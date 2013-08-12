@@ -1,0 +1,69 @@
+<schemalist>
+	<schema id="org.gnome.desk-changer" path="/org/gnome/desk-changer/">
+		<key name="auto-rotate" type="b">
+			<default>true</default>
+			<description>
+				When enabled, this will cause the extension to automatically change the wallpaper as soon as a new
+				profile is loaded into the wallpapers component.
+			</description>
+			<summary>Automatically change the wallpaper when a new profile is loaded</summary>
+		</key>
+		<key name="current-profile" type="s">
+			<default>"default"</default>
+			<description>
+				This holds the name of the currently selected profile. Changing this will trigger the wallpaper
+				component to load the new profile automatically.
+			</description>
+			<summary>Current profile name</summary>
+		</key>
+		<key name="interval" type="i">
+			<default>300</default>
+			<description>
+				This is the number of seconds that will be scheduled with the timer if interval changing of the
+				wallpapers is enabled
+			</description>
+			<summary>Timer length for interval (in seconds)</summary>
+		</key>
+		<key name="lock-disables-timer" type="b">
+			<default>false</default>
+			<description>
+				When the screen is locked, the extension itself is disabled because of how gnome-shell works. This
+				setting ensures the timer stays running during that time.
+			</description>
+			<summary>Locking the screen disables the timer</summary>
+		</key>
+		<key name="notifications" type="b">
+			<default>true</default>
+			<description>
+				If enabled the extension will show notifications when the profile is switched to a different profile
+				and when the wallpaper is switched to a different wallpaper, weather it was automatically or manually.
+			</description>
+			<summary>Display notifications for events in the extension</summary>
+		</key>
+		<key name="profiles" type="s">
+			<default>'{"default": [["file:///usr/share/backgrounds/gnome", true]]}'</default>
+			<description>
+				This is where all of the profiles are stored for the wallpapers. This setting will be automatically
+				be JSON encoded when it is set and it will be parsed when it is gotten.
+			</description>
+			<summary>JSON encoded list of profiles</summary>
+		</key>
+		<key name="random" type="b">
+			<default>true</default>
+			<description>
+				If enabled the wallpaper component will randomly choose wallpapers from the available files on the
+				current profile. If it is disabled the wallpapers will be chosen in order they are loaded.
+			</description>
+			<summary>Randomly select the next wallpaper</summary>
+		</key>
+		<key name="timer-enabled" type="b">
+			<default>true</default>
+			<description>
+				If the timer is enabled it will be added to the main loop with the interval specified by the interval
+				setting. Once the timer callback is triggered the wallpaper will be changed to the next wallpaper
+				available.
+			</description>
+			<summary>Enable the timer</summary>
+		</key>
+	</schema>
+</schemalist>

@@ -1,0 +1,27 @@
+__author__ = 'Eric Gach'
+
+import dbus
+import dbus.mainloop.glib
+import dbus.service
+
+class DBusService(dbus.service.Object):
+	bus_name = 'org.gnome.DeskChanger'
+	bus_path = '/org/gnome/DeskChanger'
+
+	def __init__(self, daemon):
+		self.daemon = daemon
+		dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
+		bus_name = dbus.service.BusName(self.bus_name, bus=dbus.SessionBus())
+		super(DBusService, self).__init__(bus_name, self.bus_path)
+
+	@dbus.service.method(bus_name)
+	def Next(self, history=True):
+		return self.daemon.next_wallpaper(history)
+
+	@dbus.service.method(bus_name)
+	def NextFile(self):
+		return self.daemon.wallpapers.next_file
+
+	@dbus.service.method(bus_name)
+	def Prev(self):
+		return self.daemon.prev_wallpaper()
