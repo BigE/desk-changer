@@ -1,11 +1,16 @@
 __author__ = 'Eric Gach <eric@php-oop.net>'
 
 from desk_changer import settings
-from gi.repository import Gio, GLib
+from gi.repository import Gio, GLib, GObject
 import random
 
-class Wallpapers(object):
+class Wallpapers(GObject.Object):
+	__gsignals__ = {
+		'wallpaper_next': (GObject.SignalFlags.RUN_FIRST, None, (str,))
+	}
+
 	def __init__(self, logger):
+		super(Wallpapers, self).__init__()
 		self._logger = logger
 		self._logger.debug('initalizing wallpapers...')
 		self._background = settings.Background()
@@ -82,4 +87,5 @@ class Wallpapers(object):
 		else:
 			self._next.append(self._wallpapers[self._position])
 			self._position += 1
+		self.emit('wallpaper_next', self._next[0])
 

@@ -22,6 +22,7 @@ class Daemon(GObject.GObject):
 		self.is_daemon = False
 		self.pidfile = pidfile
 		self._settings = settings.DeskChanger()
+		self._settings.connect('changed::current-profile', self.profile_changed)
 		self._background = settings.Background()
 		self.timer = None
 
@@ -92,6 +93,12 @@ class Daemon(GObject.GObject):
 			return e.message
 		return wallpaper
 
+	def profile_changed(self, settings, key):
+		self.logger.info('profile changed to %s', self._settings.profile)
+		self.wallpapers.load_profile()
+		if self._settings.auto_rotate:
+			self.next_wallpaper(False)
+
 	def restart(self):
 		self.logger.debug('restarting daemon')
 		self.stop()
@@ -106,7 +113,7 @@ class Daemon(GObject.GObject):
 		if self._settings.auto_rotate:
 			self.next_wallpaper(False)
 		if self._settings.timer_enabled:
-			self.timer = GLib.timeout_add_seconds(self._settings.interval, self.next_wallpaper)
+			self.timer = GLib.timeout_add_seconds(self._settings.interval, self._timer_timeout)
 		self.mainloop = GLib.MainLoop()
 		if _dbus:
 			from .dbus import DBusService
@@ -197,3 +204,6 @@ class Daemon(GObject.GObject):
 				self.logger.critical(str(err.args))
 				sys.exit(1)
 
+	def _timer_timeout(self):
+		self.next_wallpaper()
+		return True
