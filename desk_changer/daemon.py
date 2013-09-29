@@ -117,7 +117,9 @@ class Daemon(GObject.GObject):
 		self.mainloop = GLib.MainLoop()
 		if _dbus:
 			from .dbus import DBusService
-			DBusService(self)
+			dbussrv = DBusService(self)
+			self.wallpapers.connect('wallpaper_next', lambda obj, file: dbussrv.NextFile(file))
+			dbussrv.NextFile(self.wallpapers.next_file)
 		self.mainloop.run()
 
 	def start(self):

@@ -1,0 +1,13 @@
+{
+	"description":  "This extension will allow you to set up multiple profiles for changing the desktop background. It can be configured to rotate automatically or whenever you choose to change the background manually. Profiles support adding of folders and/or files.",
+	"extension-id": "desk-changer",
+	"name": "Desktop Wallpaper Changer",
+	"shell-version": [
+		"3.6",
+		"3.8",
+		"3.10"
+	],
+	"url": "https://github.com/BigE/desk-changer",
+	"uuid": "desk-changer@eric.php-oop.net",
+	"version": "0.0.1-dev"
+}

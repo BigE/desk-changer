@@ -33,7 +33,7 @@ class Wallpapers(GObject.Object):
 		self._wallpapers.sort()
 		self._populate_next()
 
-	def next(self, history = True):
+	def next(self, history=True):
 		if len(self._wallpapers) == 0:
 			KeyError('no available wallpapers loaded')
 
@@ -42,7 +42,12 @@ class Wallpapers(GObject.Object):
 			self._history(previous)
 		wallpaper = self._next.pop(0)
 		self._populate_next()
+		self.emit('wallpaper_next', self._next[0])
 		return wallpaper
+
+	@property
+	def next_file(self):
+		return self._next[0]
 
 	def prev(self):
 		if len(self._prev) == 0:
@@ -51,6 +56,7 @@ class Wallpapers(GObject.Object):
 
 		current = self._background.picture_uri
 		self._next.insert(0, current)
+		self.emit('wallpaper_next', current)
 		position = len(self._prev) - 1
 		wallpaper = self._prev.pop(position)
 		return wallpaper
@@ -87,5 +93,4 @@ class Wallpapers(GObject.Object):
 		else:
 			self._next.append(self._wallpapers[self._position])
 			self._position += 1
-		self.emit('wallpaper_next', self._next[0])
 

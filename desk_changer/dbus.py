@@ -18,8 +18,12 @@ class DBusService(dbus.service.Object):
 	def Next(self, history=True):
 		return self.daemon.next_wallpaper(history)
 
+	@dbus.service.signal(bus_name)
+	def NextFile(self, file):
+		self.daemon.logger.debug('[DBUS] emit NextFile(%s)', file)
+
 	@dbus.service.method(bus_name)
-	def NextFile(self):
+	def PreviewNext(self):
 		return self.daemon.wallpapers.next_file
 
 	@dbus.service.method(bus_name)
