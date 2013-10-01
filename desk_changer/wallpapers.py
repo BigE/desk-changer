@@ -90,8 +90,15 @@ class Wallpapers(GObject.Object):
             while True:
                 next = self._wallpapers[random.randint(0, len(self._wallpapers) - 1)]
                 self._logger.debug('got %s as possible next wallpaper', next)
-                if len(self._prev) < len(self._wallpapers) and self._prev.count(next) == 0 and next != self._background.picture_uri:
+                if len(self._prev) > 0 and len(self._prev) >= len(self._next):
+                    self._logger.warn('Your history is larger than your available wallpapers. Please consider decreasing the history size or adding more wallpapers to keep things more random.');
                     break
+                elif self._prev.count(next) == 0 and self._next.count(next) == 0:
+                    break
+                elif self._prev.count(next) > 1:
+                    self._logger.debug('%s has already been shown recently', file)
+                elif self._next.count(next) > 1:
+                    self._logger.debug('%s is already coming up', file)
             self._next.append(next)
         else:
             self._next.append(self._wallpapers[self._position])
