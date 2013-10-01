@@ -87,7 +87,7 @@ class Wallpapers(GObject.Object):
 		if self._settings.random is True:
 			while True:
 				next = self._wallpapers[random.randint(0, len(self._wallpapers) - 1)]
-				if len(self._prev) < len(self._wallpapers) and self._prev.count(next) == 0:
+				if len(self._prev) < len(self._wallpapers) and self._prev.count(next) == 0 and next != self._background.picture_uri:
 					break
 			self._next.append(next)
 		else:
