@@ -211,8 +211,10 @@ const DeskChangerIndicator = Lang.Class({
 		this._next_file_id = this._dbus.connectSignal('NextFile', Lang.bind(this, this._next_file));
 		this._preview = new DeskChangerPreview();
 		this.menu.addMenuItem(this._preview);
-		var tmp = this._dbus.PreviewNextSync();
-		this._preview.set_wallpaper(tmp[0]);
+		this._dbus.PreviewNextRemote(Lang.bind(this, function (result, excp) {
+            if (result)
+		        this._preview.set_wallpaper(result[0]);
+        }));
 		this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
 		this.menu.addMenuItem(new DeskChangerControls(this._dbus));
 	},
