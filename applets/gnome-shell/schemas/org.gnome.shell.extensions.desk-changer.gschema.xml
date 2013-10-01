@@ -1,0 +1,27 @@
+<schemalist>
+	<schema id="org.gnome.shell.extensions.desk-changer" path="/org/gnome/shell/extensions/desk-changer/">
+        <key name="change-lock-screen" type="b">
+            <default>false</default>
+            <description>
+                If enabled, the lock screen will also be changed to the current wallpaper. This changes it every time
+                the wallpaper is changed so if you change profiles, it will load an image from the current profile.
+            </description>
+        </key>
+		<key name="lock-disables-timer" type="b">
+			<default>false</default>
+			<description>
+				When the screen is locked, the extension itself is disabled because of how gnome-shell works. This
+				setting ensures the timer stays running during that time.
+			</description>
+			<summary>Locking the screen disables the timer</summary>
+		</key>
+		<key name="notifications" type="b">
+			<default>true</default>
+			<description>
+				If enabled the extension will show notifications when the profile is switched to a different profile
+				and when the wallpaper is switched to a different wallpaper, weather it was automatically or manually.
+			</description>
+			<summary>Display notifications for events in the extension</summary>
+		</key>
+    </schema>
+</schemalist>
