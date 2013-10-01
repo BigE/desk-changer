@@ -33,20 +33,20 @@ desk_changer_logger.addHandler(desk_changer_logfile_handler)
 desk_changer_daemon = Daemon(args.pidfile)
 
 if args.action == 'stop':
-	desk_changer_daemon.stop()
+    desk_changer_daemon.stop()
 elif args.action == 'start':
-	if args.daemon:
-		desk_changer_daemon.daemonize()
-	desk_changer_daemon.start()
+    if args.daemon:
+        desk_changer_daemon.daemonize()
+    desk_changer_daemon.start()
 elif args.action == 'restart':
-	if args.daemon:
-		desk_changer_daemon.daemonize()
-	desk_changer_daemon.restart()
+    if args.daemon:
+        desk_changer_daemon.daemonize()
+    desk_changer_daemon.restart()
 elif args.action == 'status':
-	status = desk_changer_daemon.status()
-	name = os.path.basename(sys.argv[0])
-	if status[0] == 'running':
-		print('%s is running with pid %i' % (name, status[1]))
-	else:
-		print('%s is stopped' % (name, ))
+    status = desk_changer_daemon.status()
+    name = os.path.basename(sys.argv[0])
+    if status[0] == 'running':
+        print('%s is running with pid %i' % (name, status[1]))
+    else:
+        print('%s is stopped' % (name, ))
 
