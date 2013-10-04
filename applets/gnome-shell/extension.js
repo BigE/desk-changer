@@ -44,7 +44,7 @@ const DeskChangerButton = new Lang.Class({
 	_init: function (icon, callback)
 	{
 		this.icon = new St.Icon({icon_name: icon+'-symbolic', icon_size: 20});
-		this.parent({child: this.icon, style_class: 'system-menu-action'});
+		this.parent({child: this.icon, style_class: 'system-menu-action notification-icon-button control-button'});
 		this.connect('clicked', callback);
 	},
 
@@ -105,7 +105,11 @@ const DeskChangerControls = new Lang.Class({
 		this._dbus = dbus
 		this.parent({reactive: false});
 		this._box = new St.BoxLayout({vertical: false});
-		this.actor.add(this._box, {align: St.Align.MIDDLE, span: -1});
+        if (this.actor.add) {
+    		this.actor.add(this._box, {align: St.Align.MIDDLE, span: -1});
+        } else {
+            this.addActor(this._box, {align: St.Align.MIDDLE, span: -1});
+        }
 		this._prev = new DeskChangerButton('media-skip-backward', Lang.bind(dbus, function () {
 			this.PrevSync();
 		}));
@@ -158,7 +162,11 @@ const DeskChangerPreview = new Lang.Class({
 	{
 		this.parent({reactive: false});
 		this._box = new St.BoxLayout({vertical: true});
-		this.actor.add(this._box, {align: St.Align.MIDDLE, span: -1});
+        if (this.actor.add) {
+    		this.actor.add(this._box, {align: St.Align.MIDDLE, span: -1});
+        } else {
+            this.addActor(this._box, {align: St.Align.MIDDLE, span: -1});
+        }
 		this._label = new St.Label({text: "Wallpaper up Next\n"});
 		this._box.add(this._label);
 		this._wallpaper = new St.Bin({});
@@ -306,7 +314,8 @@ const DeskChangerSwitch = new Lang.Class({
 
     destroy: function ()
     {
-        this.settings.schema.disconnect(this._setting_handler);
+        if (this._setting_handler)
+            this.settings.schema.disconnect(this._setting_handler);
         this.disconnect(this._toggled_handler);
         this.parent();
     }
