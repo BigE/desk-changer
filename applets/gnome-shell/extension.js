@@ -33,7 +33,6 @@ const DeskChangerStatusIcon = new Lang.Class({
 	{
 		this.parent({style_class: 'panel-status-menu-box'});
 		this.add_child(new St.Icon({icon_name: 'emblem-photos-symbolic', style_class: 'system-status-icon'}));
-		this.add_child(new St.Label({text: '\u25BE', y_expand: true, y_align: Clutter.ActorAlign.CENTER}));
 	}
 });
 
@@ -44,7 +43,7 @@ const DeskChangerButton = new Lang.Class({
 	_init: function (icon, callback)
 	{
 		this.icon = new St.Icon({icon_name: icon+'-symbolic', icon_size: 20});
-		this.parent({child: this.icon, style_class: 'system-menu-action notification-icon-button control-button'});
+		this.parent({child: this.icon, style_class: (Util.version('3.6') == 1)? 'system-menu-action':'notification-icon-button control-button'});
 		this.connect('clicked', callback);
 	},
 
@@ -105,11 +104,11 @@ const DeskChangerControls = new Lang.Class({
 		this._dbus = dbus
 		this.parent({reactive: false});
 		this._box = new St.BoxLayout({vertical: false});
-        if (this.actor.add) {
-    		this.actor.add(this._box, {align: St.Align.MIDDLE, span: -1});
-        } else {
-            this.addActor(this._box, {align: St.Align.MIDDLE, span: -1});
-        }
+		if (Util.version('3.10') >= 0) {
+			this.actor.add(this._box, {align: St.Align.MIDDLE, span: -1});
+		} else {
+			this.addActor(this._box, {align: St.Align.MIDDLE, span: -1});
+		}
 		this._prev = new DeskChangerButton('media-skip-backward', Lang.bind(dbus, function () {
 			this.PrevSync();
 		}));
@@ -147,11 +146,11 @@ const DeskChangerControls = new Lang.Class({
 
 	_random_toggled: function ()
 	{
-    },
+	},
 
 	_timer_toggled: function ()
 	{
-    }
+	}
 });
 
 const DeskChangerPreview = new Lang.Class({
@@ -162,11 +161,11 @@ const DeskChangerPreview = new Lang.Class({
 	{
 		this.parent({reactive: false});
 		this._box = new St.BoxLayout({vertical: true});
-        if (this.actor.add) {
-    		this.actor.add(this._box, {align: St.Align.MIDDLE, span: -1});
-        } else {
-            this.addActor(this._box, {align: St.Align.MIDDLE, span: -1});
-        }
+		if (Util.version('3.10') >= 0) {
+			this.actor.add(this._box, {align: St.Align.MIDDLE, span: -1});
+		} else {
+			this.addActor(this._box, {align: St.Align.MIDDLE, span: -1});
+		}
 		this._label = new St.Label({text: "Wallpaper up Next\n"});
 		this._box.add(this._label);
 		this._wallpaper = new St.Bin({});
@@ -204,29 +203,30 @@ const DeskChangerIndicator = new Lang.Class({
 
 	_init: function ()
 	{
+		Util.debug(Main.sessionMode.currentMode);
 		this.parent(0.0, 'DeskChanger');
-        this.settings = new DeskChangerExtensionSettings();
+		this.settings = new DeskChangerExtensionSettings();
 		this.actor.add_child(new DeskChangerStatusIcon());
 		this._dbus = new DeskChangerProxy(Gio.DBus.session, 'org.gnome.DeskChanger', '/org/gnome/DeskChanger');
-        this._bus_watch_id = Gio.bus_watch_name(Gio.BusType.SESSION, 'org.gnome.DeskChanger', Gio.BusNameWatcherFlags.NONE, Lang.bind(this, function () {
-            this._dbus.active = true
-        }), Lang.bind(this, function () {
-            this._dbus.active = false
-        }));
+		this._bus_watch_id = Gio.bus_watch_name(Gio.BusType.SESSION, 'org.gnome.DeskChanger', Gio.BusNameWatcherFlags.NONE, Lang.bind(this, function () {
+			this._dbus.active = true
+		}), Lang.bind(this, function () {
+			this._dbus.active = false
+		}));
 		Util.debug('connected to dbus org.gnome.DeskChanger');
 		this._next_file_id = this._dbus.connectSignal('NextFile', Lang.bind(this, this._next_file));
 		this._preview = new DeskChangerPreview();
-        this._switch = new DeskChangerSwitch('Change Lockscreen', 'change-lock-screen', this.settings);
-        this.menu.addMenuItem(this._switch);
-        this.menu.addMenuItem(new DeskChangerSwitch('Lock Disables Timer', 'lock-disables-timer', this.settings));
-        this.menu.addMenuItem(new DeskChangerSwitch('Show Notifications', 'notifications', this.settings));
-        this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
+		this._switch = new DeskChangerSwitch('Change Lockscreen', 'change-lock-screen', this.settings);
+		this.menu.addMenuItem(this._switch);
+		this.menu.addMenuItem(new DeskChangerSwitch('Lock Disables Timer', 'lock-disables-timer', this.settings));
+		this.menu.addMenuItem(new DeskChangerSwitch('Show Notifications', 'notifications', this.settings));
+		this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
 		this.menu.addMenuItem(this._preview);
 		this._dbus.PreviewNextRemote(Lang.bind(this, function (result, excp) {
-            if (result)
-		        this._preview.set_wallpaper(result[0]);
-        }));
-        this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
+			if (result)
+				this._preview.set_wallpaper(result[0]);
+		}));
+		this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
 		this.menu.addMenuItem(new DeskChangerControls(this._dbus));
 	},
 
@@ -236,7 +236,12 @@ const DeskChangerIndicator = new Lang.Class({
 			Util.debug('removing signal handler: '+this._next_file_id);
 			this._dbus.disconnectSignal(this._next_file_id);
 		}
-        Gio.bus_unwatch_name(this._bus_watch_id);
+
+		Util.debug('entering mode '+Main.sessionMode.currentMode)
+
+		if (this._bus_watch_id) {
+			Gio.bus_unwatch_name(this._bus_watch_id);
+		}
 		this.parent();
 	},
 
@@ -249,76 +254,76 @@ const DeskChangerIndicator = new Lang.Class({
 });
 
 const DeskChangerExtensionSettings = new Lang.Class({
-    Name: 'DeskChangerExtensionSettings',
+	Name: 'DeskChangerExtensionSettings',
 
-    _init: function ()
-    {
-        var source = Gio.SettingsSchemaSource.new_from_directory(
-            Me.dir.get_child('schemas').get_path(),
-            Gio.SettingsSchemaSource.get_default(),
-            false
-        );
-        this.schema = new Gio.Settings({settings_schema: source.lookup('org.gnome.shell.extensions.desk-changer', false)});
-    },
+	_init: function ()
+	{
+		var source = Gio.SettingsSchemaSource.new_from_directory(
+			Me.dir.get_child('schemas').get_path(),
+			Gio.SettingsSchemaSource.get_default(),
+			false
+		);
+		this.schema = new Gio.Settings({settings_schema: source.lookup('org.gnome.shell.extensions.desk-changer', false)});
+	},
 
-    get change_lock_screen()
-    {
-        return this.schema.get_boolean('change-lock-screen');
-    },
+	get change_lock_screen()
+	{
+		return this.schema.get_boolean('change-lock-screen');
+	},
 
-    set change_lock_screen(value)
-    {
-        this.schema.set_boolean(Boolean(value))
-    },
+	set change_lock_screen(value)
+	{
+		this.schema.set_boolean(Boolean(value))
+	},
 
-    get lock_disables_timer()
-    {
-        return this.schema.get_boolean('lock-disables-timer');
-    },
+	get lock_disables_timer()
+	{
+		return this.schema.get_boolean('lock-disables-timer');
+	},
 
-    set lock_disables_timer(value)
-    {
-        this.schema.set_boolean('lock-disables-timer', Boolean(value))
-    },
+	set lock_disables_timer(value)
+	{
+		this.schema.set_boolean('lock-disables-timer', Boolean(value))
+	},
 
-    get notifications()
-    {
-        return this.schema.get_boolean('notifications');
-    },
+	get notifications()
+	{
+		return this.schema.get_boolean('notifications');
+	},
 
-    set notifications(value)
-    {
-        this.schema.set_boolean('notifications', Boolean(value))
-    }
+	set notifications(value)
+	{
+		this.schema.set_boolean('notifications', Boolean(value))
+	}
 });
 
 const DeskChangerSwitch = new Lang.Class({
-    Name: 'DeskChangerSwitch',
-    Extends: PopupMenu.PopupSwitchMenuItem,
+	Name: 'DeskChangerSwitch',
+	Extends: PopupMenu.PopupSwitchMenuItem,
 
-    _init: function (text, setting, settings)
-    {
-        this.settings = settings;
-        this.parent(text);
-        this.setting = setting;
-        this.setToggleState(settings.schema.get_boolean(setting));
-        this._setting_handler = settings.schema.connect('changed::'+setting, Lang.bind(this, function (settings, key) {
-            Util.debug('updating switch for '+key);
-            this.setToggleState(settings.get_boolean(key));
-        }));
-        this._toggled_handler = this.connect('toggled', Lang.bind(this, function () {
-            Util.debug('setting '+this.setting+' to '+this.state);
-            this.settings.schema.set_boolean(this.setting, this.state);
-        }));
-    },
+	_init: function (text, setting, settings)
+	{
+		this.settings = settings;
+		this.parent(text);
+		this.setting = setting;
+		this.setToggleState(settings.schema.get_boolean(setting));
+		this._setting_handler = settings.schema.connect('changed::'+setting, Lang.bind(this, function (settings, key) {
+			Util.debug('updating switch for '+key);
+			this.setToggleState(settings.get_boolean(key));
+		}));
+		this._toggled_handler = this.connect('toggled', Lang.bind(this, function () {
+			Util.debug('setting '+this.setting+' to '+this.state);
+			this.settings.schema.set_boolean(this.setting, this.state);
+		}));
+	},
 
-    destroy: function ()
-    {
-        if (this._setting_handler)
-            this.settings.schema.disconnect(this._setting_handler);
-        this.disconnect(this._toggled_handler);
-        this.parent();
-    }
+	destroy: function ()
+	{
+		if (this._setting_handler)
+			this.settings.schema.disconnect(this._setting_handler);
+		this.disconnect(this._toggled_handler);
+		this.parent();
+	}
 });
 
 function disable()
