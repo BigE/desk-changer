@@ -96,9 +96,9 @@ class Wallpapers(GObject.Object):
                 elif self._prev.count(next) == 0 and self._next.count(next) == 0:
                     break
                 elif self._prev.count(next) > 1:
-                    self._logger.debug('%s has already been shown recently', file)
+                    self._logger.debug('%s has already been shown recently', next)
                 elif self._next.count(next) > 1:
-                    self._logger.debug('%s is already coming up', file)
+                    self._logger.debug('%s is already coming up', next)
             self._next.append(next)
         else:
             self._next.append(self._wallpapers[self._position])
