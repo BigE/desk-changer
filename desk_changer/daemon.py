@@ -128,7 +128,7 @@ class Daemon(GObject.GObject):
 		self.logger.debug('starting the daemon')
 		try:
 			with open(self.pidfile, 'r') as pf:
-				pid = pf.read().strip()
+				pid = int(pf.read().strip())
 				self.logger.warn('got pid %i on start', pid)
 		except IOError:
 			pid = None
@@ -138,7 +138,7 @@ class Daemon(GObject.GObject):
 				self.logger.info('attempting to test if pid %i exists', pid)
 				os.kill(pid, 0)
 			except OSError as e:
-				if e[0] == errno.ESRCH:
+				if e.errno == errno.ESRCH:
 					self.logger.warn('removing stale pid file %s', self.pidfile)
 					os.remove(self.pidfile)
 				else:
