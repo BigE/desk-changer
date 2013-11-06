@@ -24,22 +24,6 @@
 			</description>
 			<summary>Timer length for interval (in seconds)</summary>
 		</key>
-		<key name="lock-disables-timer" type="b">
-			<default>false</default>
-			<description>
-				When the screen is locked, the extension itself is disabled because of how gnome-shell works. This
-				setting ensures the timer stays running during that time.
-			</description>
-			<summary>Locking the screen disables the timer</summary>
-		</key>
-		<key name="notifications" type="b">
-			<default>true</default>
-			<description>
-				If enabled the extension will show notifications when the profile is switched to a different profile
-				and when the wallpaper is switched to a different wallpaper, weather it was automatically or manually.
-			</description>
-			<summary>Display notifications for events in the extension</summary>
-		</key>
 		<key name="profiles" type="s">
 			<default>'{"default": [["file:///usr/share/backgrounds/gnome", true]]}'</default>
 			<description>

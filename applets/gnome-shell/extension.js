@@ -101,7 +101,7 @@ const DeskChangerControls = new Lang.Class({
 
 	_init: function (dbus)
 	{
-		this._dbus = dbus
+		this._dbus = dbus;
 		this.parent({reactive: false});
 		this._box = new St.BoxLayout({vertical: false});
 		if (Util.version('3.10') >= 0) {
