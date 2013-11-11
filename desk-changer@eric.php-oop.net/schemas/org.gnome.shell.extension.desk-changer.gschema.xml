@@ -1,0 +1,10 @@
+<schemalist>
+	<schema id="org.gnome.shell.extension.desk-changer" path="/org/gnome/shell/extension/desk-changer/">
+		<key name="interval" type="i">
+			<default>300</default>
+			<description>
+				The interval is the amount of time in seconds between the daemon switching the wallpaper.
+			</description>
+		</key>
+	</schema>
+</schemalist>

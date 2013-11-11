@@ -1,0 +1,9 @@
+{
+	"description": "Simple wallpaper changer with multiple profile support.",
+	"name": "Desk Changer",
+	"shell-version": [
+		"3.10"
+	],
+	"url": "https://github.com/BigE/desk-changer/",
+	"uuid": "desk-changer@eric.php-oop.net"
+}
