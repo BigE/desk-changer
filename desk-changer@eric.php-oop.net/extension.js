@@ -28,6 +28,11 @@ const DeskChangerIndicator = new Lang.Class({
 		this.settings = new DeskChangerSettings();
 		this.parent(0.0, 'DeskChanger');
 		this.actor.add_child(new DeskChangerIcon());
+	},
+
+	destroy: function ()
+	{
+		this.parent();
 	}
 });
 
@@ -45,6 +50,16 @@ const DeskChangerSettings = new Lang.Class({
 		this.parent({settings_schema: source.lookup('org.gnome.shell.extensions.desk-changer', false)});
 	},
 
+	get current_profile()
+	{
+		return this.get_string('current-profile');
+	},
+
+	set current_profile(value)
+	{
+		this.set_string('current-profile', value);
+	},
+
 	get interval()
 	{
 		return this.get_integer('interval');
@@ -53,6 +68,36 @@ const DeskChangerSettings = new Lang.Class({
 	set interval(value)
 	{
 		this.set_integer('interval', parseInt(value));
+	},
+
+	get notifications()
+	{
+		return this.get_boolean('notifications');
+	},
+
+	set notifications(value)
+	{
+		this.set_boolean('notifications', Boolean(value));
+	},
+
+	get profiles()
+	{
+		return JSON.parse(this.get_string('profiles'));
+	},
+
+	set profiles(value)
+	{
+		this.set_string('profiles', JSON.stringify(value));
+	},
+
+	get timer_enabled()
+	{
+		return this.get_boolean('timer-enabled');
+	},
+
+	set timer_enabled(value)
+	{
+		this.set_boolean('timer-enabled', Boolean(value));
 	}
 });
 

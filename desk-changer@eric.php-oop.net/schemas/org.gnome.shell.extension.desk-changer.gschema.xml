@@ -1,9 +1,34 @@
 <schemalist>
 	<schema id="org.gnome.shell.extension.desk-changer" path="/org/gnome/shell/extension/desk-changer/">
+		<key name="current-profile" type="s">
+			<default>gnome</default>
+			<description>
+				This is the current profile that the daemon will load.
+			</description>
+		</key>
 		<key name="interval" type="i">
 			<default>300</default>
 			<description>
 				The interval is the amount of time in seconds between the daemon switching the wallpaper.
+			</description>
+		</key>
+		<key name="notifications" type="b">
+			<default>true</default>
+			<description>
+				Display a notification each time an event happens with desk-changer.
+			</description>
+		</key>
+		<key name="profiles" type="s">
+			<default>{default: [["/usr/share/backgrounds/gnome", true]]}</default>
+			<description>
+				These are the profiles available to the daemon.
+			</description>
+		</key>
+		<key name="timer-enabled" type="b">
+			<default>true</default>
+			<description>
+				The timer controls the automatic switching of wallpapers. If it is enabled, it will use the interval
+				to switch the wallpaper automatically.
 			</description>
 		</key>
 	</schema>
