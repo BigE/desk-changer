@@ -2,7 +2,7 @@ const Gio = imports.gi.Gio;
 const GObject = imports.gi.GObject;
 const Lang = imports.lang;
 const Main = imports.ui.main;
-const Me = imports.misc.extensionUtil.getCurrentExtension();
+const Me = imports.misc.extensionUtils.getCurrentExtension();
 const PanelMenu = imports.ui.panelMenu;
 const PopupMenu = imports.ui.popupMenu;
 const St = imports.gi.St;
@@ -73,7 +73,7 @@ const DeskChangerSettings = new Lang.Class({
 		'current_profile': GObject.ParamSpec.string(
 			'current_profile', '', '', GObject.ParamFlags.READABLE | GObject.ParamFlags.WRITABLE, 'gnome'
 		),
-		'interval': GObject.ParamSpec.integer(
+		'interval': GObject.ParamSpec.int(
 			'interval', '', '', GObject.ParamFlags.READABLE | GObject.ParamFlags.WRITABLE, 0, 3600, 300
 		),
 		'notifications': GObject.ParamSpec.boolean(
