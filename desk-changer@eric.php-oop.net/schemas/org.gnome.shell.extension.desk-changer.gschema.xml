@@ -1,7 +1,7 @@
 <schemalist>
 	<schema id="org.gnome.shell.extension.desk-changer" path="/org/gnome/shell/extension/desk-changer/">
 		<key name="current-profile" type="s">
-			<default>gnome</default>
+			<default>"gnome"</default>
 			<description>
 				This is the current profile that the daemon will load.
 			</description>
@@ -19,7 +19,7 @@
 			</description>
 		</key>
 		<key name="profiles" type="s">
-			<default>{default: [["/usr/share/backgrounds/gnome", true]]}</default>
+			<default>'{default: [["/usr/share/backgrounds/gnome", true]]}'</default>
 			<description>
 				These are the profiles available to the daemon.
 			</description>
