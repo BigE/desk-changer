@@ -1,5 +1,5 @@
 <schemalist>
-	<schema id="org.gnome.shell.extension.desk-changer" path="/org/gnome/shell/extension/desk-changer/">
+	<schema id="org.gnome.shell.extensions.desk-changer" path="/org/gnome/shell/extensions/desk-changer/">
 		<key name="current-profile" type="s">
 			<default>"gnome"</default>
 			<description>
