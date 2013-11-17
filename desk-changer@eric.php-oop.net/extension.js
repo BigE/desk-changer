@@ -61,31 +61,8 @@ const DeskChangerIndicator = new Lang.Class({
 	}
 });
 
-/**
- * This is just a helper class to tie into the settings.
- *
- * @type {Lang.Class}
- */
 const DeskChangerSettings = new Lang.Class({
 	Name: 'DeskChangerSettings',
-	Extends: Gio.Settings,
-	Properties: {
-		'current_profile': GObject.ParamSpec.string(
-			'current_profile', '', '', GObject.ParamFlags.READABLE | GObject.ParamFlags.WRITABLE, 'gnome'
-		),
-		'interval': GObject.ParamSpec.int(
-			'interval', '', '', GObject.ParamFlags.READABLE | GObject.ParamFlags.WRITABLE, 0, 3600, 300
-		),
-		'notifications': GObject.ParamSpec.boolean(
-			'notifications', '', '', GObject.ParamFlags.READABLE | GObject.ParamFlags.WRITABLE, true
-		),
-		'profiles': GObject.ParamSpec.string(
-			'profiles', '', '', GObject.ParamFlags.READABLE | GObject.ParamFlags.WRITABLE, ''
-		),
-		'timer_enabled': GObject.ParamSpec.boolean(
-			'timer_enabled', '', '', GObject.ParamFlags.READABLE | GObject.ParamFlags.WRITABLE, true
-		)
-	},
 
 	_init: function ()
 	{
@@ -94,13 +71,64 @@ const DeskChangerSettings = new Lang.Class({
 			Gio.SettingsSchemaSource.get_default(),
 			false
 		);
-		this.parent({settings_schema: source.lookup('org.gnome.shell.extensions.desk-changer', false)});
+
+		this.schema = new Gio.Settings({settings_schema: source.lookup('org.gnome.shell.extensions.desk-changer', false)});
 		this._handlers = [];
+	},
+
+	get current_profile()
+	{
+		return this.schema.get_string('current-profile');
+	},
+
+	set current_profile(value)
+	{
+		this.schema.set_string('current-profile', value);
+	},
+
+	get interval()
+	{
+		return this.schema.get_int('interval');
+	},
+
+	set interval(value)
+	{
+		this.schema.set_int('interval', parseInt(value));
+	},
+
+	get notifications()
+	{
+		return this.schema.get_boolean('notifications');
+	},
+
+	set notifications(value)
+	{
+		this.schema.set_boolean('notifications', Boolean(value));
+	},
+
+	get profiles()
+	{
+		return JSON.parse(this.schema.get_string('profiles'));
+	},
+
+	set profiles(value)
+	{
+		this.schema.set_string('profiles', JSON.stringify(value));
+	},
+
+	get timer_enabled()
+	{
+		return this.schema.get_boolean('timer-enabled');
+	},
+
+	set timer_enabled(value)
+	{
+		this.schema.set_boolean('timer-enabled', Boolean(value));
 	},
 
 	connect: function(signal, callback)
 	{
-		var handler_id = this.parent(signal, callback);
+		var handler_id = this.schema.connect(signal, callback);
 		this._handlers.push(handler_id);
 	},
 
@@ -111,67 +139,17 @@ const DeskChangerSettings = new Lang.Class({
 			this.disconnect(this._handlers[0]);
 		}
 
-		this.parent();
+		this.schema.destroy();
 	},
 
 	disconnect: function (handler_id)
 	{
 		var index = this._handlers.valueOf(handler_id);
-		this.parent(handler_id);
+		this.schema.disconnect(handler_id);
 
 		if (index > -1) {
 			this._handlers.splice(index, 1);
 		}
-	},
-
-	get current_profile()
-	{
-		return this.get_string('current-profile');
-	},
-
-	set current_profile(value)
-	{
-		this.set_string('current-profile', value);
-	},
-
-	get interval()
-	{
-		return this.get_integer('interval');
-	},
-
-	set interval(value)
-	{
-		this.set_integer('interval', parseInt(value));
-	},
-
-	get notifications()
-	{
-		return this.get_boolean('notifications');
-	},
-
-	set notifications(value)
-	{
-		this.set_boolean('notifications', Boolean(value));
-	},
-
-	get profiles()
-	{
-		return JSON.parse(this.get_string('profiles'));
-	},
-
-	set profiles(value)
-	{
-		this.set_string('profiles', JSON.stringify(value));
-	},
-
-	get timer_enabled()
-	{
-		return this.get_boolean('timer-enabled');
-	},
-
-	set timer_enabled(value)
-	{
-		this.set_boolean('timer-enabled', Boolean(value));
 	}
 });
 
@@ -226,7 +204,7 @@ const DeskChangerSwitch = new Lang.Class({
 		this._setting = setting;
 		this._settings = settings;
 		this.parent(label);
-		this.setToggleState(settings.get_boolean(setting));
+		this.setToggleState(settings.schema.get_boolean(setting));
 		this._handler_changed = settings.connect('changed::'+setting, Lang.bind(this, this._changed));
 		this._handler_toggled = this.connect('toggled', Lang.bind(this, this._toggled));
 	},
@@ -244,7 +222,7 @@ const DeskChangerSwitch = new Lang.Class({
 
 	_changed: function (settings, key)
 	{
-		this.setToggledState(settings.get_boolean(key));
+		this.setToggledState(settings.schema.get_boolean(key));
 	},
 
 	_toggled: function ()
@@ -256,7 +234,7 @@ const DeskChangerSwitch = new Lang.Class({
 function disable()
 {
 	if (Main.panel.statusArea.deskchanger) {
-		Main.panel.statusArea.destroy();
+		Main.panel.statusArea.deskchanger.destroy();
 	}
 }
 
