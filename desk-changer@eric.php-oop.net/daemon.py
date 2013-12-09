@@ -11,7 +11,9 @@ import json
 import logging
 import os
 import random
+import signal
 import sys
+import time
 
 
 __author__ = 'Eric Gach <eric@php-oop.net>'
@@ -31,7 +33,6 @@ class DeskChangerDaemon(GObject.GObject):
 		self.timer = None
 		self.background = Gio.Settings('org.gnome.desktop.background')
 		self.settings = DeskChangerSettings()
-		self._wallpapers = DeskChangerWallpapers()
 
 	def __del__(self):
 		if self.timer:
@@ -85,6 +86,7 @@ class DeskChangerDaemon(GObject.GObject):
 
 	def run(self, _dbus=False):
 		_logger.debug('running the daemon %s dbus support', 'with' if _dbus else 'without')
+		self._wallpapers = DeskChangerWallpapers()
 		self.mainloop = GLib.MainLoop()
 		if _dbus:
 			self.dbus = DeskChangerDBus()
@@ -128,7 +130,29 @@ class DeskChangerDaemon(GObject.GObject):
 		self.run(True)
 
 	def stop(self):
-		pass
+		_logger.debug('attempting to stop daemon')
+		try:
+			with open(self.pidfile) as f:
+				pid = int(f.read().strip())
+				_logger.debug('got pid of %d', pid)
+		except IOError:
+			_logger.error('no pidfile was found, daemon not running?')
+			return
+
+		try:
+			while 1:
+				os.kill(pid, signal.SIGTERM)
+				time.sleep(0.1)
+		except OSError as err:
+			e = str(err.args)
+			if e.find('No such process') > 0:
+				if os.path.exists(self.pidfile):
+					os.remove(self.pidfile)
+					_logger.info('killed process %d and removed pid file %s', pid, self.pidfile)
+			else:
+				_logger.critical(e)
+				sys.exit(1)
+
 
 	def _timeout(self):
 		self.next()
@@ -236,7 +260,7 @@ class DeskChangerWallpapers(GObject.GObject):
 			self._history(self._background.get_string('picture-uri'))
 		wallpaper = self._next.pop(0)
 		self._load_next()
-		self.emit('wallpaper_next', wallpaper)
+		self.emit('wallpaper_next', self._next[0])
 		return wallpaper
 
 	def prev(self):
