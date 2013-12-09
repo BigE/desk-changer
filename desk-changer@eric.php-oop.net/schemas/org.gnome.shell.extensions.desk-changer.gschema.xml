@@ -1,28 +1,47 @@
 <schemalist>
 	<schema id="org.gnome.shell.extensions.desk-changer" path="/org/gnome/shell/extensions/desk-changer/">
+		<key name="auto-rotate" type="b">
+			<default>true</default>
+			<description>
+				When enabled, this will cause the daemon to automatically change the wallpaper whenever the
+				current profile is changed.
+			</description>
+			<summary>Auto rotate wallpaper when the profile is changed</summary>
+		</key>
 		<key name="current-profile" type="s">
 			<default>"gnome"</default>
 			<description>
 				This is the current profile that the daemon will load.
 			</description>
+			<summary>test</summary>
 		</key>
 		<key name="interval" type="i">
 			<default>300</default>
 			<description>
 				The interval is the amount of time in seconds between the daemon switching the wallpaper.
 			</description>
+			<summary>test</summary>
 		</key>
 		<key name="notifications" type="b">
 			<default>true</default>
 			<description>
 				Display a notification each time an event happens with desk-changer.
 			</description>
+			<summary>test</summary>
 		</key>
 		<key name="profiles" type="s">
-			<default>'{default: [["/usr/share/backgrounds/gnome", true]]}'</default>
+			<default>'{"gnome": [["file:///usr/share/backgrounds/gnome", true]]}'</default>
 			<description>
 				These are the profiles available to the daemon.
 			</description>
+			<summary>test</summary>
+		</key>
+		<key name="random" type="b">
+			<default>true</default>
+			<description>
+				If set to true the daemon will randomize the order in which the wallpapers are displayed
+			</description>
+			<summary>test</summary>
 		</key>
 		<key name="timer-enabled" type="b">
 			<default>true</default>
@@ -30,6 +49,7 @@
 				The timer controls the automatic switching of wallpapers. If it is enabled, it will use the interval
 				to switch the wallpaper automatically.
 			</description>
+			<summary>test</summary>
 		</key>
 	</schema>
 </schemalist>

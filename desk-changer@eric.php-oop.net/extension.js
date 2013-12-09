@@ -144,7 +144,7 @@ const DeskChangerSettings = new Lang.Class({
 
 	disconnect: function (handler_id)
 	{
-		var index = this._handlers.valueOf(handler_id);
+		var index = this._handlers.indexOf(handler_id);
 		this.schema.disconnect(handler_id);
 
 		if (index > -1) {
