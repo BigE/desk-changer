@@ -96,7 +96,11 @@ class DeskChangerDaemon(GObject.GObject):
 			self.next(False)
 		if self.settings.timer_enabled:
 			self.timer = GLib.timeout_add_seconds(self.settings.interval, self._timeout)
-		self.mainloop.run()
+		try:
+			self.mainloop.run()
+		except KeyboardInterrupt:
+			_logger.info('keyboard interrupt, exiting')
+			sys.exit(0)
 
 	def start(self):
 		_logger.debug('starting desk-changer daemon')
