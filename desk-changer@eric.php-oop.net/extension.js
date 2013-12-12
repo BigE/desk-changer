@@ -11,6 +11,7 @@ const Util = imports.misc.util;
 const versionCheck = imports.misc.extensionUtils.versionCheck;
 
 const DeskChangerVersion = Me.metadata.version;
+const GnomeShellVersion = Main.shellDBusService.ShellVersion;
 
 const DeskChangerButton = new Lang.Class({
 	Name: 'DeskChangerButton',
@@ -19,7 +20,10 @@ const DeskChangerButton = new Lang.Class({
 	_init: function(icon, callback)
 	{
 		this.icon = new St.Icon({icon_name: icon+'-symbolic', icon_size: 20});
-		this.parent({child: this.icon, style_class: 'notification-icon-button control-button'});
+		this.parent({
+			child: this.icon,
+			style_class: (versionCheck(['3.10'], GnomeShellVersion))? 'system-menu-action' : 'notification-icon-button control-button'
+		});
 		this.connect('clicked', callback);
 	},
 
@@ -29,13 +33,78 @@ const DeskChangerButton = new Lang.Class({
 	}
 });
 
+const DeskChangerControls = new Lang.Class({
+	Name: 'DeskChangerControls',
+	Extends: PopupMenu.PopupBaseMenuItem,
+
+	_init: function (dbus, settings)
+	{
+		this._dbus = dbus;
+		this._settings = settings;
+		this.parent({can_focus: false, reactive: false});
+
+		this._next = new DeskChangerButton('media-skip-forward', Lang.bind(this._dbus, function () {
+			this.nextSync(true);
+		}));
+		this._prev = new DeskChangerButton('media-skip-backward', Lang.bind(this._dbus, function () {
+			this.prevSync();
+		}));
+		this._random = new DeskChangerStateButton([
+			{
+				icon: 'media-playlist-shuffle',
+				name: 'random'
+			},
+			{
+				icon: 'media-playlist-repeat',
+				name: 'ordered'
+			}
+		], Lang.bind(this, this._toggle_random));
+		this._random.set_state((this._settings.random)? 'random' : 'ordered');
+		this._timer = new DeskChangerStateButton([
+			{
+				icon: 'media-playback-stop',
+				name: 'enable'
+			},
+			{
+				icon: 'media-playback-start',
+				name: 'disable'
+			}
+		], Lang.bind(this, this._toggle_timer));
+		this._timer.set_state((this._settings.timer_enabled)? 'enable' : 'disable');
+
+		this._add(this._prev, {expand: true, x_fill: false});
+		this._add(this._random, {expand: true, x_fill: false});
+		this._add(this._timer, {expand: true, x_fill: false});
+		this._add(this._next, {expand: true, x_fill: false});
+	},
+
+	_add: function (widget, params)
+	{
+		if (versionCheck(['3.10'], GnomeShellVersion)) {
+			this.actor.add(widget, params);
+		} else {
+			this.actorAdd(widget, params);
+		}
+	},
+
+	_toggle_random: function (state)
+	{
+		debug('setting order to '+state);
+		this._settings.random = (state == 'random');
+	},
+
+	_toggle_timer: function (state)
+	{
+		debug(state+'ing timer');
+		this._settings.timer_enabled = (state == 'enable');
+	}
+});
+
 const DeskChangerDBusInterface = <interface name="org.gnome.shell.extensions.desk_changer">
 	<method name="next">
 		<arg direction="in" name="history" type="b" />
-		<arg direction="out" name="next_file" type="s" />
 	</method>
 	<method name="prev">
-		<arg direction="out" name="next_file" type="s" />
 	</method>
 	<method name="up_next">
 		<arg direction="out" name="next_file" type="s" />
@@ -76,12 +145,13 @@ const DeskChangerIndicator = new Lang.Class({
 		this.parent(0.0, 'DeskChanger');
 		this._dbus = new DeskChangerDBusProxy(Gio.DBus.session, 'org.gnome.shell.extensions.desk_changer', '/org/gnome/shell/extensions/desk_changer');
 		this.actor.add_child(new DeskChangerIcon());
-		this.menu.addMenuItem(new DeskChangerSwitch('Auto Rotate', 'auto-rotate', this.settings));
+		this.menu.addMenuItem(new DeskChangerSwitch('Change with Profile', 'auto_rotate', this.settings));
 		this.menu.addMenuItem(new DeskChangerSwitch('Notifications', 'notifications', this.settings));
 		this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
 		this.menu.addMenuItem(new DeskChangerPreview(this._dbus));
 		this.menu.addMenuItem(new DeskChangerOpenCurrent());
 		this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
+		this.menu.addMenuItem(new DeskChangerControls(this._dbus, this.settings));
 	},
 
 	destroy: function ()
@@ -117,7 +187,6 @@ const DeskChangerOpenCurrent = new Lang.Class({
 const DeskChangerPreview = new Lang.Class({
 	Name: 'DeskChangerPreview',
 	Extends: PopupMenu.PopupBaseMenuItem,
-	gnome_shell_version: imports.ui.main.shellDBusService.ShellVersion,
 
 	_init: function (_dbus)
 	{
@@ -125,7 +194,7 @@ const DeskChangerPreview = new Lang.Class({
 		this._dbus = _dbus;
 		this.parent({reactive: true});
 		this._box = new St.BoxLayout({vertical: true});
-		if (versionCheck(['3.10'], this.gnome_shell_version)) {
+		if (versionCheck(['3.10'], GnomeShellVersion)) {
 			this.actor.add(this._box, {align: St.Align.MIDDLE, span: -1});
 		} else {
 			this.actorAdd(this._box, {align: St.Align.MIDDLE, span: -1});
@@ -205,6 +274,16 @@ const DeskChangerSettings = new Lang.Class({
 		this._handlers = [];
 	},
 
+	get auto_rotate()
+	{
+		return(this.schema.get_boolean('auto-rotate'));
+	},
+
+	set auto_rotate(value)
+	{
+		this.schema.set_boolean('auto-rotate', Boolean(value));
+	},
+
 	get current_profile()
 	{
 		return this.schema.get_string('current-profile');
@@ -243,6 +322,16 @@ const DeskChangerSettings = new Lang.Class({
 	set profiles(value)
 	{
 		this.schema.set_string('profiles', JSON.stringify(value));
+	},
+
+	get random()
+	{
+		return this.schema.get_boolean('random');
+	},
+
+	set random(value)
+	{
+		this.schema.set_boolean('random', Boolean(value));
 	},
 
 	get timer_enabled()
@@ -319,6 +408,7 @@ const DeskChangerStateButton = new Lang.Class({
 		var state = this._state;
 		if (++state >= this._states.length)
 			state = 0;
+		state = this._states[state].name;
 		this.set_state(state);
 		this._callback(state);
 	}
@@ -333,7 +423,7 @@ const DeskChangerSwitch = new Lang.Class({
 		this._setting = setting;
 		this._settings = settings;
 		this.parent(label);
-		this.setToggleState(settings.schema.get_boolean(setting));
+		this.setToggleState(settings[setting]);
 		this._handler_changed = settings.connect('changed::'+setting, Lang.bind(this, this._changed));
 		this._handler_toggled = this.connect('toggled', Lang.bind(this, this._toggled));
 	},
@@ -351,12 +441,13 @@ const DeskChangerSwitch = new Lang.Class({
 
 	_changed: function (settings, key)
 	{
-		this.setToggledState(settings.schema.get_boolean(key));
+		this.setToggledState(settings[key]);
 	},
 
 	_toggled: function ()
 	{
-		this._settings.set_boolean(this._setting, this.state);
+		debug('setting '+this._setting+' to '+this.state);
+		this._settings[this._setting] = this.state;
 	}
 });
 

@@ -79,10 +79,10 @@ class DeskChangerDaemon(GObject.GObject):
 		os.remove(self.pidfile)
 
 	def next(self, history=True):
-		_next = self._wallpapers.next(history)
-		_logger.info('setting wallpaper to %s', _next)
-		self.background.set_string('picture-uri', _next)
-		return _next
+		return self._set_wallpaper(self._wallpapers.next(history))
+
+	def prev(self):
+		return self._set_wallpaper(self._wallpapers.prev())
 
 	def run(self, _dbus=False):
 		_logger.debug('running the daemon %s dbus support', 'with' if _dbus else 'without')
@@ -157,6 +157,11 @@ class DeskChangerDaemon(GObject.GObject):
 				_logger.critical(e)
 				sys.exit(1)
 
+	def _set_wallpaper(self, wallpaper):
+		if wallpaper:
+			_logger.info('setting wallpaper to %s', wallpaper)
+			self.background.set_string('picture-uri', wallpaper)
+			return wallpaper
 
 	def _timeout(self):
 		self.next()
@@ -174,15 +179,17 @@ class DeskChangerDBus(dbus.service.Object):
 
 	@dbus.service.method(bus_name)
 	def next(self, history=True):
-		dc._wallpapers.next(history)
+		_logger.debug('[DBUS] called next()')
+		dc.next(history)
 
 	@dbus.service.signal(bus_name)
 	def next_file(self, file):
-		_logger.info('[DBUS] next_file(%s)', file)
+		_logger.info('[DBUS] SIGNAL next_file %s', file)
 
 	@dbus.service.method(bus_name)
 	def prev(self):
-		dc._wallpapers.prev()
+		_logger.debug('[DBUS] called prev()')
+		dc.prev()
 
 	@dbus.service.method(bus_name)
 	def up_next(self):
@@ -291,7 +298,7 @@ class DeskChangerWallpapers(GObject.GObject):
 		_logger.debug('adding wallpaper %s to the history', wallpaper)
 		self._prev.append(wallpaper)
 		while len(self._prev) > 20:
-			_logger.debug('removing %s from the history', self._prev.pop(0))
+			_logger.debug('[GC] removing %s from the history', self._prev.pop(0))
 
 	def _load_next(self):
 		if len(self._next) > 0:
