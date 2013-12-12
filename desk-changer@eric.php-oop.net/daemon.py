@@ -184,6 +184,10 @@ class DeskChangerDBus(dbus.service.Object):
 	def prev(self):
 		dc._wallpapers.prev()
 
+	@dbus.service.method(bus_name)
+	def up_next(self):
+		return dc._wallpapers.next_uri
+
 
 class DeskChangerSettings(Gio.Settings):
 	auto_rotate = GObject.property(type=bool, default=True, nick='auto rotate',
@@ -238,7 +242,7 @@ class DeskChangerWallpapers(GObject.GObject):
 		super(DeskChangerWallpapers, self).__init__()
 		self._background = Gio.Settings('org.gnome.desktop.background')
 		self._settings = DeskChangerSettings()
-		self._profile_handler = self._settings.connect('changed::current-profile', self.load_profile)
+		self._profile_handler = self._settings.connect('changed::current-profile', self._profile_changed)
 		self.load_profile()
 
 	def load_profile(self):
@@ -289,14 +293,6 @@ class DeskChangerWallpapers(GObject.GObject):
 		while len(self._prev) > 20:
 			_logger.debug('removing %s from the history', self._prev.pop(0))
 
-	def _parse_info(self, item, info, recursive=False):
-		if recursive and info.get_file_type() == Gio.FileType.DIRECTORY:
-			self._children(item.enumerate_children('standard::*', Gio.FileQueryInfoFlags.NONE, None), recursive)
-		elif info.get_content_type().startswith('image/'):
-			wallpaper = item.get_uri() + '/' + info.get_name()
-			_logger.debug('adding wallpaper %s', wallpaper)
-			self._wallpapers.append(wallpaper)
-
 	def _load_next(self):
 		if len(self._next) > 0:
 			_logger.debug('wallpapers already loaded, skipping')
@@ -320,6 +316,20 @@ class DeskChangerWallpapers(GObject.GObject):
 		else:
 			self._next.append(self._wallpapers[self._position])
 			self._position += 1
+
+	def _parse_info(self, item, info, recursive=False):
+		if recursive and info.get_file_type() == Gio.FileType.DIRECTORY:
+			self._children(item.enumerate_children('standard::*', Gio.FileQueryInfoFlags.NONE, None), recursive)
+		elif info.get_content_type().startswith('image/'):
+			wallpaper = item.get_uri() + '/' + info.get_name()
+			_logger.debug('adding wallpaper %s', wallpaper)
+			self._wallpapers.append(wallpaper)
+
+	def _profile_changed(self, y, z):
+		_logger.info('profile has changed, reloading')
+		self.load_profile()
+		if self._settings.auto_rotate:
+			dc.next(False)
 
 	@property
 	def next_uri(self):
@@ -355,7 +365,7 @@ if __name__ == '__main__':
 		_logger.addHandler(handler)
 
 	try:
-		logfile = open(args.logfile, 'a')
+		logfile = open(args.logfile, 'w')
 		handler = logging.StreamHandler(logfile)
 		handler.setFormatter(logging.Formatter(args.format))
 		_logger.addHandler(handler)

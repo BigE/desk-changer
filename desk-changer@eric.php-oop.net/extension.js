@@ -1,3 +1,4 @@
+const Clutter = imports.gi.Clutter;
 const Gio = imports.gi.Gio;
 const GObject = imports.gi.GObject;
 const Lang = imports.lang;
@@ -6,6 +7,10 @@ const Me = imports.misc.extensionUtils.getCurrentExtension();
 const PanelMenu = imports.ui.panelMenu;
 const PopupMenu = imports.ui.popupMenu;
 const St = imports.gi.St;
+const Util = imports.misc.util;
+const versionCheck = imports.misc.extensionUtils.versionCheck;
+
+const DeskChangerVersion = Me.metadata.version;
 
 const DeskChangerButton = new Lang.Class({
 	Name: 'DeskChangerButton',
@@ -23,6 +28,24 @@ const DeskChangerButton = new Lang.Class({
 		this.icon.icon_name = icon+'-symbolic';
 	}
 });
+
+const DeskChangerDBusInterface = <interface name="org.gnome.shell.extensions.desk_changer">
+	<method name="next">
+		<arg direction="in" name="history" type="b" />
+		<arg direction="out" name="next_file" type="s" />
+	</method>
+	<method name="prev">
+		<arg direction="out" name="next_file" type="s" />
+	</method>
+	<method name="up_next">
+		<arg direction="out" name="next_file" type="s" />
+	</method>
+	<signal name="next_file">
+		<arg direction="out" name="file" type="s" />
+	</signal>
+</interface>;
+
+const DeskChangerDBusProxy = Gio.DBusProxy.makeProxyWrapper(DeskChangerDBusInterface);
 
 const DeskChangerIcon = new Lang.Class({
 	Name: 'DeskChangerIcon',
@@ -51,13 +74,119 @@ const DeskChangerIndicator = new Lang.Class({
 	{
 		this.settings = new DeskChangerSettings();
 		this.parent(0.0, 'DeskChanger');
+		this._dbus = new DeskChangerDBusProxy(Gio.DBus.session, 'org.gnome.shell.extensions.desk_changer', '/org/gnome/shell/extensions/desk_changer');
 		this.actor.add_child(new DeskChangerIcon());
+		this.menu.addMenuItem(new DeskChangerSwitch('Auto Rotate', 'auto-rotate', this.settings));
 		this.menu.addMenuItem(new DeskChangerSwitch('Notifications', 'notifications', this.settings));
+		this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
+		this.menu.addMenuItem(new DeskChangerPreview(this._dbus));
+		this.menu.addMenuItem(new DeskChangerOpenCurrent());
+		this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
 	},
 
 	destroy: function ()
 	{
 		this.parent();
+	}
+});
+
+const DeskChangerOpenCurrent = new Lang.Class({
+	Name: 'DeskChangerOpenCurrent',
+	Extends: PopupMenu.PopupMenuItem,
+
+	_init: function ()
+	{
+		this._background = new Gio.Settings({'schema': 'org.gnome.desktop.background'});
+		this.parent('Open Current Wallpaper');
+		this._activate_id = this.connect('activate', Lang.bind(this, this._activate));
+	},
+
+	destroy: function ()
+	{
+		this.disconnect(this._activate_id);
+		this.parent();
+	},
+
+	_activate: function()
+	{
+		debug('opening current wallpaper '+this._background.get_string('picture-uri'));
+		Util.spawn(['xdg-open', this._background.get_string('picture-uri')]);
+	}
+});
+
+const DeskChangerPreview = new Lang.Class({
+	Name: 'DeskChangerPreview',
+	Extends: PopupMenu.PopupBaseMenuItem,
+	gnome_shell_version: imports.ui.main.shellDBusService.ShellVersion,
+
+	_init: function (_dbus)
+	{
+		this._file = null;
+		this._dbus = _dbus;
+		this.parent({reactive: true});
+		this._box = new St.BoxLayout({vertical: true});
+		if (versionCheck(['3.10'], this.gnome_shell_version)) {
+			this.actor.add(this._box, {align: St.Align.MIDDLE, span: -1});
+		} else {
+			this.actorAdd(this._box, {align: St.Align.MIDDLE, span: -1});
+		}
+		this._label = new St.Label({text: "Next Wallpaper\n"});
+		this._box.add(this._label);
+		this._wallpaper = new St.Bin({});
+		this._box.add(this._wallpaper);
+		this._texture = new Clutter.Texture({
+			filter_quality: Clutter.TextureQuality.HIGH,
+			keep_aspect_ratio: true,
+			width: 220
+		});
+		this._wallpaper.set_child(this._texture);
+		this._next_file_id = this._dbus.connectSignal('next_file', Lang.bind(this, function (emitter, signalName, parameters) {
+			[file] = parameters;
+			this.set_wallpaper(file);
+		}));
+		this._dbus.up_nextRemote(Lang.bind(this, function (result, e) {
+			if (result)
+				this.set_wallpaper(result[0]);
+		}));
+		this._activate_id = this.connect('activate', Lang.bind(this, this._clicked));
+	},
+
+	destroy: function ()
+	{
+		if (this._next_file_id) {
+			debug('removing dbus next_file handler '+this._next_file_id);
+			this._dbus.disconnectSignal(this._next_file_id);
+		}
+
+		if (this._activate_id) {
+			this.disconnect(this._activate_id);
+		}
+
+		this._wallpaper.destroy();
+		this._texture.destroy();
+		this._label.destroy();
+		this._box.destroy();
+		this.parent();
+	},
+
+	set_wallpaper: function (file)
+	{
+		this._file = file;
+		file = file.replace('file://', '');
+		debug('setting preview to '+file);
+		if (this._texture.set_from_file(file) === false) {
+			debug('ERROR: Failed to set preview of ' + file);
+		}
+	},
+
+	_clicked: function ()
+	{
+		if (this._file) {
+			debug('opening file '+this._file);
+			Util.spawn(['xdg-open', this._file]);
+		} else {
+			debug('ERROR: no preview currently set');
+		}
 	}
 });
 
@@ -231,8 +360,16 @@ const DeskChangerSwitch = new Lang.Class({
 	}
 });
 
+function debug(output)
+{
+	var date = new Date();
+	output = '['+date.toLocaleString()+']'+Me.metadata.uuid+': '+output;
+	log(output);
+}
+
 function disable()
 {
+	debug('disabling extension');
 	if (Main.panel.statusArea.deskchanger) {
 		Main.panel.statusArea.deskchanger.destroy();
 	}
@@ -240,9 +377,11 @@ function disable()
 
 function enable()
 {
+	debug('enabling extension');
 	Main.panel.addToStatusArea('deskchanger', new DeskChangerIndicator());
 }
 
 function init()
 {
+	debug('initalizing extension version: '+DeskChangerVersion);
 }
