@@ -15,7 +15,6 @@ import signal
 import sys
 import time
 
-
 __author__ = 'Eric Gach <eric@php-oop.net>'
 __daemon_path__ = os.path.dirname(os.path.realpath(__file__))
 __version__ = '0.0.1-dev'
@@ -253,6 +252,10 @@ class DeskChangerWallpapers(GObject.GObject):
 		self.load_profile()
 
 	def load_profile(self):
+		if hasattr(self, '_monitors'):
+			for monitor in self._monitors:
+				monitor.cancel()
+		self._monitors = []
 		self._next = []
 		self._position = 0
 		self._prev = []
@@ -262,6 +265,11 @@ class DeskChangerWallpapers(GObject.GObject):
 		for uri, recursive in profile:
 			_logger.debug('loading %s%s', uri, ' recursively' if recursive else '')
 			location = Gio.File.new_for_uri(uri)
+			if location.query_file_type(Gio.FileQueryInfoFlags.NONE, None) == Gio.FileType.DIRECTORY:
+				monitor = location.monitor_directory(Gio.FileMonitorFlags.SEND_MOVED, Gio.Cancellable())
+				_logger.debug('adding %s as directory to watch', uri)
+				monitor.connect('changed', self._files_changed)
+				self._monitors.append(monitor)
 			self._children(location.enumerate_children('standard::*', Gio.FileQueryInfoFlags.NONE, None), recursive)
 		self._wallpapers.sort()
 		self._load_next()
@@ -293,6 +301,20 @@ class DeskChangerWallpapers(GObject.GObject):
 	def _children(self, enumerator, recursive=False):
 		for child in enumerator:
 			self._parse_info(enumerator.get_container(), child, recursive)
+
+	def _files_changed(self, monitor, file, other_file, event_type):
+		if event_type == Gio.FileMonitorEvent.CREATED:
+			_logger.debug('adding file %s', file.get_uri())
+			self._wallpapers.append(file.get_uri())
+			self._wallpapers.sort()
+		elif event_type == Gio.FileMonitorEvent.DELETED:
+			i = self._wallpapers.index(file.get_uri())
+			if i:
+				_logger.debug('removing file %s', file.get_uri())
+				self._wallpapers.pop(i)
+				self._wallpapers.sort()
+		elif event_type == Gio.FileMonitorEvent.MOVED:
+			pass
 
 	def _history(self, wallpaper):
 		_logger.debug('adding wallpaper %s to the history', wallpaper)
