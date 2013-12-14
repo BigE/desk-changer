@@ -304,17 +304,17 @@ class DeskChangerWallpapers(GObject.GObject):
 
 	def _files_changed(self, monitor, file, other_file, event_type):
 		if event_type == Gio.FileMonitorEvent.CREATED:
-			_logger.debug('adding file %s', file.get_uri())
+			_logger.debug('adding new file to the list: %s', file.get_uri())
 			self._wallpapers.append(file.get_uri())
 			self._wallpapers.sort()
 		elif event_type == Gio.FileMonitorEvent.DELETED:
 			i = self._wallpapers.index(file.get_uri())
 			if i:
-				_logger.debug('removing file %s', file.get_uri())
+				_logger.debug('removing deleted file from the list: %s', file.get_uri())
 				self._wallpapers.pop(i)
 				self._wallpapers.sort()
 		elif event_type == Gio.FileMonitorEvent.MOVED:
-			pass
+			_logger.debug('file %s was moved to %s', file.get_uri(), other_file.get_uri())
 
 	def _history(self, wallpaper):
 		_logger.debug('adding wallpaper %s to the history', wallpaper)
