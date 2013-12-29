@@ -1,5 +1,6 @@
 const Clutter = imports.gi.Clutter;
 const Gio = imports.gi.Gio;
+const GLib = imports.gi.GLib;
 const GObject = imports.gi.GObject;
 const Lang = imports.lang;
 const Main = imports.ui.main;
@@ -13,6 +14,20 @@ const versionCheck = imports.misc.extensionUtils.versionCheck;
 const DeskChangerSettings = Me.imports.settings.DeskChangerSettings;
 const DeskChangerVersion = Me.metadata.version;
 const GnomeShellVersion = Main.shellDBusService.ShellVersion;
+
+const DeskChangerBaseMenuItem = new Lang.Class({
+	Name: 'DeskChangerBaseMenuItem',
+	Extends: PopupMenu.PopupBaseMenuItem,
+
+	_addActor: function (widget, params)
+	{
+		if (versionCheck(['3.10'], GnomeShellVersion)) {
+			this.actor.add(widget, params);
+		} else {
+			this.actorAdd(widget, params);
+		}
+	}
+});
 
 const DeskChangerButton = new Lang.Class({
 	Name: 'DeskChangerButton',
@@ -36,7 +51,7 @@ const DeskChangerButton = new Lang.Class({
 
 const DeskChangerControls = new Lang.Class({
 	Name: 'DeskChangerControls',
-	Extends: PopupMenu.PopupBaseMenuItem,
+	Extends: DeskChangerBaseMenuItem,
 
 	_init: function (dbus, settings)
 	{
@@ -73,19 +88,10 @@ const DeskChangerControls = new Lang.Class({
 		], Lang.bind(this, this._toggle_timer));
 		this._timer.set_state((this._settings.timer_enabled)? 'enable' : 'disable');
 
-		this._add(this._prev, {expand: true, x_fill: false});
-		this._add(this._random, {expand: true, x_fill: false});
-		this._add(this._timer, {expand: true, x_fill: false});
-		this._add(this._next, {expand: true, x_fill: false});
-	},
-
-	_add: function (widget, params)
-	{
-		if (versionCheck(['3.10'], GnomeShellVersion)) {
-			this.actor.add(widget, params);
-		} else {
-			this.actorAdd(widget, params);
-		}
+		this._addActor(this._prev, {expand: true, x_fill: false});
+		this._addActor(this._random, {expand: true, x_fill: false});
+		this._addActor(this._timer, {expand: true, x_fill: false});
+		this._addActor(this._next, {expand: true, x_fill: false});
 	},
 
 	_toggle_random: function (state)
@@ -98,6 +104,39 @@ const DeskChangerControls = new Lang.Class({
 	{
 		debug(state+'ing timer');
 		this._settings.timer_enabled = (state == 'enable');
+	}
+});
+
+const DeskChangerDaemonControls = new Lang.Class({
+	Name: 'DeskChangerDaemonControls',
+	Extends: PopupMenu.PopupSwitchMenuItem,
+
+	_init: function ()
+	{
+		this._path = Me.dir.get_path();
+		this.parent('DeskChanger Daemon');
+		debug(this.is_running());
+		this.setToggleState(this.is_running());
+		this.connect('toggled', Lang.bind(this, this._toggle_daemon));
+	},
+
+	is_running: function ()
+	{
+		// I need a better way to test this..
+		return(GLib.file_test(this._path+'/daemon.pid', GLib.FileTest.EXISTS));
+	},
+
+	_toggle_daemon: function ()
+	{
+		var out;
+
+		if (this.is_running()) {
+			GLib.spawn_command_line_sync(this._path+'/daemon.py stop', out);
+		} else {
+			GLib.spawn_command_line_sync(this._path+'/daemon.py start', out);
+		}
+
+		debug(out);
 	}
 });
 
@@ -153,6 +192,8 @@ const DeskChangerIndicator = new Lang.Class({
 		this.menu.addMenuItem(new DeskChangerOpenCurrent());
 		this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
 		this.menu.addMenuItem(new DeskChangerControls(this._dbus, this.settings));
+		this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
+		this.menu.addMenuItem(new DeskChangerDaemonControls());
 	},
 
 	destroy: function ()
