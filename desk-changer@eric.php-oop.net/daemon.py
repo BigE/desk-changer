@@ -7,6 +7,7 @@ import dbus.mainloop.glib
 import dbus.service
 import errno
 from gi.repository import GLib, Gio, GObject
+import imghdr
 import json
 import logging
 import os
@@ -266,7 +267,7 @@ class DeskChangerWallpapers(GObject.GObject):
 			_logger.debug('loading %s%s', uri, ' recursively' if recursive else '')
 			location = Gio.File.new_for_uri(uri)
 			if location.query_file_type(Gio.FileQueryInfoFlags.NONE, None) == Gio.FileType.DIRECTORY:
-				monitor = location.monitor_directory(Gio.FileMonitorFlags.SEND_MOVED, Gio.Cancellable())
+				monitor = location.monitor_directory(Gio.FileMonitorFlags.NONE, Gio.Cancellable())
 				_logger.debug('adding %s as directory to watch', uri)
 				monitor.connect('changed', self._files_changed)
 				self._monitors.append(monitor)
@@ -303,24 +304,36 @@ class DeskChangerWallpapers(GObject.GObject):
 			self._parse_info(enumerator.get_container(), child, recursive)
 
 	def _files_changed(self, monitor, file, other_file, event_type):
-		if event_type == Gio.FileMonitorEvent.CREATED:
-			_logger.debug('adding new file to the list: %s', file.get_uri())
-			self._wallpapers.append(file.get_uri())
-			self._wallpapers.sort()
-		elif event_type == Gio.FileMonitorEvent.DELETED:
-			i = self._wallpapers.index(file.get_uri())
-			if i:
-				_logger.debug('removing deleted file from the list: %s', file.get_uri())
-				self._wallpapers.pop(i)
+		if event_type == Gio.FileMonitorEvent.CREATED and self._is_image(file.get_uri()):
+			try:
+				self._wallpapers.index(file.get_uri())
+			except ValueError:
+				_logger.debug('adding new file to the list: %s', file.get_uri())
+				self._wallpapers.append(file.get_uri())
 				self._wallpapers.sort()
-		elif event_type == Gio.FileMonitorEvent.MOVED:
-			_logger.debug('file %s was moved to %s', file.get_uri(), other_file.get_uri())
+		elif event_type == Gio.FileMonitorEvent.DELETED:
+			try:
+				i = self._wallpapers.index(file.get_uri())
+				if i:
+					_logger.debug('removing deleted file from the list: %s', file.get_uri())
+					self._wallpapers.pop(i)
+					self._wallpapers.sort()
+			except ValueError:
+				pass
 
 	def _history(self, wallpaper):
 		_logger.debug('adding wallpaper %s to the history', wallpaper)
 		self._prev.append(wallpaper)
-		while len(self._prev) > 20:
+		while len(self._prev) > 100:
 			_logger.debug('[GC] removing %s from the history', self._prev.pop(0))
+
+	def _is_image(self, uri):
+		file = uri.replace('file://', '')
+		try:
+			is_img = bool(imghdr.what(file))
+		except FileNotFoundError:
+			is_img = False
+		return is_img
 
 	def _load_next(self):
 		if len(self._next) > 0:
@@ -351,8 +364,11 @@ class DeskChangerWallpapers(GObject.GObject):
 			self._children(item.enumerate_children('standard::*', Gio.FileQueryInfoFlags.NONE, None), recursive)
 		elif info.get_content_type().startswith('image/'):
 			wallpaper = item.get_uri() + '/' + info.get_name()
-			_logger.debug('adding wallpaper %s', wallpaper)
-			self._wallpapers.append(wallpaper)
+			if self._is_image(wallpaper):
+				_logger.debug('adding wallpaper %s', wallpaper)
+				self._wallpapers.append(wallpaper)
+			else:
+				_logger.debug('ignoring non-image file %s', wallpaper)
 
 	def _profile_changed(self, y, z):
 		_logger.info('profile has changed, reloading')
