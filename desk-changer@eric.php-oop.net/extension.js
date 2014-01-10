@@ -113,17 +113,35 @@ const DeskChangerDaemonControls = new Lang.Class({
 
 	_init: function ()
 	{
+		this._is_running = false;
 		this._path = Me.dir.get_path();
 		this.parent('DeskChanger Daemon');
-		debug(this.is_running());
 		this.setToggleState(this.is_running());
 		this.connect('toggled', Lang.bind(this, this._toggle_daemon));
 	},
 
 	is_running: function ()
 	{
-		// I need a better way to test this..
-		return(GLib.file_test(this._path+'/daemon.pid', GLib.FileTest.EXISTS));
+		if (this._pid == undefined && GLib.file_test(this._path+'/daemon.pid', GLib.FileTest.EXISTS)) {
+			var out;
+			out =  GLib.file_get_contents(this._path+'/daemon.pid');
+			if (out[0] == true) {
+				this._pid = out[1];
+				debug('got pid ' + this._pid + ' for daemon');
+			} else {
+				debug('failed to open pid file, daemon not running?');
+			}
+		}
+
+		if (this._pid != undefined && this._child_watch == undefined) {
+			this._child_watch = GLib.child_watch_add(GLib.PRIORITY_DEFAULT, this._pid, Lang.bind(this, function (pid, status, data) {
+				debug(pid + ' ' + status + ' ' + data);
+				return(0);
+			}), {}, null);
+			debug('added child watch ' + this._child_watch);
+		}
+
+		return(this._is_running);
 	},
 
 	_toggle_daemon: function ()
