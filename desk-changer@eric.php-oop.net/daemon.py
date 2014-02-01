@@ -15,6 +15,7 @@ import random
 import signal
 import sys
 import time
+import traceback
 
 __author__ = 'Eric Gach <eric@php-oop.net>'
 __daemon_path__ = os.path.dirname(os.path.realpath(__file__))
@@ -29,7 +30,6 @@ class DeskChangerDaemon(GObject.GObject):
 			pidfile = os.path.join(os.path.dirname(__file__), 'daemon.pid')
 		_logger.debug('initalizing with pidfile \'%s\'', pidfile)
 		self.pidfile = pidfile
-		self.is_daemon = False
 		self.timer = None
 		self.background = Gio.Settings('org.gnome.desktop.background')
 		self.settings = DeskChangerSettings()
@@ -39,40 +39,6 @@ class DeskChangerDaemon(GObject.GObject):
 			_logger.debug('removing timer %s', self.timer)
 			GLib.source_remove(self.timer)
 			self.timer = None
-
-	def daemonize(self):
-		_logger.debug('daemonizing')
-		try:
-			pid = os.fork()
-			if pid > 0:
-				_logger.info('first fork successful')
-				sys.exit(0)
-		except OSError as err:
-			_logger.critical('first fork has failed: %s', err)
-			sys.exit(1)
-
-		os.chdir('/')
-		os.setsid()
-		os.umask(0)
-
-		try:
-			pid = os.fork()
-			if pid > 0:
-				_logger.info('second fork successful')
-				sys.exit(0)
-		except OSError as err:
-			_logger.critical('second fork has failed: %s', err)
-			sys.exit(1)
-
-		sys.stdout.flush()
-		sys.stderr.flush()
-		si = open(os.devnull, 'r')
-		so = open(os.devnull, 'a+')
-		se = open(os.devnull, 'a+')
-		os.dup2(si.fileno(), sys.stdin.fileno())
-		os.dup2(so.fileno(), sys.stdout.fileno())
-		os.dup2(se.fileno(), sys.stderr.fileno())
-		self.is_daemon = True
 
 	def delpid(self):
 		_logger.info('removing pidfile %s', self.pidfile)
@@ -85,6 +51,10 @@ class DeskChangerDaemon(GObject.GObject):
 		return self._set_wallpaper(self._wallpapers.prev())
 
 	def run(self, _dbus=False):
+		atexit.register(self.delpid)
+		pid = int(os.getpid())
+		open(self.pidfile, 'w+').write(str(pid))
+		_logger.info('daemon started with pid of %i', pid)
 		_logger.debug('running the daemon %s dbus support', 'with' if _dbus else 'without')
 		self._wallpapers = DeskChangerWallpapers()
 		self.mainloop = GLib.MainLoop()
@@ -126,11 +96,6 @@ class DeskChangerDaemon(GObject.GObject):
 					)
 					sys.exit(1)
 
-		atexit.register(self.delpid)
-		pid = int(os.getpid())
-		_logger.info('daemon started with pid of %i', pid)
-		with open(self.pidfile, 'w+') as f:
-			f.write(str(pid))
 		self.run(True)
 
 	def stop(self):
@@ -386,8 +351,6 @@ class DeskChangerWallpapers(GObject.GObject):
 
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser(description='DeskChanger Daemon')
-	parser.add_argument('-f', '--foreground', dest='daemon', action='store_false', default=True,
-	                    help='Prevent the daemon from forking off and running in the background.')
 	parser.add_argument('--logfile', dest='logfile', action='store', default=__daemon_path__+'/daemon.log',
 	                    help='Log file to output logging to, default: %s' % __daemon_path__+'/daemon.log')
 	parser.add_argument('--logformat', dest='format', action='store',
@@ -417,12 +380,8 @@ if __name__ == '__main__':
 	except IOError as e:
 		_logger.critical('cannot open log file %s', args.logfile)
 
-	if args.action == 'status':
-		args.daemon = False
 	dc = DeskChangerDaemon()
-	if args.daemon:
-		dc.daemonize()
-
+	_logger.debug('action: %s', args.action)
 	if args.action == 'start':
 		dc.start()
 	elif args.action == 'stop':
