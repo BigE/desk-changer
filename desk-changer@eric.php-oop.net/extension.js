@@ -128,6 +128,7 @@ const DeskChangerDaemonControls = new Lang.Class({
 			if (out[0] == true) {
 				this._pid = out[1];
 				debug('got pid ' + this._pid + ' for daemon');
+				this._is_running = true;
 			} else {
 				debug('failed to open pid file, daemon not running?');
 			}
@@ -136,7 +137,7 @@ const DeskChangerDaemonControls = new Lang.Class({
 		if (this._pid != undefined && this._child_watch == undefined) {
 			this._child_watch = GLib.child_watch_add(GLib.PRIORITY_DEFAULT, this._pid, Lang.bind(this, function (pid, status, data) {
 				debug(pid + ' ' + status + ' ' + data);
-				return(0);
+				this._is_running = false;
 			}), {}, null);
 			debug('added child watch ' + this._child_watch);
 		}
@@ -149,9 +150,9 @@ const DeskChangerDaemonControls = new Lang.Class({
 		var out;
 
 		if (this.is_running()) {
-			GLib.spawn_command_line_sync(this._path+'/daemon.py stop', out);
+			GLib.spawn_command_line_async(this._path+'/daemon.py stop', out);
 		} else {
-			GLib.spawn_command_line_sync(this._path+'/daemon.py start', out);
+			GLib.spawn_command_line_async(this._path+'/daemon.py start', out);
 		}
 
 		debug(out);
