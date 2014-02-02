@@ -51,6 +51,7 @@ class DeskChangerDaemon(GObject.GObject):
 		return self._set_wallpaper(self._wallpapers.prev())
 
 	def run(self, _dbus=False):
+		signal.signal(signal.SIGCHLD, signal.SIG_DFL)
 		atexit.register(self.delpid)
 		pid = int(os.getpid())
 		open(self.pidfile, 'w+').write(str(pid))
@@ -126,6 +127,7 @@ class DeskChangerDaemon(GObject.GObject):
 		if wallpaper:
 			_logger.info('setting wallpaper to %s', wallpaper)
 			self.background.set_string('picture-uri', wallpaper)
+			self.dbus.changed(wallpaper)
 			return wallpaper
 
 	def _timeout(self):
@@ -141,6 +143,10 @@ class DeskChangerDBus(dbus.service.Object):
 		dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
 		bus_name = dbus.service.BusName(self.bus_name, bus=dbus.SessionBus())
 		super(DeskChangerDBus, self).__init__(bus_name, self.bus_path)
+
+	@dbus.service.signal(bus_name)
+	def changed(self, file):
+		_logger.info('[DBUS] SIGNAL changed %s', file)
 
 	@dbus.service.method(bus_name)
 	def next(self, history=True):
@@ -216,6 +222,7 @@ class DeskChangerWallpapers(GObject.GObject):
 		self._settings = DeskChangerSettings()
 		self._profile_handler = self._settings.connect('changed::current-profile', self._profile_changed)
 		self.load_profile()
+		self._settings.connect('changed::random', self._random_changed)
 
 	def load_profile(self):
 		if hasattr(self, '_monitors'):
@@ -340,6 +347,10 @@ class DeskChangerWallpapers(GObject.GObject):
 		self.load_profile()
 		if self._settings.auto_rotate:
 			dc.next(False)
+
+	def _random_changed(self, y, z):
+		self._next = []
+		self._load_next()
 
 	@property
 	def next_uri(self):

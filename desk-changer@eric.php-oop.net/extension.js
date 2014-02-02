@@ -1,10 +1,10 @@
 const Clutter = imports.gi.Clutter;
 const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
-const GObject = imports.gi.GObject;
 const Lang = imports.lang;
 const Main = imports.ui.main;
 const Me = imports.misc.extensionUtils.getCurrentExtension();
+const MessageTray = imports.ui.messageTray;
 const PanelMenu = imports.ui.panelMenu;
 const PopupMenu = imports.ui.popupMenu;
 const St = imports.gi.St;
@@ -177,6 +177,9 @@ const DeskChangerDBusInterface = <interface name="org.gnome.shell.extensions.des
 	<method name="up_next">
 		<arg direction="out" name="next_file" type="s" />
 	</method>
+	<signal name="changed">
+		<arg direction="out" name="file" type="s" />
+	</signal>
 	<signal name="next_file">
 		<arg direction="out" name="file" type="s" />
 	</signal>
@@ -210,8 +213,13 @@ const DeskChangerIndicator = new Lang.Class({
 	_init: function ()
 	{
 		this.settings = new DeskChangerSettings();
+		this.notifications = new DeskChangerNotification(this.settings);
 		this.parent(0.0, 'DeskChanger');
 		this._dbus = new DeskChangerDBusProxy(Gio.DBus.session, 'org.gnome.shell.extensions.desk_changer', '/org/gnome/shell/extensions/desk_changer');
+		this._dbus.connectSignal('changed', Lang.bind(this, function (emitter, signalName, parameters) {
+			if (this.settings.notifications)
+				this.notifications.wallpaperChanged(parameters[0]);
+		}));
 		this.actor.add_child(new DeskChangerIcon());
 		this.menu.addMenuItem(new DeskChangerSwitch('Change with Profile', 'auto_rotate', this.settings));
 		this.menu.addMenuItem(new DeskChangerSwitch('Notifications', 'notifications', this.settings));
@@ -227,6 +235,44 @@ const DeskChangerIndicator = new Lang.Class({
 	destroy: function ()
 	{
 		this.parent();
+	}
+});
+
+const DeskChangerNotification = new Lang.Class({
+	Name: 'DeskChangerNotification',
+
+	_init: function (settings)
+	{
+		this._background = new Gio.Settings({'schema': 'org.gnome.desktop.background'});
+		this._settings = settings;
+		this._source = new MessageTray.Source('DeskChanger', 'emblem-photos-symbolic');
+		Main.messageTray.add(this._source);
+		this._source.setTransient(true);
+	},
+
+	wallpaperChanged: function (uri)
+	{
+		var n = this._create('Wallpaper Changed', uri);
+		n.addButton('open', 'Open File');
+		n.connect('action-invoked', Lang.bind(this, function (n, action) {
+			if (action == 'open') {
+				Util.spawn(['xdg-open', this._background.get_string('picture-uri')]);
+			}
+		}));
+		this._notify(n);
+	},
+
+	_create: function (title, text, params)
+	{
+		return new MessageTray.Notification(this._source, title, text, params);
+	},
+
+	_notify: function (notification)
+	{
+		if (this._settings.notifications) {
+			notification.setTransient(true);
+			this._source.notify(notification);
+		}
 	}
 });
 
