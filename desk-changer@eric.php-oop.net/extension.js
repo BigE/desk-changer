@@ -214,11 +214,13 @@ const DeskChangerIndicator = new Lang.Class({
 	{
 		this.settings = new DeskChangerSettings();
 		this.notifications = new DeskChangerNotification(this.settings);
+		this.settings.connect('changed::current-profile', Lang.bind(this, function () {
+			this.notifications.profileChanged();
+		}));
 		this.parent(0.0, 'DeskChanger');
 		this._dbus = new DeskChangerDBusProxy(Gio.DBus.session, 'org.gnome.shell.extensions.desk_changer', '/org/gnome/shell/extensions/desk_changer');
 		this._dbus.connectSignal('changed', Lang.bind(this, function (emitter, signalName, parameters) {
-			if (this.settings.notifications)
-				this.notifications.wallpaperChanged(parameters[0]);
+			this.notifications.wallpaperChanged(parameters[0]);
 		}));
 		this.actor.add_child(new DeskChangerIcon());
 		this.menu.addMenuItem(new DeskChangerProfile(this.settings));
@@ -248,8 +250,13 @@ const DeskChangerNotification = new Lang.Class({
 		this._background = new Gio.Settings({'schema': 'org.gnome.desktop.background'});
 		this._settings = settings;
 		this._source = new MessageTray.Source('DeskChanger', 'emblem-photos-symbolic');
-		Main.messageTray.add(this._source);
 		this._source.setTransient(true);
+	},
+
+	profileChanged: function ()
+	{
+		var n = this._create('Profile Changed', 'Current profile has been changed to '+this._settings.current_profile);
+		this._notify(n);
 	},
 
 	wallpaperChanged: function (uri)
@@ -266,12 +273,14 @@ const DeskChangerNotification = new Lang.Class({
 
 	_create: function (title, text, params)
 	{
+		debug('creating notification ['+title+'] '+text);
 		return new MessageTray.Notification(this._source, title, text, params);
 	},
 
 	_notify: function (notification)
 	{
 		if (this._settings.notifications) {
+			Main.messageTray.add(this._source);
 			notification.setTransient(true);
 			this._source.notify(notification);
 		}
@@ -458,8 +467,8 @@ const DeskChangerSwitch = new Lang.Class({
 		this._setting = setting;
 		this._settings = settings;
 		this.parent(label);
-		this.setToggleState(settings[setting]);
-		this._handler_changed = settings.connect('changed::'+setting, Lang.bind(this, this._changed));
+		this.setToggleState(this._settings[setting]);
+		this._handler_changed = this._settings.connect('changed::'+this._setting, Lang.bind(this, this._changed));
 		this._handler_toggled = this.connect('toggled', Lang.bind(this, this._toggled));
 	},
 
@@ -476,7 +485,7 @@ const DeskChangerSwitch = new Lang.Class({
 
 	_changed: function (settings, key)
 	{
-		this.setToggledState(settings[key]);
+		this.setToggleState(this._settings[key]);
 	},
 
 	_toggled: function ()

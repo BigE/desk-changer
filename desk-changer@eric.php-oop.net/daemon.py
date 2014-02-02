@@ -15,7 +15,6 @@ import random
 import signal
 import sys
 import time
-import traceback
 
 __author__ = 'Eric Gach <eric@php-oop.net>'
 __daemon_path__ = os.path.dirname(os.path.realpath(__file__))
@@ -349,6 +348,7 @@ class DeskChangerWallpapers(GObject.GObject):
 			dc.next(False)
 
 	def _random_changed(self, y, z):
+		_logger.info('wallpapers now showing in %s mode', 'random' if self._settings.random else 'ordered')
 		self._next = []
 		self._load_next()
 
@@ -391,14 +391,17 @@ if __name__ == '__main__':
 	except IOError as e:
 		_logger.critical('cannot open log file %s', args.logfile)
 
-	dc = DeskChangerDaemon()
-	_logger.debug('action: %s', args.action)
-	if args.action == 'start':
-		dc.start()
-	elif args.action == 'stop':
-		dc.stop()
-	elif args.action == 'restart':
-		dc.stop()
-		dc.start()
-	elif args.action == 'status':
-		dc.status()
+	try:
+		dc = DeskChangerDaemon()
+		_logger.debug('action: %s', args.action)
+		if args.action == 'start':
+			dc.start()
+		elif args.action == 'stop':
+			dc.stop()
+		elif args.action == 'restart':
+			dc.stop()
+			dc.start()
+		elif args.action == 'status':
+			dc.status()
+	except Exception as e:
+		_logger.critical(e)
