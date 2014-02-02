@@ -221,6 +221,8 @@ const DeskChangerIndicator = new Lang.Class({
 				this.notifications.wallpaperChanged(parameters[0]);
 		}));
 		this.actor.add_child(new DeskChangerIcon());
+		this.menu.addMenuItem(new DeskChangerProfile(this.settings));
+		this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
 		this.menu.addMenuItem(new DeskChangerSwitch('Change with Profile', 'auto_rotate', this.settings));
 		this.menu.addMenuItem(new DeskChangerSwitch('Notifications', 'notifications', this.settings));
 		this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
@@ -372,6 +374,34 @@ const DeskChangerPreview = new Lang.Class({
 		} else {
 			debug('ERROR: no preview currently set');
 		}
+	}
+});
+
+
+const DeskChangerProfile = new Lang.Class({
+	Name: 'DeskChangerProfile',
+	Extends: PopupMenu.PopupSubMenuMenuItem,
+
+	_init: function (settings)
+	{
+		this._settings = settings;
+		this.parent('Profile: '+this._settings.current_profile);
+		for (var index in this._settings.profiles) {
+			debug('adding menu: '+index);
+			var item = new PopupMenu.PopupMenuItem(index);
+			item.connect('activate', Lang.bind(item, function() {
+				var settings = new DeskChangerSettings();
+				settings.current_profile = this.label.text;
+			}))
+			this.menu.addMenuItem(item);
+		}
+
+		this._settings.connect('changed::current-profile', Lang.bind(this, this.setLabel));
+	},
+
+	setLabel: function ()
+	{
+		this.label.text = 'Profile: '+this._settings.current_profile;
 	}
 });
 
