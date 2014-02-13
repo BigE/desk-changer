@@ -1,10 +1,22 @@
+/**
+ *  ▄▄▄▄    ██▓  ▄████   ▄████  ██▓▓█████ 
+ * ▓█████▄ ▓██▒ ██▒ ▀█▒ ██▒ ▀█▒▓██▒▓█   ▀ 
+ * ▒██▒ ▄██▒██▒▒██░▄▄▄░▒██░▄▄▄░▒██▒▒███   
+ * ▒██░█▀  ░██░░▓█  ██▓░▓█  ██▓░██░▒▓█  ▄ 
+ * ░▓█  ▀█▓░██░░▒▓███▀▒░▒▓███▀▒░██░░▒████▒
+ * ░▒▓███▀▒░▓   ░▒   ▒  ░▒   ▒ ░▓  ░░ ▒░ ░
+ * ▒░▒   ░  ▒ ░  ░   ░   ░   ░  ▒ ░ ░ ░  ░
+ *  ░    ░  ▒ ░░ ░   ░ ░ ░   ░  ▒ ░   ░   
+ *  ░       ░        ░       ░  ░     ░  ░
+ *       ░                                
+ */
+
 const Clutter = imports.gi.Clutter;
 const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
 const Lang = imports.lang;
 const Main = imports.ui.main;
 const Me = imports.misc.extensionUtils.getCurrentExtension();
-const MessageTray = imports.ui.messageTray;
 const PanelMenu = imports.ui.panelMenu;
 const PopupMenu = imports.ui.popupMenu;
 const St = imports.gi.St;
@@ -213,14 +225,18 @@ const DeskChangerIndicator = new Lang.Class({
 	_init: function ()
 	{
 		this.settings = new DeskChangerSettings();
-		this.notifications = new DeskChangerNotification(this.settings);
 		this.settings.connect('changed::current-profile', Lang.bind(this, function () {
-			this.notifications.profileChanged();
+			if (this.settings.notifications)
+				Main.notify('Desk Changer', 'Profile changed to ' + this.settings.current_profile);
+		}));
+		this.settings.connect('changed::notifications', Lang.bind(this, function () {
+			Main.notify('Desk Changer', 'Notifications are now '+((this.settings.notifications)? 'enabled' : 'disabled'));
 		}));
 		this.parent(0.0, 'DeskChanger');
 		this._dbus = new DeskChangerDBusProxy(Gio.DBus.session, 'org.gnome.shell.extensions.desk_changer', '/org/gnome/shell/extensions/desk_changer');
 		this._dbus.connectSignal('changed', Lang.bind(this, function (emitter, signalName, parameters) {
-			this.notifications.wallpaperChanged(parameters[0]);
+			if (this.settings.notifications)
+				Main.notify('Desk Changer', 'Wallpaper Changed: ' + parameters[0]);
 		}));
 		this.actor.add_child(new DeskChangerIcon());
 		this.menu.addMenuItem(new DeskChangerProfile(this.settings));
@@ -234,59 +250,17 @@ const DeskChangerIndicator = new Lang.Class({
 		this.menu.addMenuItem(new DeskChangerControls(this._dbus, this.settings));
 		this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
 		this.menu.addMenuItem(new DeskChangerDaemonControls());
+		// Simple settings for the extension
+		var settings = new PopupMenu.PopupMenuItem('DeskChanger Settings');
+		settings.connect('activate', function () {
+			Util.spawn(['gnome-shell-extension-prefs', Me.metadata.uuid]);
+		});
+		this.menu.addMenuItem(settings);
 	},
 
 	destroy: function ()
 	{
 		this.parent();
-	}
-});
-
-const DeskChangerNotification = new Lang.Class({
-	Name: 'DeskChangerNotification',
-
-	_init: function (settings)
-	{
-		this._background = new Gio.Settings({'schema': 'org.gnome.desktop.background'});
-		this._settings = settings;
-		this._settings.connect('changed::notifications', Lang.bind(this, function () {
-			this.notify(this.create('DeskChanger Notifications', 'Notifications are now '+((this._settings.notifications)? 'enabled' : 'disabled')), true);
-		}));
-		this._source = new MessageTray.Source('DeskChanger', 'emblem-photos-symbolic');
-		this._source.setTransient(true);
-	},
-
-	create: function (title, text, params)
-	{
-		debug('creating notification ['+title+'] '+text);
-		return new MessageTray.Notification(this._source, title, text, params);
-	},
-
-	notify: function (notification, bypass)
-	{
-		if (this._settings.notifications || bypass == true) {
-			Main.messageTray.add(this._source);
-			notification.setTransient(true);
-			this._source.notify(notification);
-		}
-	},
-
-	profileChanged: function ()
-	{
-		var n = this.create('Profile Changed', 'Current profile has been changed to '+this._settings.current_profile);
-		this.notify(n);
-	},
-
-	wallpaperChanged: function (uri)
-	{
-		var n = this.create('Wallpaper Changed', uri);
-		n.addButton('open', 'Open File');
-		n.connect('action-invoked', Lang.bind(this, function (n, action) {
-			if (action == 'open') {
-				Util.spawn(['xdg-open', this._background.get_string('picture-uri')]);
-			}
-		}));
-		this.notify(n);
 	}
 });
 
