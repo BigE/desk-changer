@@ -135,8 +135,7 @@ const DeskChangerDaemonControls = new Lang.Class({
 	is_running: function ()
 	{
 		if (!this._pid && GLib.file_test(this._path+'/daemon.pid', GLib.FileTest.EXISTS)) {
-			var out;
-			out =  GLib.file_get_contents(this._path+'/daemon.pid');
+			var out =  GLib.file_get_contents(this._path+'/daemon.pid');
 			if (out[0] == true) {
 				this._pid = out[1];
 				debug('got pid ' + this._pid + ' for daemon');
@@ -180,22 +179,24 @@ const DeskChangerDaemonControls = new Lang.Class({
 	}
 });
 
-const DeskChangerDBusInterface = <interface name="org.gnome.shell.extensions.desk_changer">
-	<method name="next">
-		<arg direction="in" name="history" type="b" />
-	</method>
-	<method name="prev">
-	</method>
-	<method name="up_next">
-		<arg direction="out" name="next_file" type="s" />
-	</method>
-	<signal name="changed">
-		<arg direction="out" name="file" type="s" />
-	</signal>
-	<signal name="next_file">
-		<arg direction="out" name="file" type="s" />
-	</signal>
-</interface>;
+const DeskChangerDBusInterface = '<node>\
+	<interface name="org.gnome.shell.extensions.desk_changer">\
+		<method name="next">\
+			<arg direction="in" name="history" type="b" />\
+		</method>\
+		<method name="prev">\
+		</method>\
+		<method name="up_next">\
+			<arg direction="out" name="next_file" type="s" />\
+		</method>\
+		<signal name="changed">\
+			<arg direction="out" name="file" type="s" />\
+		</signal>\
+		<signal name="next_file">\
+			<arg direction="out" name="file" type="s" />\
+		</signal>\
+	</interface>\
+</node>';
 
 const DeskChangerDBusProxy = Gio.DBusProxy.makeProxyWrapper(DeskChangerDBusInterface);
 
