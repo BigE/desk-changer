@@ -41,7 +41,7 @@ class DeskChangerDaemon(GObject.GObject):
 		_logger.debug('initalizing with pidfile \'%s\'', pidfile)
 		self.pidfile = pidfile
 		self.timer = None
-		self.background = Gio.Settings('org.gnome.desktop.background')
+		self.background = Gio.Settings(schema='org.gnome.desktop.background')
 		self.settings = DeskChangerSettings()
 
 	def __del__(self):
@@ -199,7 +199,7 @@ class DeskChangerSettings(Gio.Settings):
 			False
 		)
 		kwargs.setdefault('settings_schema', source.lookup('org.gnome.shell.extensions.desk-changer', False))
-		super(DeskChangerSettings, self).__init__(None, **kwargs)
+		super(DeskChangerSettings, self).__init__(**kwargs)
 		self.bind('auto-rotate', self, 'auto_rotate', Gio.SettingsBindFlags.DEFAULT)
 		self.bind('current-profile', self, 'profile', Gio.SettingsBindFlags.DEFAULT)
 		self.bind('interval', self, 'interval', Gio.SettingsBindFlags.DEFAULT)
@@ -228,7 +228,7 @@ class DeskChangerWallpapers(GObject.GObject):
 	def __init__(self):
 		_logger.debug('initalizing wallpapers')
 		super(DeskChangerWallpapers, self).__init__()
-		self._background = Gio.Settings('org.gnome.desktop.background')
+		self._background = Gio.Settings(schema='org.gnome.desktop.background')
 		self._settings = DeskChangerSettings()
 		self._profile_handler = self._settings.connect('changed::current-profile', self._profile_changed)
 		self.load_profile()

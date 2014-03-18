@@ -3,9 +3,10 @@
 	"name": "Desk Changer",
 	"shell-version": [
 		"3.8",
-		"3.10"
+		"3.10",
+                "3.11.90"
 	],
 	"url": "https://github.com/BigE/desk-changer/",
 	"uuid": "desk-changer@eric.php-oop.net",
-	"version": "0.0.1-dev"
+	"version": "0.0.1"
 }

@@ -21,11 +21,9 @@ const PanelMenu = imports.ui.panelMenu;
 const PopupMenu = imports.ui.popupMenu;
 const St = imports.gi.St;
 const Util = imports.misc.util;
-const versionCheck = imports.misc.extensionUtils.versionCheck;
 
 const DeskChangerSettings = Me.imports.settings.DeskChangerSettings;
 const DeskChangerVersion = Me.metadata.version;
-const GnomeShellVersion = Main.shellDBusService.ShellVersion;
 
 const DeskChangerBaseMenuItem = new Lang.Class({
 	Name: 'DeskChangerBaseMenuItem',
@@ -33,7 +31,7 @@ const DeskChangerBaseMenuItem = new Lang.Class({
 
 	_addActor: function (widget, params)
 	{
-		if (versionCheck(['3.10'], GnomeShellVersion)) {
+		if (this.actor.add) {
 			this.actor.add(widget, params);
 		} else {
 			this.actorAdd(widget, params);
@@ -50,7 +48,7 @@ const DeskChangerButton = new Lang.Class({
 		this.icon = new St.Icon({icon_name: icon+'-symbolic', icon_size: 20});
 		this.parent({
 			child: this.icon,
-			style_class: (versionCheck(['3.10'], GnomeShellVersion))? 'system-menu-action' : 'notification-icon-button control-button'
+			style_class: 'system-menu-action'// : 'notification-icon-button control-button'
 		});
 		this.connect('clicked', callback);
 	},
@@ -299,7 +297,7 @@ const DeskChangerPreview = new Lang.Class({
 		this._dbus = _dbus;
 		this.parent({reactive: true});
 		this._box = new St.BoxLayout({vertical: true});
-		if (versionCheck(['3.10'], GnomeShellVersion)) {
+		if (this.actor.add) {
 			this.actor.add(this._box, {align: St.Align.MIDDLE, span: -1});
 		} else {
 			this.actorAdd(this._box, {align: St.Align.MIDDLE, span: -1});
