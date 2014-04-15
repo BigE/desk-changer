@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.3
+#!/usr/bin/env python3
 
 #  ▄▄▄▄    ██▓  ▄████   ▄████  ██▓▓█████ 
 # ▓█████▄ ▓██▒ ██▒ ▀█▒ ██▒ ▀█▒▓██▒▓█   ▀ 
@@ -67,7 +67,7 @@ class DeskChangerDaemon(GObject.GObject):
 		open(self.pidfile, 'w+').write(str(pid))
 		_logger.info('daemon started with pid of %i', pid)
 		_logger.debug('running the daemon %s dbus support', 'with' if _dbus else 'without')
-		self._wallpapers = DeskChangerWallpapers()
+		self._wallpapers = DeskChangerWallpapers(self)
 		self.mainloop = GLib.MainLoop()
 		if _dbus:
 			self.dbus = DeskChangerDBus()
@@ -75,8 +75,7 @@ class DeskChangerDaemon(GObject.GObject):
 			self.dbus.next_file(self._wallpapers.next_uri)
 		if self.settings.auto_rotate:
 			self.next(False)
-		if self.settings.timer_enabled:
-			self.timer = GLib.timeout_add_seconds(self.settings.interval, self._timeout)
+		self.toggle_timer()
 		try:
 			self.mainloop.run()
 		except KeyboardInterrupt:
@@ -132,6 +131,15 @@ class DeskChangerDaemon(GObject.GObject):
 			else:
 				_logger.critical(e)
 				sys.exit(1)
+
+	def toggle_timer(self):
+		if self.settings.timer_enabled and self.timer is None:
+			_logger.info('enabling timer to change wallpapers automatically every %d seconds', self.settings.interval)
+			self.timer = GLib.timeout_add_seconds(self.settings.interval, self._timeout)
+		elif self.timer:
+			_logger.info('disabling timer to automatically change wallpapers')
+			GLib.source_remove(self.timer)
+			self.timer = None
 
 	def _set_wallpaper(self, wallpaper):
 		if wallpaper:
@@ -225,7 +233,8 @@ class DeskChangerSettings(Gio.Settings):
 class DeskChangerWallpapers(GObject.GObject):
 	__gsignals__ = {'wallpaper_next': (GObject.SignalFlags.RUN_FIRST, None, (str,))}
 
-	def __init__(self):
+	def __init__(self, daemon):
+		self.daemon = daemon
 		_logger.debug('initalizing wallpapers')
 		super(DeskChangerWallpapers, self).__init__()
 		self._background = Gio.Settings(schema='org.gnome.desktop.background')
@@ -233,6 +242,7 @@ class DeskChangerWallpapers(GObject.GObject):
 		self._profile_handler = self._settings.connect('changed::current-profile', self._profile_changed)
 		self.load_profile()
 		self._settings.connect('changed::random', self._random_changed)
+		self._settings.connect('changed::timer-enabled', self._toggle_timer)
 
 	def load_profile(self):
 		if hasattr(self, '_monitors'):
@@ -363,6 +373,10 @@ class DeskChangerWallpapers(GObject.GObject):
 		self._next = []
 		self._load_next()
 
+	def _toggle_timer(self, y, z):
+		_logger.debug('timer-enabled changed to %s', self._settings.timer_enabled)
+		self.daemon.toggle_timer()
+
 	@property
 	def next_uri(self):
 		if len(self._next) == 0:
@@ -378,7 +392,7 @@ if __name__ == '__main__':
 	parser.add_argument('--logformat', dest='format', action='store',
 	                    default='[%(asctime)s %(levelname)-8s] %(name)s: %(message)s',
 	                    help='Change the logging format')
-	parser.add_argument('--loglevel', dest='level', action='store', default='WARNING',
+	parser.add_argument('--loglevel', dest='level', action='store', default='DEBUG',
 	                    choices=('DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'),
 	                    help='Set the default logging level')
 	parser.add_argument('-v', '--verbose', dest='verbose', action='store_true', default=False,
