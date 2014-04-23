@@ -18,6 +18,7 @@ import dbus.mainloop.glib
 import dbus.service
 import errno
 from gi.repository import GLib, Gio, GObject
+from hashlib import sha1
 import imghdr
 import json
 import logging
@@ -26,6 +27,7 @@ import random
 import signal
 import sys
 import time
+import traceback
 
 __author__ = 'Eric Gach <eric@php-oop.net>'
 __daemon_path__ = os.path.dirname(os.path.realpath(__file__))
@@ -245,6 +247,8 @@ class DeskChangerWallpapers(GObject.GObject):
 		self._settings = DeskChangerSettings()
 		self._profile_handler = self._settings.connect('changed::current-profile', self._profile_changed)
 		self.load_profile()
+		self._current_profile = sha1(json.dumps(self._settings.profiles[self._settings.profile]).encode())
+		_logger.debug('current-profile hash: %s', self._current_profile.hexdigest())
 		self._settings.connect('changed::random', self._random_changed)
 		self._settings.connect('changed::timer-enabled', self._toggle_timer)
 		self._settings.connect('changed::profiles', self._profiles_changed)
@@ -268,7 +272,9 @@ class DeskChangerWallpapers(GObject.GObject):
 				_logger.debug('adding %s as directory to watch', uri)
 				monitor.connect('changed', self._files_changed)
 				self._monitors.append(monitor)
-			self._children(location.enumerate_children('standard::*', Gio.FileQueryInfoFlags.NONE), recursive)
+				self._children(location.enumerate_children('standard::*', Gio.FileQueryInfoFlags.NONE), recursive)
+			elif location.query_file_type(Gio.FileQueryInfoFlags.NONE, None) == Gio.FileType.REGULAR:
+				self._parse_info(location, location.query_info('standard::*', Gio.FileQueryInfoFlags.NONE))
 		self._wallpapers.sort()
 		self._load_next()
 
@@ -360,7 +366,7 @@ class DeskChangerWallpapers(GObject.GObject):
 		if recursive and info.get_file_type() == Gio.FileType.DIRECTORY:
 			self._children(item.enumerate_children('standard::*', Gio.FileQueryInfoFlags.NONE, None), recursive)
 		elif info.get_content_type().startswith('image/'):
-			wallpaper = item.get_uri() + '/' + info.get_name()
+			wallpaper = item.get_uri().replace(info.get_name(), '') + '/' + info.get_name()
 			if self._is_image(wallpaper):
 				_logger.debug('adding wallpaper %s', wallpaper)
 				self._wallpapers.append(wallpaper)
@@ -374,9 +380,14 @@ class DeskChangerWallpapers(GObject.GObject):
 			dc.next(False)
 
 	def _profiles_changed(self, y, z):
-		_logger.info('profiles have been updated, reloading')
-		self.load_profile()
-		self.daemon.dbus.next_file(self._next[0])
+		profile = sha1(json.dumps(self._settings.get_json('profiles')[self._settings.profile]).encode())
+		update = False if self._current_profile.hexdigest() == profile.hexdigest() else True
+		_logger.debug('profiles have changed, should we update? %s', 'yep' if update else 'nope')
+		if update:
+			_logger.info('the current profile has been updated, reloading')
+			self.load_profile()
+			self.daemon.dbus.next_file(self._next[0])
+			self._current_profile = profile
 
 	def _random_changed(self, y, z):
 		_logger.info('wallpapers now showing in %s mode', 'random' if self._settings.random else 'ordered')
@@ -440,4 +451,5 @@ if __name__ == '__main__':
 		elif args.action == 'status':
 			dc.status()
 	except Exception as e:
+		_logger.debug(traceback.format_exc())
 		_logger.critical(e)

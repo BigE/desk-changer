@@ -34,6 +34,8 @@ const DeskChangerPrefs = new Lang.Class({
 		this._settings = new Settings.DeskChangerSettings();
 		this.notebook = new Gtk.Notebook();
 		this._initProfiles();
+		this._initDaemon();
+		this._initAbout();
 		this.box.pack_start(this.notebook, true, true, 0);
 		this.box.show_all();
 	},
@@ -42,6 +44,22 @@ const DeskChangerPrefs = new Lang.Class({
 	{
 		var iter = this._folders.get_iter_from_string(path)[1];
 		this._folders.set_value(iter, 1, !this._folders.get_value(iter, 1));
+		var profiles = this._settings.profiles;
+		profiles[this.profiles_combo_box.get_active_text()][path][1] = Boolean(this._folders.get_value(iter, 1));
+		this._settings.profiles = profiles;
+		this._load_profiles();
+	},
+
+	_initAbout: function()
+	{
+		var about_box = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL});
+		this.notebook.append_page(about_box, new Gtk.Label({label: 'About'}));
+	},
+
+	_initDaemon: function ()
+	{
+		var daemon_box = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL});
+		this.notebook.append_page(daemon_box, new Gtk.Label({label: 'Daemon'}));
 	},
 
 	_initProfiles: function ()
@@ -68,9 +86,54 @@ const DeskChangerPrefs = new Lang.Class({
 		}));
 
 		hbox.pack_start(this.profiles_combo_box, true, true, 10);
+		var vbox = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL});
+		hbox.pack_start(vbox, false, true, 10);
 		this.add_profile = new Gtk.Button({label: 'Add Profile'});
 		this.add_profile.set_sensitive(true);
-		hbox.pack_start(this.add_profile, false, true, 10);
+		this.add_profile.connect('clicked', Lang.bind(this, function () {
+			var dialog, mbox, box, label, input;
+			dialog = new Gtk.Dialog();
+			mbox = dialog.get_content_area();
+			box = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL});
+			label = new Gtk.Label({label: 'Profile Name'});
+			box.pack_start(label, false, true, 10);
+			input = new Gtk.Entry();
+			box.pack_end(input, true, true, 10);
+			box.show_all();
+			mbox.pack_start(box, true, true, 10);
+			dialog.add_button('OK', Gtk.ResponseType.OK);
+			dialog.add_button('Cancel', Gtk.ResponseType.CANCEL);
+			var result = dialog.run();
+			if (result == Gtk.ResponseType.OK) {
+				var profiles = this._settings.profiles;
+				profiles[input.get_text()] = [];
+				this._settings.profiles = profiles;
+				this._load_profiles();
+			}
+			dialog.destroy();
+		}));
+		vbox.pack_start(this.add_profile, false, true, 0);
+		this.remove_profile = new Gtk.Button({label: 'Remove Profile'});
+		this.remove_profile.connect('clicked', Lang.bind(this, function () {
+			var profile, dialog, box, label;
+			profile = this.profiles_combo_box.get_active_text();
+			dialog = new Gtk.Dialog();
+			box = dialog.get_content_area();
+			label = new Gtk.Label({label: 'Are you sure you want to delete the profile "'+profile+'"?'});
+			box.pack_start(label, true, true, 10);
+			box.show_all();
+			dialog.add_button('Yes', Gtk.ResponseType.YES);
+			dialog.add_button('No', Gtk.ResponseType.NO);
+			var response = dialog.run();
+			if (response == Gtk.ResponseType.YES) {
+				var profiles = this._settings.profiles;
+				delete profiles[profile];
+				this._settings.profiles = profiles;
+				this._load_profiles();
+			}
+			dialog.destroy();
+		}));
+		vbox.pack_start(this.remove_profile, false, true, 0);
 		profiles_box.pack_start(hbox, false, false, 10);
 
 		this.profiles = new Gtk.TreeView();
@@ -97,16 +160,7 @@ const DeskChangerPrefs = new Lang.Class({
 		column.pack_start(renderer, false);
 		column.add_attribute(renderer, 'active', 1);
 		this.profiles.append_column(column);
-
-		var active = 0, i = 0;
-		for (var profile in this._settings.profiles) {
-			this.profiles_combo_box.append_text(profile);
-			if (profile == this._settings.current_profile) {
-				active = i;
-			}
-			i++;
-		}
-		this.profiles_combo_box.set_active(active);
+		this._load_profiles();
 
 		hbox = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL});
 		this.remove = new Gtk.Button({label: 'Remove'});
@@ -114,18 +168,68 @@ const DeskChangerPrefs = new Lang.Class({
 			var [bool, list, iter] = this.profiles.get_selection().get_selected();
 			var path = list.get_path(iter);
 			list.row_deleted(path);
+			var profiles = this._settings.profiles;
+			profiles[this.profiles_combo_box.get_active_text()].splice(path.get_indices(), 1);
+			this._settings.profiles = profiles;
 			this.remove.set_sensitive(false);
 		}));
 		this.remove.set_sensitive(false);
 		hbox.pack_start(this.remove, false, true, 10);
 		var label = new Gtk.Label({label: ' '});
 		hbox.pack_start(label, true, true, 0);
-		this.add = new Gtk.FileChooserButton({title: 'Add Folder'});
+		this.add = new Gtk.Button({label: 'Add Image'});
+		this.add.connect('clicked', Lang.bind(this, function () {
+			this._add_item('Add Image', Gtk.FileChooserAction.OPEN);
+		}));
+		hbox.pack_start(this.add, false, true, 10);
+		this.add = new Gtk.Button({label: 'Add Folder'});
+		this.add.connect('clicked', Lang.bind(this, function () {
+			this._add_item('Add Folder', Gtk.FileChooserAction.SELECT_FOLDER);
+		}));
 		hbox.pack_start(this.add, false, true, 10);
 		profiles_box.pack_end(hbox, true, true, 10);
 
 		profiles_box.pack_start(this.profiles, true, true, 10);
 		this.notebook.append_page(profiles_box, new Gtk.Label({label: 'Profiles'}));
+	},
+
+	_add_item: function(title, action)
+	{
+		var dialog, filter_image, response;
+		dialog = new Gtk.FileChooserDialog({title: title, action: action});
+		if (action != Gtk.FileChooserAction.SELECT_FOLDER) {
+			filter_image = new Gtk.FileFilter();
+			filter_image.set_name("Image files");
+			filter_image.add_mime_type("image/*");
+			dialog.add_filter(filter_image);
+		}
+		dialog.add_button(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL);
+		dialog.add_button(Gtk.STOCK_OPEN, Gtk.ResponseType.OK);
+		response = dialog.run();
+		if (response == Gtk.ResponseType.OK) {
+			var path = dialog.get_uri(), profile, profiles = this._settings.profiles;
+			profile = this.profiles_combo_box.get_active_text();
+			profiles[profile].push([path, false]);
+			this._settings.profiles = profiles;
+			this._load_profiles();
+		}
+		dialog.destroy();
+	},
+
+	_load_profiles: function()
+	{
+		var active = this.profiles_combo_box.get_active(), i = 0, text = this.profiles_combo_box.get_active_text();
+		this.profiles_combo_box.remove_all();
+
+		for (var profile in this._settings.profiles) {
+			this.profiles_combo_box.insert_text(i, profile);
+			if (text == profile || (active == -1 && profile == this._settings.current_profile)) {
+				active = i;
+			}
+			i++;
+		}
+
+		this.profiles_combo_box.set_active(active);
 	},
 
 	_save_profile: function()
