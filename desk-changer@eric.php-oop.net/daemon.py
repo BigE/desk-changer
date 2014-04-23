@@ -215,6 +215,10 @@ class DeskChangerSettings(Gio.Settings):
 		self.bind('random', self, 'random', Gio.SettingsBindFlags.DEFAULT)
 		self.bind('timer-enabled', self, 'timer_enabled', Gio.SettingsBindFlags.DEFAULT)
 
+	def connect(self, signal, callback):
+		_logger.debug('connecting signal %s to callback %s', signal, callback)
+		super(DeskChangerSettings, self).connect(signal, callback)
+
 	def get_json(self, key):
 		return json.loads(self.get_string(key))
 
@@ -243,6 +247,7 @@ class DeskChangerWallpapers(GObject.GObject):
 		self.load_profile()
 		self._settings.connect('changed::random', self._random_changed)
 		self._settings.connect('changed::timer-enabled', self._toggle_timer)
+		self._settings.connect('changed::profiles', self._profiles_changed)
 
 	def load_profile(self):
 		if hasattr(self, '_monitors'):
@@ -263,7 +268,7 @@ class DeskChangerWallpapers(GObject.GObject):
 				_logger.debug('adding %s as directory to watch', uri)
 				monitor.connect('changed', self._files_changed)
 				self._monitors.append(monitor)
-			self._children(location.enumerate_children('standard::*', Gio.FileQueryInfoFlags.NONE, None), recursive)
+			self._children(location.enumerate_children('standard::*', Gio.FileQueryInfoFlags.NONE), recursive)
 		self._wallpapers.sort()
 		self._load_next()
 
@@ -368,10 +373,16 @@ class DeskChangerWallpapers(GObject.GObject):
 		if self._settings.auto_rotate:
 			dc.next(False)
 
+	def _profiles_changed(self, y, z):
+		_logger.info('profiles have been updated, reloading')
+		self.load_profile()
+		self.daemon.dbus.next_file(self._next[0])
+
 	def _random_changed(self, y, z):
 		_logger.info('wallpapers now showing in %s mode', 'random' if self._settings.random else 'ordered')
 		self._next = []
 		self._load_next()
+		self.daemon.dbus.next_file(self._next[0])
 
 	def _toggle_timer(self, y, z):
 		_logger.debug('timer-enabled changed to %s', self._settings.timer_enabled)

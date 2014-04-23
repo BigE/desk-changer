@@ -59,17 +59,22 @@ const DeskChangerPrefs = new Lang.Class({
 				if (profile == object.get_active_text()) {
 					this._folders.clear();
 					for (var folder in this._settings.profiles[profile]) {
-						folder = [this._settings.profiles[profile][folder][0].replace('file://', ''), this._settings.profiles[profile][folder][1]];
+						folder = [this._settings.profiles[profile][folder][0], this._settings.profiles[profile][folder][1]];
 						this._folders.insert_with_valuesv(-1, [0, 1], folder);
 					}
+					break;
 				}
 			}
 		}));
 
 		hbox.pack_start(this.profiles_combo_box, true, true, 10);
+		this.add_profile = new Gtk.Button({label: 'Add Profile'});
+		this.add_profile.set_sensitive(true);
+		hbox.pack_start(this.add_profile, false, true, 10);
 		profiles_box.pack_start(hbox, false, false, 10);
 
 		this.profiles = new Gtk.TreeView();
+		this.profiles.get_selection().set_mode(Gtk.SelectionMode.SINGLE);
 		this.profiles.connect('cursor_changed', Lang.bind(this, function (treeview) {
 			this.remove.set_sensitive(true);
 		}));
@@ -103,13 +108,20 @@ const DeskChangerPrefs = new Lang.Class({
 		}
 		this.profiles_combo_box.set_active(active);
 
-		hbox = new Gtk.ButtonBox({orientation: Gtk.Orientation.HORIZONTAL});
-		this.add = new Gtk.Button({label: 'Add Profile'});
-		this.add.set_sensitive(true);
-		hbox.pack_start(this.add, true, true, 10);
+		hbox = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL});
 		this.remove = new Gtk.Button({label: 'Remove'});
+		this.remove.connect('clicked', Lang.bind(this, function () {
+			var [bool, list, iter] = this.profiles.get_selection().get_selected();
+			var path = list.get_path(iter);
+			list.row_deleted(path);
+			this.remove.set_sensitive(false);
+		}));
 		this.remove.set_sensitive(false);
-		hbox.pack_end(this.remove, false, false, 10);
+		hbox.pack_start(this.remove, false, true, 10);
+		var label = new Gtk.Label({label: ' '});
+		hbox.pack_start(label, true, true, 0);
+		this.add = new Gtk.FileChooserButton({title: 'Add Folder'});
+		hbox.pack_start(this.add, false, true, 10);
 		profiles_box.pack_end(hbox, true, true, 10);
 
 		profiles_box.pack_start(this.profiles, true, true, 10);
@@ -127,7 +139,7 @@ const DeskChangerPrefs = new Lang.Class({
 		var profiles = this._settings.profiles;
 		profiles[this.profiles_combo_box.get_active_text()] = profile;
 		this._settings.profiles = profiles;
-		this._initProfiles();
+		this.profiles_combo_box.do_changed();
 	}
 });
 
