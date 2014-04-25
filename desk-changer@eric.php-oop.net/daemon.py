@@ -45,6 +45,9 @@ class DeskChangerDaemon(GObject.GObject):
 		self.timer = None
 		self.background = Gio.Settings(schema='org.gnome.desktop.background')
 		self.settings = DeskChangerSettings()
+		self.wallpapers = None
+		self.mainloop = None
+		self.dbus = None
 
 	def __del__(self):
 		if self.timer:
@@ -57,10 +60,10 @@ class DeskChangerDaemon(GObject.GObject):
 		os.remove(self.pidfile)
 
 	def next(self, history=True):
-		return self._set_wallpaper(self._wallpapers.next(history))
+		return self._set_wallpaper(self.wallpapers.next(history))
 
 	def prev(self):
-		return self._set_wallpaper(self._wallpapers.prev())
+		return self._set_wallpaper(self.wallpapers.prev())
 
 	def run(self, _dbus=False):
 		signal.signal(signal.SIGCHLD, signal.SIG_DFL)
@@ -69,12 +72,12 @@ class DeskChangerDaemon(GObject.GObject):
 		open(self.pidfile, 'w+').write(str(pid))
 		_logger.info('daemon started with pid of %i', pid)
 		_logger.debug('running the daemon %s dbus support', 'with' if _dbus else 'without')
-		self._wallpapers = DeskChangerWallpapers(self)
+		self.wallpapers = DeskChangerWallpapers(self)
 		self.mainloop = GLib.MainLoop()
 		if _dbus:
-			self.dbus = DeskChangerDBus()
-			self._wallpapers.connect('wallpaper_next', lambda obj, file: self.dbus.next_file(file))
-			self.dbus.next_file(self._wallpapers.next_uri)
+			self.dbus = DeskChangerDBus(self)
+			self.wallpapers.connect('wallpaper_next', lambda obj, file: self.dbus.next_file(file))
+			self.dbus.next_file(self.wallpapers.next_uri)
 		if self.settings.auto_rotate:
 			self.next(False)
 		self.toggle_timer()
@@ -159,7 +162,8 @@ class DeskChangerDBus(dbus.service.Object):
 	bus_name = 'org.gnome.shell.extensions.desk_changer'
 	bus_path = '/org/gnome/shell/extensions/desk_changer'
 
-	def __init__(self):
+	def __init__(self, daemon):
+		self.daemon = daemon
 		dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
 		bus_name = dbus.service.BusName(self.bus_name, bus=dbus.SessionBus())
 		super(DeskChangerDBus, self).__init__(bus_name, self.bus_path)
@@ -171,7 +175,7 @@ class DeskChangerDBus(dbus.service.Object):
 	@dbus.service.method(bus_name)
 	def next(self, history=True):
 		_logger.debug('[DBUS] called next()')
-		dc.next(history)
+		self.daemon.next(history)
 
 	@dbus.service.signal(bus_name)
 	def next_file(self, file):
@@ -180,11 +184,11 @@ class DeskChangerDBus(dbus.service.Object):
 	@dbus.service.method(bus_name)
 	def prev(self):
 		_logger.debug('[DBUS] called prev()')
-		dc.prev()
+		self.daemon.prev()
 
 	@dbus.service.method(bus_name)
 	def up_next(self):
-		return dc._wallpapers.next_uri
+		return self.daemon.wallpapers.next_uri
 
 
 class DeskChangerSettings(Gio.Settings):
@@ -219,7 +223,7 @@ class DeskChangerSettings(Gio.Settings):
 
 	def connect(self, signal, callback):
 		_logger.debug('connecting signal %s to callback %s', signal, callback)
-		super(DeskChangerSettings, self).connect(signal, callback)
+		return super(DeskChangerSettings, self).connect(signal, callback)
 
 	def get_json(self, key):
 		return json.loads(self.get_string(key))
@@ -240,6 +244,11 @@ class DeskChangerWallpapers(GObject.GObject):
 	__gsignals__ = {'wallpaper_next': (GObject.SignalFlags.RUN_FIRST, None, (str,))}
 
 	def __init__(self, daemon):
+		self._monitors = []
+		self._next = []
+		self._position = 0
+		self._prev = []
+		self._wallpapers = []
 		self.daemon = daemon
 		_logger.debug('initalizing wallpapers')
 		super(DeskChangerWallpapers, self).__init__()
@@ -275,6 +284,9 @@ class DeskChangerWallpapers(GObject.GObject):
 				self._children(location.enumerate_children('standard::*', Gio.FileQueryInfoFlags.NONE), recursive)
 			elif location.query_file_type(Gio.FileQueryInfoFlags.NONE, None) == Gio.FileType.REGULAR:
 				self._parse_info(location, location.query_info('standard::*', Gio.FileQueryInfoFlags.NONE))
+		if len(self._wallpapers) < 2:
+			_logger.critical('cannot run daemon, only loaded %d wallpapers!', len(self._wallpapers))
+			sys.exit(-1)
 		self._wallpapers.sort()
 		self._load_next()
 
@@ -285,8 +297,8 @@ class DeskChangerWallpapers(GObject.GObject):
 
 		if history:
 			self._history(self._background.get_string('picture-uri'))
-		wallpaper = self._next.pop(0)
 		self._load_next()
+		wallpaper = self._next.pop(0)
 		self.emit('wallpaper_next', self._next[0])
 		return wallpaper
 
@@ -339,26 +351,32 @@ class DeskChangerWallpapers(GObject.GObject):
 		return is_img
 
 	def _load_next(self):
-		if len(self._next) > 0:
-			_logger.debug('wallpapers already loaded, skipping')
+		if len(self._next) > 1:
+			_logger.debug('%d wallpapers already loaded, skipping _load_next()', len(self._next))
 			return
 
 		if self._settings.random is True:
 			_next = None
-			while True:
+			while _next is None:
 				_next = self._wallpapers[random.randint(0, len(self._wallpapers) - 1)]
 				_logger.debug('got %s as a possible next wallpaper', _next)
-				if len(self._prev) > 0 and len(self._prev) >= len(self._wallpapers):
+				if (len(self._next) + len(self._prev)) >= len(self._wallpapers):
 					_logger.warning('Your history is larger than the available wallpapers on the current profile')
-					break
-				elif self._prev.count(_next) == 0 and self._next.count(_next) == 0:
-					break
-				elif self._prev.count(_next) > 1:
+					if self._next[0] == _next:
+						_logger.debug('%s is up next already, choosing a different wallpaper', _next)
+						_next = None
+				elif self._prev.count(_next) > 0:
 					_logger.debug('the wallpaper %s has recently been shown, picking a new one', _next)
-				elif self._next.count(_next) > 1:
+					_next = None
+				elif self._next.count(_next) > 0:
 					_logger.debug('the wallpaper %s is already up next', _next)
+					_next = None
+			_logger.info('adding %s to the list of next wallpapers', _next)
 			self._next.append(_next)
 		else:
+			if self._position >= len(self._wallpapers):
+				_logger.debug('reached end of sequential wallpaper list, starting over')
+				self._position = 0
 			self._next.append(self._wallpapers[self._position])
 			self._position += 1
 
