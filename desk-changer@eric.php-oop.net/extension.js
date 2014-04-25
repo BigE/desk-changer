@@ -371,22 +371,28 @@ const DeskChangerProfile = new Lang.Class({
 	{
 		this._settings = settings;
 		this.parent('Profile: '+this._settings.current_profile);
+		this._populate_profiles();
+		this._settings.connect('changed::current-profile', Lang.bind(this, this.setLabel));
+		this._settings.connect('changed::profiles', Lang.bind(this, this._populate_profiles))
+	},
+
+	setLabel: function ()
+	{
+		this.label.text = 'Profile: '+this._settings.current_profile;
+	},
+
+	_populate_profiles: function ()
+	{
+		this.menu.removeAll();
 		for (var index in this._settings.profiles) {
 			debug('adding menu: '+index);
 			var item = new PopupMenu.PopupMenuItem(index);
 			item.connect('activate', Lang.bind(item, function() {
 				var settings = new DeskChangerSettings();
 				settings.current_profile = this.label.text;
-			}))
+			}));
 			this.menu.addMenuItem(item);
 		}
-
-		this._settings.connect('changed::current-profile', Lang.bind(this, this.setLabel));
-	},
-
-	setLabel: function ()
-	{
-		this.label.text = 'Profile: '+this._settings.current_profile;
 	}
 });
 
