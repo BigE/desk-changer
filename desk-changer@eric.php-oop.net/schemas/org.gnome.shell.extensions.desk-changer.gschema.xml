@@ -30,7 +30,7 @@
 			<summary>test</summary>
 		</key>
 		<key name="profiles" type="s">
-			<default>'{"gnome": [["file:///usr/share/backgrounds/gnome", true]]}'</default>
+			<default>'{"default": [["file:///usr/share/backgrounds", true]]}'</default>
 			<description>
 				These are the profiles available to the daemon.
 			</description>
