@@ -277,13 +277,9 @@ class DeskChangerWallpapers(GObject.GObject):
 			_logger.debug('loading %s%s', uri, ' recursively' if recursive else '')
 			location = Gio.File.new_for_uri(uri)
 			if location.query_file_type(Gio.FileQueryInfoFlags.NONE, None) == Gio.FileType.DIRECTORY:
-				monitor = location.monitor_directory(Gio.FileMonitorFlags.NONE, Gio.Cancellable())
-				_logger.debug('adding %s as directory to watch', uri)
-				monitor.connect('changed', self._files_changed)
-				self._monitors.append(monitor)
 				self._children(location.enumerate_children('standard::*', Gio.FileQueryInfoFlags.NONE), recursive)
 			elif location.query_file_type(Gio.FileQueryInfoFlags.NONE, None) == Gio.FileType.REGULAR:
-				self._parse_info(location, location.query_info('standard::*', Gio.FileQueryInfoFlags.NONE))
+				self._parse_info(location, location.query_info('standard::*', Gio.FileQueryInfoFlags.NONE), recursive)
 		if len(self._wallpapers) < 2:
 			_logger.critical('cannot run daemon, only loaded %d wallpapers!', len(self._wallpapers))
 			sys.exit(-1)
@@ -380,11 +376,16 @@ class DeskChangerWallpapers(GObject.GObject):
 			self._next.append(self._wallpapers[self._position])
 			self._position += 1
 
-	def _parse_info(self, item, info, recursive=False):
-		if recursive and info.get_file_type() == Gio.FileType.DIRECTORY:
-			self._children(item.enumerate_children('standard::*', Gio.FileQueryInfoFlags.NONE, None), recursive)
-		elif info.get_content_type().startswith('image/'):
-			wallpaper = item.get_uri().replace(info.get_name(), '') + '/' + info.get_name()
+	def _parse_info(self, parent, _child, recursive=False):
+		child = parent.get_child(_child.get_name())
+		if recursive and child.query_file_type(Gio.FileQueryInfoFlags.NONE, None) == Gio.FileType.DIRECTORY:
+			monitor = child.monitor_directory(Gio.FileMonitorFlags.NONE, Gio.Cancellable())
+			_logger.debug('adding %s as directory to watch', child.get_uri())
+			monitor.connect('changed', self._files_changed)
+			self._monitors.append(monitor)
+			self._children(child.enumerate_children('standard::*', Gio.FileQueryInfoFlags.NONE, None), recursive)
+		elif _child.get_content_type().startswith('image/'):
+			wallpaper = parent.get_uri().replace(_child.get_name(),'')+'/'+_child.get_name()
 			if self._is_image(wallpaper):
 				_logger.debug('adding wallpaper %s', wallpaper)
 				self._wallpapers.append(wallpaper)
