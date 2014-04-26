@@ -11,14 +11,11 @@
  *       ░
  */
 
-const Gdk = imports.gi.Gdk;
 const GObject = imports.gi.GObject;
 const Gtk = imports.gi.Gtk;
 const Lang = imports.lang;
 const Me = imports.misc.extensionUtils.getCurrentExtension();
 const Settings = Me.imports.settings;
-const Signals = imports.signals;
-const St = imports.gi.St;
 
 const DeskChangerPrefs = new Lang.Class({
 	Name: 'DeskChangerPrefs',
@@ -86,9 +83,7 @@ const DeskChangerPrefs = new Lang.Class({
 		}));
 
 		hbox.pack_start(this.profiles_combo_box, true, true, 10);
-		var vbox = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL});
-		hbox.pack_start(vbox, false, true, 10);
-		this.add_profile = new Gtk.Button({label: 'Add Profile'});
+		this.add_profile = new Gtk.Button({label: 'Add'});
 		this.add_profile.set_sensitive(true);
 		this.add_profile.connect('clicked', Lang.bind(this, function () {
 			var dialog, mbox, box, label, input;
@@ -112,8 +107,8 @@ const DeskChangerPrefs = new Lang.Class({
 			}
 			dialog.destroy();
 		}));
-		vbox.pack_start(this.add_profile, false, true, 0);
-		this.remove_profile = new Gtk.Button({label: 'Remove Profile'});
+		hbox.pack_start(this.add_profile, false, true, 0);
+		this.remove_profile = new Gtk.Button({label: 'Remove'});
 		this.remove_profile.connect('clicked', Lang.bind(this, function () {
 			var profile, dialog, box, label;
 			profile = this.profiles_combo_box.get_active_text();
@@ -133,7 +128,7 @@ const DeskChangerPrefs = new Lang.Class({
 			}
 			dialog.destroy();
 		}));
-		vbox.pack_start(this.remove_profile, false, true, 0);
+		hbox.pack_start(this.remove_profile, false, true, 0);
 		profiles_box.pack_start(hbox, false, false, 10);
 
 		this.profiles = new Gtk.TreeView();
