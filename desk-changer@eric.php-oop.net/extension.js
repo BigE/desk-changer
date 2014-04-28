@@ -22,6 +22,7 @@ const PopupMenu = imports.ui.popupMenu;
 const St = imports.gi.St;
 const Util = imports.misc.util;
 
+const DeskChangerDaemon = Me.imports.daemon.DeskChangerDaemon;
 const DeskChangerSettings = Me.imports.settings.DeskChangerSettings;
 const DeskChangerVersion = Me.metadata.version;
 
@@ -123,57 +124,15 @@ const DeskChangerDaemonControls = new Lang.Class({
 
 	_init: function ()
 	{
-		this._is_running = false;
-		this._path = Me.dir.get_path();
+		this._daemon = new DeskChangerDaemon();
 		this.parent('DeskChanger Daemon');
-		this.setToggleState(this.is_running());
-		this.connect('toggled', Lang.bind(this, this._toggle_daemon));
-	},
-
-	is_running: function ()
-	{
-		if (!this._pid && GLib.file_test(this._path+'/daemon.pid', GLib.FileTest.EXISTS)) {
-			var out =  GLib.file_get_contents(this._path+'/daemon.pid');
-			if (out[0] == true) {
-				this._pid = out[1];
-				debug('got pid ' + this._pid + ' for daemon');
-				try {
-					var path = Gio.file_new_for_path('/proc/'+this._pid+'/cmdline'), exists = path.query_exists(null);
-
-					if (exists) {
-						this._is_running = true;
-					} else {
-						this._pid = null;
-					}
-				} catch (e) {
-					debug(e);
-					this._pid = null;
-				}
-			} else {
-				debug('failed to open pid file, daemon not running?');
-			}
-		}
-
-		if (this._pid && !this._child_watch) {
-			this._child_watch = GLib.child_watch_add(GLib.PRIORITY_DEFAULT, this._pid, Lang.bind(this, function (pid, status, data) {
-				debug(pid + ' ' + status + ' ' + data);
-				this._pid = null;
-				this._child_watch = null;
-				this._is_running = false;
-			}), {}, null);
-			debug('added child watch ' + this._child_watch);
-		}
-
-		return(this._is_running);
-	},
-
-	_toggle_daemon: function ()
-	{
-		if (this.is_running()) {
-			GLib.spawn_command_line_async(this._path+'/daemon.py stop');
-		} else {
-			GLib.spawn_command_line_async(this._path+'/daemon.py start');
-		}
+		this.setToggleState(this._daemon.is_running);
+		this.connect('toggled', Lang.bind(this, function () {
+			this._daemon.toggle();
+		}));
+		this._daemon.connect('toggled', Lang.bind(this, function (obj, state, pid) {
+			this.setToggleState(state);
+		}));
 	}
 });
 

@@ -15,20 +15,22 @@ const GObject = imports.gi.GObject;
 const Gtk = imports.gi.Gtk;
 const Lang = imports.lang;
 const Me = imports.misc.extensionUtils.getCurrentExtension();
-const Settings = Me.imports.settings;
+const DeskChangerSettings = Me.imports.settings.DeskChangerSettings;
+const DeskChangerDaemon = Me.imports.daemon.DeskChangerDaemon;
 
 const DeskChangerPrefs = new Lang.Class({
 	Name: 'DeskChangerPrefs',
 
 	_init: function ()
 	{
+		this._daemon = new DeskChangerDaemon();
 		this.box = new Gtk.Box({
 			border_width: 10,
 			orientation: Gtk.Orientation.VERTICAL,
 			spacing: 10
 		});
 
-		this._settings = new Settings.DeskChangerSettings();
+		this._settings = new DeskChangerSettings();
 		this.notebook = new Gtk.Notebook();
 		this._initProfiles();
 		this._initDaemon();
@@ -56,6 +58,25 @@ const DeskChangerPrefs = new Lang.Class({
 	_initDaemon: function ()
 	{
 		var daemon_box = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL});
+		var box = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL});
+		var label = new Gtk.Label({label: 'DeskChanger Daemon:'});
+		box.pack_start(label, false, true, 5);
+		label = new Gtk.Label({label: ' '});
+		box.pack_start(label, true, true, 5);
+		this._switch = new Gtk.Switch();
+		this._switch.set_active(this._daemon.is_running);
+		this._switch_handler = this._switch.connect('notify::active', Lang.bind(this._daemon, this._daemon.toggle));
+		this._daemon.connect('toggled', Lang.bind(this, function(obj, state, pid) {
+			if (this._switch_handler) {
+				this._switch.disconnect(this._switch_handler);
+				this._switch_handler = null;
+			}
+			debug('toggled('+state+', '+pid+')');
+			this._switch.set_active(state);
+			this._switch_handler = this._switch.connect('notify::active', Lang.bind(this._daemon, this._daemon.toggle));
+		}));
+		box.pack_start(this._switch, false, true, 5);
+		daemon_box.pack_start(box, true, false, 10);
 		this.notebook.append_page(daemon_box, new Gtk.Label({label: 'Daemon'}));
 	},
 
@@ -133,9 +154,6 @@ const DeskChangerPrefs = new Lang.Class({
 
 		this.profiles = new Gtk.TreeView();
 		this.profiles.get_selection().set_mode(Gtk.SelectionMode.SINGLE);
-		this.profiles.connect('cursor_changed', Lang.bind(this, function (treeview) {
-			this.remove.set_sensitive(true);
-		}));
 		this.profiles.set_model(this._folders);
 		var renderer = new Gtk.CellRendererText();
 		renderer.set_property('editable', true);
@@ -167,6 +185,9 @@ const DeskChangerPrefs = new Lang.Class({
 			profiles[this.profiles_combo_box.get_active_text()].splice(path.get_indices(), 1);
 			this._settings.profiles = profiles;
 			this.remove.set_sensitive(false);
+		}));
+		this.profiles.connect('cursor_changed', Lang.bind(this, function (treeview) {
+			this.remove.set_sensitive(true);
 		}));
 		this.remove.set_sensitive(false);
 		hbox.pack_start(this.remove, false, true, 10);
