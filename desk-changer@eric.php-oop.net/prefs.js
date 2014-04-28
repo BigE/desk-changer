@@ -11,6 +11,7 @@
  *       ░
  */
 
+const GLib = imports.gi.GLib;
 const GObject = imports.gi.GObject;
 const Gtk = imports.gi.Gtk;
 const Lang = imports.lang;
@@ -34,7 +35,6 @@ const DeskChangerPrefs = new Lang.Class({
 		this.notebook = new Gtk.Notebook();
 		this._initProfiles();
 		this._initDaemon();
-		this._initAbout();
 		this.box.pack_start(this.notebook, true, true, 0);
 		this.box.show_all();
 	},
@@ -47,12 +47,6 @@ const DeskChangerPrefs = new Lang.Class({
 		profiles[this.profiles_combo_box.get_active_text()][path][1] = Boolean(this._folders.get_value(iter, 1));
 		this._settings.profiles = profiles;
 		this._load_profiles();
-	},
-
-	_initAbout: function()
-	{
-		var about_box = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL});
-		this.notebook.append_page(about_box, new Gtk.Label({label: 'About'}));
 	},
 
 	_initDaemon: function ()
