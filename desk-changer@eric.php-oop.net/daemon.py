@@ -264,6 +264,7 @@ class DeskChangerWallpapers(GObject.GObject):
 
 	def load_profile(self):
 		if hasattr(self, '_monitors'):
+			_logger.debug('removing previous directory monitors')
 			for monitor in self._monitors:
 				monitor.cancel()
 		self._monitors = []
@@ -276,10 +277,7 @@ class DeskChangerWallpapers(GObject.GObject):
 		for uri, recursive in profile:
 			_logger.debug('loading %s%s', uri, ' recursively' if recursive else '')
 			location = Gio.File.new_for_uri(uri)
-			if location.query_file_type(Gio.FileQueryInfoFlags.NONE, None) == Gio.FileType.DIRECTORY:
-				self._children(location.enumerate_children('standard::*', Gio.FileQueryInfoFlags.NONE), recursive)
-			elif location.query_file_type(Gio.FileQueryInfoFlags.NONE, None) == Gio.FileType.REGULAR:
-				self._parse_info(location, location.query_info('standard::*', Gio.FileQueryInfoFlags.NONE), recursive)
+			self._parse_info(location, location.query_info('standard::*', Gio.FileQueryInfoFlags.NONE), recursive)
 		if len(self._wallpapers) < 2:
 			_logger.critical('cannot run daemon, only loaded %d wallpapers!', len(self._wallpapers))
 			sys.exit(-1)
@@ -377,7 +375,7 @@ class DeskChangerWallpapers(GObject.GObject):
 			self._position += 1
 
 	def _parse_info(self, parent, _child, recursive=False):
-		child = parent.get_child(_child.get_name())
+		child = Gio.File.new_for_uri(parent.get_uri().replace(_child.get_name(),'')+'/'+_child.get_name())
 		if recursive and child.query_file_type(Gio.FileQueryInfoFlags.NONE, None) == Gio.FileType.DIRECTORY:
 			monitor = child.monitor_directory(Gio.FileMonitorFlags.NONE, Gio.Cancellable())
 			_logger.debug('adding %s as directory to watch', child.get_uri())
