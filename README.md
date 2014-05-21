@@ -38,10 +38,8 @@ with the built in toggle switch.
 To view more information about the daemon, run it from the command line with the `-h` or `--help` option.
 
 >$ ./desk-changer@eric.php-oop.net/daemon.py -h  
->usage: daemon.py \[-h] \[--logfile LOGFILE] \[--logformat FORMAT]  
->                 \[--loglevel {DEBUG,INFO,WARNING,ERROR,CRITICAL}] \[-v]  
->                 \[--version]  
->                 {start,stop,restart,status}  
+>usage: daemon.py \[-h] \[--logfile LOGFILE] \[--logformat FORMAT] \[--loglevel {DEBUG,INFO,WARNING,ERROR,CRITICAL}]
+>                 \[-v] \[--version] {start,stop,restart,status}  
 >  
 >DeskChanger Daemon  
 >  
@@ -51,11 +49,9 @@ To view more information about the daemon, run it from the command line with the
 >  
 >optional arguments:  
 >  -h, --help            show this help message and exit  
->  --logfile LOGFILE     Log file to output logging to, default:  
->                        /home/eric/Projects/desk-changer/desk-changer@eric  
->                        .php-oop.net/daemon.log  
+>  --logfile LOGFILE     Log file to output logging to, default: ./desk-changer@eric.php-oop.net/daemon.log  
 >  --logformat FORMAT    Change the logging format  
->  --loglevel {DEBUG,INFO,WARNING,ERROR,CRITICAL}  
+>  --loglevel {DEBUG,INFO,WARNING,ERROR,CRITICAL}
 >                        Set the default logging level  
 >  -v, --verbose         Display logging output to stderr  
 >  --version             show program's version number and exit  
