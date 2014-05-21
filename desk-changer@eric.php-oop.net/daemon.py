@@ -31,7 +31,7 @@ import traceback
 
 __author__ = 'Eric Gach <eric@php-oop.net>'
 __daemon_path__ = os.path.dirname(os.path.realpath(__file__))
-__version__ = '0.0.1-dev'
+__version__ = '1.0.2'
 
 _logger = logging.getLogger('desk-changer')
 
@@ -41,6 +41,7 @@ class DeskChangerDaemon(GObject.GObject):
 		if pidfile is None:
 			pidfile = os.path.join(os.path.dirname(__file__), 'daemon.pid')
 		_logger.debug('initalizing with pidfile \'%s\'', pidfile)
+		self._interval_handler = None
 		self.pidfile = pidfile
 		self.timer = None
 		self.background = Gio.Settings(schema='org.gnome.desktop.background')
@@ -261,6 +262,7 @@ class DeskChangerWallpapers(GObject.GObject):
 		self._settings.connect('changed::random', self._random_changed)
 		self._settings.connect('changed::timer-enabled', self._toggle_timer)
 		self._settings.connect('changed::profiles', self._profiles_changed)
+		self._settings.connect('changed::interval', self._interval_changed)
 
 	def load_profile(self):
 		if hasattr(self, '_monitors'):
@@ -335,6 +337,13 @@ class DeskChangerWallpapers(GObject.GObject):
 		self._prev.append(wallpaper)
 		while len(self._prev) > 100:
 			_logger.debug('[GC] removing %s from the history', self._prev.pop(0))
+
+	def _interval_changed(self, y, z):
+		_logger.debug('the interval has changed')
+		# should end the timer
+		self.daemon.toggle_timer()
+		# should start the timer
+		self.daemon.toggle_timer()
 
 	def _is_image(self, uri):
 		file = uri.replace('file://', '')
