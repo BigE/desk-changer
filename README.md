@@ -7,8 +7,8 @@ on the fly without reloading the daemon.
 
 ### Screenshots
 
-![Screenshot-1](./screenshot-1.png?raw=true "Screenshot of menu")
-![Screenshot-2](./screenshot-2.png?raw=true "Screenshot of notification")
+![Screenshot-1](./screenshot-1.png?raw=true =300x "Screenshot of menu")
+![Screenshot-2](./screenshot-2.png?raw=true =300x "Screenshot of notification")
 
 ---
 
@@ -19,7 +19,7 @@ on the fly without reloading the daemon.
 
 ### Install
 
-Just simply copy the desk-changer@eric.php-oop.net folder to your `~/.local/share/gnome-shell/extensions/` folder or the
+Just simply copy the desk-changer&commat;eric.php-oop.net folder to your `~/.local/share/gnome-shell/extensions/` folder or the
 system `/usr/share/gnome-shell/extensions/` folder.
 
 `cp desk-changer@eric.php-oop.net/ ~/.local/share/gnome-shell/extensions/`
@@ -38,9 +38,9 @@ with the built in toggle switch.
 To view more information about the daemon, run it from the command line with the `-h` or `--help` option.
 
 >$ ./desk-changer@eric.php-oop.net/daemon.py -h  
->usage: daemon.py [-h] [--logfile LOGFILE] [--logformat FORMAT]  
->                 [--loglevel {DEBUG,INFO,WARNING,ERROR,CRITICAL}] [-v]  
->                 [--version]  
+>usage: daemon.py \[-h] \[--logfile LOGFILE] \[--logformat FORMAT]  
+>                 \[--loglevel {DEBUG,INFO,WARNING,ERROR,CRITICAL}] \[-v]  
+>                 \[--version]  
 >                 {start,stop,restart,status}  
 >  
 >DeskChanger Daemon  
