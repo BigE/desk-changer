@@ -7,8 +7,8 @@ on the fly without reloading the daemon.
 
 ### Screenshots
 
-![Screenshot-1](./screenshot-1.png?raw=true =300x "Screenshot of menu")
-![Screenshot-2](./screenshot-2.png?raw=true =300x "Screenshot of notification")
+![Screenshot-1](./screenshot-1.png?raw=true "Screenshot of menu")
+![Screenshot-2](./screenshot-2.png?raw=true "Screenshot of notification")
 
 ---
 
