@@ -71,6 +71,18 @@ const DeskChangerPrefs = new Lang.Class({
 		}));
 		box.pack_start(this._switch, false, true, 5);
 		daemon_box.pack_start(box, true, false, 10);
+		box = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL});
+		label = new Gtk.Label({label: 'Timer Interval (seconds)'});
+		box.pack_start(label, false, true, 5);
+		label = new Gtk.Label({label: ' '});
+		box.pack_start(label, true, true, 5);
+		this._interval = new Gtk.SpinButton({
+			adjustment: new Gtk.Adjustment({lower: 0.0, upper: 84600.0, step_increment: 1.0, page_increment: 10.0, page_size: 0.0})
+		});
+		this._interval.set_value(this._settings.interval);
+		this._interval.update();
+		box.pack_start(this._interval, false, true, 5);
+		daemon_box.pack_start(box, true, false, 10);
 		this.notebook.append_page(daemon_box, new Gtk.Label({label: 'Daemon'}));
 	},
 
