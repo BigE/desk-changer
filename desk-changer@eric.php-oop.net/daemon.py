@@ -31,7 +31,7 @@ import traceback
 
 __author__ = 'Eric Gach <eric@php-oop.net>'
 __daemon_path__ = os.path.dirname(os.path.realpath(__file__))
-__version__ = '1.0.3'
+__version__ = '1.0.4'
 
 _logger = logging.getLogger('desk-changer')
 
