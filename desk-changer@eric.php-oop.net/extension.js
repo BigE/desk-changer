@@ -13,7 +13,6 @@
 
 const Clutter = imports.gi.Clutter;
 const Gio = imports.gi.Gio;
-const GLib = imports.gi.GLib;
 const Lang = imports.lang;
 const Main = imports.ui.main;
 const Me = imports.misc.extensionUtils.getCurrentExtension();
@@ -51,7 +50,15 @@ const DeskChangerButton = new Lang.Class({
 			child: this.icon,
 			style_class: 'system-menu-action'// : 'notification-icon-button control-button'
 		});
-		this.connect('clicked', callback);
+		this._handler = this.connect('clicked', callback);
+	},
+
+	destroy: function()
+	{
+		debug('removing button clicked handler '+this._handler);
+		this.disconnect(this._handler);
+		this.icon.destroy();
+		this.parent();
 	},
 
 	set_icon: function(icon)
@@ -105,6 +112,14 @@ const DeskChangerControls = new Lang.Class({
 		this._addActor(this._next, {expand: true, x_fill: false});
 	},
 
+	destroy: function() {
+		this._next.destroy();
+		this._prev.destroy();
+		this._random.destroy();
+		this._timer.destroy();
+		this.parent();
+	},
+
 	_toggle_random: function (state)
 	{
 		debug('setting order to '+state);
@@ -127,12 +142,23 @@ const DeskChangerDaemonControls = new Lang.Class({
 		this._daemon = new DeskChangerDaemon();
 		this.parent('DeskChanger Daemon');
 		this.setToggleState(this._daemon.is_running);
-		this.connect('toggled', Lang.bind(this, function () {
+		this._handler = this.connect('toggled', Lang.bind(this, function () {
 			this._daemon.toggle();
 		}));
-		this._daemon.connect('toggled', Lang.bind(this, function (obj, state, pid) {
+		this._daemon_handler = this._daemon.connect('toggled', Lang.bind(this, function (obj, state, pid) {
 			this.setToggleState(state);
 		}));
+	},
+
+	destroy: function()
+	{
+		// not sure why, but removing this handler causes the extension to crash on unload... meh
+		//debug('removing daemon switch handler '+this._handler);
+		//this.disconnect(this._handler);
+		debug('removing daemon toggled handler '+this._daemon_handler);
+		this.disconnect(this._daemon_handler);
+		this._daemon.destroy();
+		this.parent();
 	}
 });
 
@@ -192,7 +218,7 @@ const DeskChangerIndicator = new Lang.Class({
 		}));
 		this.parent(0.0, 'DeskChanger');
 		this._dbus = new DeskChangerDBusProxy(Gio.DBus.session, 'org.gnome.shell.extensions.desk_changer', '/org/gnome/shell/extensions/desk_changer');
-		this._dbus.connectSignal('changed', Lang.bind(this, function (emitter, signalName, parameters) {
+		this._dbus_handler = this._dbus.connectSignal('changed', Lang.bind(this, function (emitter, signalName, parameters) {
 			if (this.settings.notifications)
 				Main.notify('Desk Changer', 'Wallpaper Changed: ' + parameters[0]);
 		}));
@@ -218,6 +244,9 @@ const DeskChangerIndicator = new Lang.Class({
 
 	destroy: function ()
 	{
+		debug('removing dbus changed handler '+this._dbus_handler);
+		this._dbus.disconnectSignal(this._dbus_handler);
+		this.settings.destroy();
 		this.parent();
 	}
 });
@@ -235,6 +264,7 @@ const DeskChangerOpenCurrent = new Lang.Class({
 
 	destroy: function ()
 	{
+		debug('removing current activate handler '+this._activate_id);
 		this.disconnect(this._activate_id);
 		this.parent();
 	},
@@ -284,14 +314,10 @@ const DeskChangerPreview = new Lang.Class({
 
 	destroy: function ()
 	{
-		if (this._next_file_id) {
-			debug('removing dbus next_file handler '+this._next_file_id);
-			this._dbus.disconnectSignal(this._next_file_id);
-		}
-
-		if (this._activate_id) {
-			this.disconnect(this._activate_id);
-		}
+		debug('removing dbus next_file handler '+this._next_file_id);
+		this._dbus.disconnectSignal(this._next_file_id);
+		debug('removing preview activate handler '+this._activate_id);
+		this.disconnect(this._activate_id);
 
 		this._wallpaper.destroy();
 		this._texture.destroy();
@@ -416,12 +442,12 @@ const DeskChangerSwitch = new Lang.Class({
 	destroy: function ()
 	{
 		if (this._handler_changed) {
-			this._settings.disconnect(this._handler);
+			debug('removing changed::' + this._setting + ' handler ' + this._handler_changed);
+			this._settings.disconnect(this._handler_changed);
 		}
 
-		if (this._handler_toggled) {
-			this.disconnect(this._handler_toggled);
-		}
+		debug('removing swtich toggled handler '+this._handler_toggled);
+		this.disconnect(this._handler_toggled);
 	},
 
 	_changed: function (settings, key)

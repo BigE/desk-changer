@@ -101,8 +101,6 @@ const DeskChangerSettings = new Lang.Class({
 		while (this._handlers.length) {
 			this.disconnect(this._handlers[0]);
 		}
-
-		this.schema.destroy();
 	},
 
 	disconnect: function (handler_id)
