@@ -9,7 +9,7 @@
 			<summary>Auto rotate wallpaper when the profile is changed</summary>
 		</key>
 		<key name="current-profile" type="s">
-			<default>"gnome"</default>
+			<default>"default"</default>
 			<description>
 				This is the current profile that the daemon will load.
 			</description>
