@@ -236,11 +236,14 @@ const DeskChangerPrefs = new Lang.Class({
 		}
 		dialog.add_button(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL);
 		dialog.add_button(Gtk.STOCK_OPEN, Gtk.ResponseType.OK);
+		dialog.set_select_multiple(true);
 		response = dialog.run();
 		if (response == Gtk.ResponseType.OK) {
-			var path = dialog.get_uri(), profile, profiles = this._settings.profiles;
+			var paths = dialog.get_uris(), profile, profiles = this._settings.profiles;
 			profile = this.profiles_combo_box.get_active_text();
-			profiles[profile].push([path, false]);
+			for (var path in paths) {
+				profiles[profile].push([paths[path], false]);
+			}
 			this._settings.profiles = profiles;
 			this._load_profiles();
 		}
