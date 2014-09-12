@@ -1,15 +1,4 @@
-#!/usr/bin/env python3
-
-#  ▄▄▄▄    ██▓  ▄████   ▄████  ██▓▓█████ 
-# ▓█████▄ ▓██▒ ██▒ ▀█▒ ██▒ ▀█▒▓██▒▓█   ▀ 
-# ▒██▒ ▄██▒██▒▒██░▄▄▄░▒██░▄▄▄░▒██▒▒███   
-# ▒██░█▀  ░██░░▓█  ██▓░▓█  ██▓░██░▒▓█  ▄ 
-# ░▓█  ▀█▓░██░░▒▓███▀▒░▒▓███▀▒░██░░▒████▒
-# ░▒▓███▀▒░▓   ░▒   ▒  ░▒   ▒ ░▓  ░░ ▒░ ░
-# ▒░▒   ░  ▒ ░  ░   ░   ░   ░  ▒ ░ ░ ░  ░
-#  ░    ░  ▒ ░░ ░   ░ ░ ░   ░  ▒ ░   ░   
-#  ░       ░        ░       ░  ░     ░  ░
-#       ░                                
+#!/usr/bin/env python                    
 
 import argparse
 import atexit
@@ -215,7 +204,7 @@ class DeskChangerSettings(Gio.Settings):
 			False
 		)
 		kwargs.setdefault('settings_schema', source.lookup('org.gnome.shell.extensions.desk-changer', False))
-		super(DeskChangerSettings, self).__init__(**kwargs)
+		super(DeskChangerSettings, self).__init__(None, **kwargs)
 		self.bind('auto-rotate', self, 'auto_rotate', Gio.SettingsBindFlags.DEFAULT)
 		self.bind('current-profile', self, 'profile', Gio.SettingsBindFlags.DEFAULT)
 		self.bind('interval', self, 'interval', Gio.SettingsBindFlags.DEFAULT)
@@ -280,7 +269,7 @@ class DeskChangerWallpapers(GObject.GObject):
 		for uri, recursive in profile:
 			_logger.debug('loading %s%s', uri, ' recursively' if recursive else '')
 			location = Gio.File.new_for_uri(uri)
-			self._parse_info(location, location.query_info('standard::*', Gio.FileQueryInfoFlags.NONE), recursive)
+			self._parse_info(location, location.query_info('standard::*', Gio.FileQueryInfoFlags.NONE, None), recursive)
 		if len(self._wallpapers) < 2:
 			_logger.critical('cannot run daemon, only loaded %d wallpapers!', len(self._wallpapers))
 			sys.exit(-1)
