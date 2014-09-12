@@ -34,7 +34,7 @@ const DeskChangerBaseMenuItem = new Lang.Class({
 		if (this.actor.add) {
 			this.actor.add(widget, params);
 		} else {
-			this.actorAdd(widget, params);
+			this.actor.add_actor(widget, params);
 		}
 	}
 });
@@ -289,7 +289,7 @@ const DeskChangerPreview = new Lang.Class({
 		if (this.actor.add) {
 			this.actor.add(this._box, {align: St.Align.MIDDLE, span: -1});
 		} else {
-			this.actorAdd(this._box, {align: St.Align.MIDDLE, span: -1});
+			this.actor.add_actor(this._box, {align: St.Align.MIDDLE, span: -1});
 		}
 		this._label = new St.Label({text: "Next Wallpaper\n"});
 		this._box.add(this._label);
