@@ -17,10 +17,11 @@ import signal
 import sys
 import time
 import traceback
+from urllib import parse as urlparser
 
 __author__ = 'Eric Gach <eric@php-oop.net>'
 __daemon_path__ = os.path.dirname(os.path.realpath(__file__))
-__version__ = '1.0.4'
+__version__ = '5'
 
 _logger = logging.getLogger('desk-changer')
 
@@ -304,6 +305,7 @@ class DeskChangerWallpapers(GObject.GObject):
 			self._parse_info(enumerator.get_container(), child, recursive)
 
 	def _files_changed(self, monitor, file, other_file, event_type):
+		_logger.debug('file monitor %s changed with event type %s', file.get_uri(), event_type)
 		if event_type == Gio.FileMonitorEvent.CREATED and self._is_image(file.get_uri()):
 			try:
 				self._wallpapers.index(file.get_uri())
@@ -335,7 +337,7 @@ class DeskChangerWallpapers(GObject.GObject):
 		self.daemon.toggle_timer()
 
 	def _is_image(self, uri):
-		file = uri.replace('file://', '')
+		file = urlparser.unquote(uri).replace('file://', '')
 		try:
 			is_img = bool(imghdr.what(file))
 		except FileNotFoundError:

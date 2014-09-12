@@ -15,7 +15,7 @@ on the fly without reloading the daemon.
 ## Requirements
 
 * gnome-shell 3.8 or higher
-* Python 3 with [PyGObject](https://wiki.gnome.org/action/show/Projects/PyGObject?action=show&redirect=PyGObject)
+* Python 2 with [PyGObject](https://wiki.gnome.org/action/show/Projects/PyGObject?action=show&redirect=PyGObject)
 
 ### Install
 
