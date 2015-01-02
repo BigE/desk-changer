@@ -1,14 +1,23 @@
 /**
- *  ▄▄▄▄    ██▓  ▄████   ▄████  ██▓▓█████ 
- * ▓█████▄ ▓██▒ ██▒ ▀█▒ ██▒ ▀█▒▓██▒▓█   ▀ 
- * ▒██▒ ▄██▒██▒▒██░▄▄▄░▒██░▄▄▄░▒██▒▒███   
- * ▒██░█▀  ░██░░▓█  ██▓░▓█  ██▓░██░▒▓█  ▄ 
- * ░▓█  ▀█▓░██░░▒▓███▀▒░▒▓███▀▒░██░░▒████▒
- * ░▒▓███▀▒░▓   ░▒   ▒  ░▒   ▒ ░▓  ░░ ▒░ ░
- * ▒░▒   ░  ▒ ░  ░   ░   ░   ░  ▒ ░ ░ ░  ░
- *  ░    ░  ▒ ░░ ░   ░ ░ ░   ░  ▒ ░   ░   
- *  ░       ░        ░       ░  ░     ░  ░
- *       ░                                
+ * Copyright (c) 2014-2015 Eric Gach <eric@php-oop.net>
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  */
 
 const Clutter = imports.gi.Clutter;
@@ -24,20 +33,6 @@ const Util = imports.misc.util;
 const DeskChangerDaemon = Me.imports.daemon.DeskChangerDaemon;
 const DeskChangerSettings = Me.imports.settings.DeskChangerSettings;
 const DeskChangerVersion = Me.metadata.version;
-
-const DeskChangerBaseMenuItem = new Lang.Class({
-	Name: 'DeskChangerBaseMenuItem',
-	Extends: PopupMenu.PopupBaseMenuItem,
-
-	_addActor: function (widget, params)
-	{
-		if (this.actor.add) {
-			this.actor.add(widget, params);
-		} else {
-			this.actor.add_actor(widget, params);
-		}
-	}
-});
 
 const DeskChangerButton = new Lang.Class({
 	Name: 'DeskChangerButton',
@@ -69,7 +64,7 @@ const DeskChangerButton = new Lang.Class({
 
 const DeskChangerControls = new Lang.Class({
 	Name: 'DeskChangerControls',
-	Extends: DeskChangerBaseMenuItem,
+	Extends: PopupMenu.PopupBaseMenuItem,
 
 	_init: function (dbus, settings)
 	{
@@ -106,10 +101,19 @@ const DeskChangerControls = new Lang.Class({
 		], Lang.bind(this, this._toggle_timer));
 		this._timer.set_state((this._settings.timer_enabled)? 'enable' : 'disable');
 
-		this._addActor(this._prev, {expand: true, x_fill: false});
-		this._addActor(this._random, {expand: true, x_fill: false});
-		this._addActor(this._timer, {expand: true, x_fill: false});
-		this._addActor(this._next, {expand: true, x_fill: false});
+		if (this.addActor) {
+			this._box = new St.BoxLayout({style: 'spacing: 20px;'});
+			this.addActor(this._box, {align: St.Align.MIDDLE, span: -1});
+			this._box.add_actor(this._prev, {expand: true});
+			this._box.add_actor(this._random, {expand: true});
+			this._box.add_actor(this._timer, {expand: true});
+			this._box.add_actor(this._next, {expand: true});
+		} else {
+			this.actor.add_actor(this._prev, {expand: true, x_fill: false});
+			this.actor.add_actor(this._random, {expand: true, x_fill: false});
+			this.actor.add_actor(this._timer, {expand: true, x_fill: false});
+			this.actor.add_actor(this._next, {expand: true, x_fill: false});
+		}
 	},
 
 	destroy: function() {
@@ -286,9 +290,9 @@ const DeskChangerPreview = new Lang.Class({
 		this._dbus = _dbus;
 		this.parent({reactive: true});
 		this._box = new St.BoxLayout({vertical: true});
-		if (this.actor.add) {
-			this.actor.add(this._box, {align: St.Align.MIDDLE, span: -1});
-		} else {
+		try {
+			this.addActor(this._box, {align: St.Align.MIDDLE, span: -1});
+		} catch (e) {
 			this.actor.add_actor(this._box, {align: St.Align.MIDDLE, span: -1});
 		}
 		this._label = new St.Label({text: "Next Wallpaper\n"});
