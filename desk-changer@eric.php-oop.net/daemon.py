@@ -17,7 +17,10 @@ import signal
 import sys
 import time
 import traceback
-from urllib import parse as urlparser
+try:
+    from urllib import parse
+except ImportError:
+    import urlparse as parse
 
 __author__ = 'Eric Gach <eric@php-oop.net>'
 __daemon_path__ = os.path.dirname(os.path.realpath(__file__))
@@ -337,7 +340,8 @@ class DeskChangerWallpapers(GObject.GObject):
         self.daemon.toggle_timer()
 
     def _is_image(self, uri):
-        file = urlparser.unquote(uri).replace('file://', '')
+        uri = parse.unquote(uri)
+        file = uri.replace('file://', '')
         try:
             is_img = bool(imghdr.what(file))
         except FileNotFoundError:
