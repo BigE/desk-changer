@@ -1,5 +1,4 @@
 const Gio = imports.gi.Gio;
-const GObject = imports.gi.GObject;
 const Lang = imports.lang;
 const Me = imports.misc.extensionUtils.getCurrentExtension();
 
