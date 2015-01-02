@@ -25,20 +25,6 @@ const DeskChangerDaemon = Me.imports.daemon.DeskChangerDaemon;
 const DeskChangerSettings = Me.imports.settings.DeskChangerSettings;
 const DeskChangerVersion = Me.metadata.version;
 
-const DeskChangerBaseMenuItem = new Lang.Class({
-	Name: 'DeskChangerBaseMenuItem',
-	Extends: PopupMenu.PopupBaseMenuItem,
-
-	_addActor: function (widget, params)
-	{
-		if (this.actor.add) {
-			this.actor.add(widget, params);
-		} else {
-			this.actor.add_actor(widget, params);
-		}
-	}
-});
-
 const DeskChangerButton = new Lang.Class({
 	Name: 'DeskChangerButton',
 	Extends: St.Button,
@@ -69,13 +55,15 @@ const DeskChangerButton = new Lang.Class({
 
 const DeskChangerControls = new Lang.Class({
 	Name: 'DeskChangerControls',
-	Extends: DeskChangerBaseMenuItem,
+	Extends: PopupMenu.PopupBaseMenuItem,
 
 	_init: function (dbus, settings)
 	{
 		this._dbus = dbus;
 		this._settings = settings;
 		this.parent({can_focus: false, reactive: false});
+		this._box = new St.BoxLayout({style: 'spacing: 20px;'});
+		this.addActor(this._box, {span: -1, align: St.Align.MIDDLE});
 
 		this._next = new DeskChangerButton('media-skip-forward', Lang.bind(this._dbus, function () {
 			this.nextSync(true);
@@ -106,10 +94,10 @@ const DeskChangerControls = new Lang.Class({
 		], Lang.bind(this, this._toggle_timer));
 		this._timer.set_state((this._settings.timer_enabled)? 'enable' : 'disable');
 
-		this._addActor(this._prev, {expand: true, x_fill: false});
-		this._addActor(this._random, {expand: true, x_fill: false});
-		this._addActor(this._timer, {expand: true, x_fill: false});
-		this._addActor(this._next, {expand: true, x_fill: false});
+		this._box.add_actor(this._prev, {expand: true});
+		this._box.add_actor(this._random, {expand: true});
+		this._box.add_actor(this._timer, {expand: true});
+		this._box.add_actor(this._next, {expand: true});
 	},
 
 	destroy: function() {
@@ -286,11 +274,7 @@ const DeskChangerPreview = new Lang.Class({
 		this._dbus = _dbus;
 		this.parent({reactive: true});
 		this._box = new St.BoxLayout({vertical: true});
-		if (this.actor.add) {
-			this.actor.add(this._box, {align: St.Align.MIDDLE, span: -1});
-		} else {
-			this.actor.add_actor(this._box, {align: St.Align.MIDDLE, span: -1});
-		}
+		this.addActor(this._box, {align: St.Align.MIDDLE, span: -1});
 		this._label = new St.Label({text: "Next Wallpaper\n"});
 		this._box.add(this._label);
 		this._wallpaper = new St.Bin({});
