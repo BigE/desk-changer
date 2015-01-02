@@ -64,10 +64,10 @@ const DeskChangerDaemon = new Lang.Class({
 	{
 		if (this._is_running) {
 			debug('stopping daeomn');
-			GLib.spawn_async(this._path, [this._path+'/daemon.py','stop'], null, GLib.SpawnFlags.DO_NOT_REAP_CHILD, null);
+			GLib.spawn_async(this._path, ['/usr/bin/python', this._path+'/daemon.py','stop'], null, GLib.SpawnFlags.DO_NOT_REAP_CHILD, null);
 		} else {
 			debug('starting daemon');
-			GLib.spawn_async(this._path, [this._path+'/daemon.py', 'start'], null, GLib.SpawnFlags.DO_NOT_REAP_CHILD, null);
+			GLib.spawn_async(this._path, ['/usr/bin/python', this._path+'/daemon.py', 'start'], null, GLib.SpawnFlags.DO_NOT_REAP_CHILD, null);
 		}
 	},
 
