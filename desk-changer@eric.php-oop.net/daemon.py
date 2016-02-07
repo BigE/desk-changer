@@ -90,7 +90,7 @@ class DeskChangerDaemon(GObject.GObject):
         self.mainloop = GLib.MainLoop()
         if _dbus:
             self.dbus = DeskChangerDBus(self)
-            self.wallpapers.connect('wallpaper_next', lambda obj, file: self.dbus.next_file(file))
+            self.wallpapers.connect('wallpaper_next', lambda obj, _file: self.dbus.next_file(_file))
             self.dbus.next_file(self.wallpapers.next_uri)
         if self.settings.auto_rotate:
             self.next(False)
@@ -183,8 +183,8 @@ class DeskChangerDBus(dbus.service.Object):
         super(DeskChangerDBus, self).__init__(bus_name, self.bus_path)
 
     @dbus.service.signal(bus_name)
-    def changed(self, file):
-        _logger.info('[DBUS] SIGNAL changed %s', file)
+    def changed(self, _file):
+        _logger.info('[DBUS] SIGNAL changed %s', _file)
 
     @dbus.service.method(bus_name)
     def next(self, history=True):
@@ -192,8 +192,8 @@ class DeskChangerDBus(dbus.service.Object):
         self.daemon.next(history)
 
     @dbus.service.signal(bus_name)
-    def next_file(self, file):
-        _logger.info('[DBUS] SIGNAL next_file %s', file)
+    def next_file(self, _file):
+        _logger.info('[DBUS] SIGNAL next_file %s', _file)
 
     @dbus.service.method(bus_name)
     def prev(self):
