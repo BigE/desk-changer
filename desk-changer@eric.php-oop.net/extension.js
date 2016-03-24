@@ -25,8 +25,10 @@ const Gio = imports.gi.Gio;
 const Lang = imports.lang;
 const Main = imports.ui.main;
 const Me = imports.misc.extensionUtils.getCurrentExtension();
+const Meta = imports.gi.Meta;
 const PanelMenu = imports.ui.panelMenu;
 const PopupMenu = imports.ui.popupMenu;
+const Shell = imports.gi.Shell;
 const St = imports.gi.St;
 const Util = imports.misc.util;
 
@@ -67,11 +69,15 @@ const DeskChangerControls = new Lang.Class({
     _init: function (dbus, settings) {
         this._dbus = dbus;
         this._settings = settings;
+        this._bindings = new Array();
         this.parent({can_focus: false, reactive: false});
 
-        this._next = new DeskChangerButton('media-skip-forward', Lang.bind(this._dbus, function () {
-            this.nextSync(true);
+        this._addKeyBinding('next-wallpaper', Lang.bind(this, this.next));
+        this._addKeyBinding('prev-wallpaper', Lang.bind(this._dbus, function () {
+            this.prevSync();
         }));
+
+        this._next = new DeskChangerButton('media-skip-forward', Lang.bind(this, this.next));
         this._prev = new DeskChangerButton('media-skip-backward', Lang.bind(this._dbus, function () {
             this.prevSync();
         }));
@@ -114,11 +120,59 @@ const DeskChangerControls = new Lang.Class({
     },
 
     destroy: function () {
+        let size = this._bindings.length;
+
+        for (let i = 0; i < size; i++) {
+            this._removeKeyBinding(this._bindings[i]);
+        }
+
         this._next.destroy();
         this._prev.destroy();
         this._random.destroy();
         this._timer.destroy();
         this.parent();
+    },
+
+    next: function () {
+        debug('next');
+        this._dbus.nextSync(true);
+    },
+
+    _addKeyBinding: function (key, handler) {
+        let success = false;
+        if (Shell.ActionMode) { // 3.16 and above
+            success = Main.wm.addKeybinding(
+                key,
+                this._settings.schema,
+                Meta.KeyBindingFlags.NONE,
+                Shell.ActionMode.NORMAL,
+                handler
+            );
+        } else { // 3.8 and above
+            success = Main.wm.addKeybinding(
+                key,
+                this._settings.schema,
+                Meta.KeyBindingFlags.NONE,
+                Shell.KeyBindingMode.NORMAL,
+                handler
+            );
+        }
+
+        this._bindings.push(key);
+        if (success) {
+            debug('added keybinding ' + key);
+        } else {
+            debug('fuck... failed');
+        }
+    },
+
+    _removeKeyBinding: function (key) {
+        if (this._bindings.indexOf(key)) {
+            this._bindings.splice(this._bindings.indexOf(key), 1);
+        }
+
+        debug('removing keybinding ' + key);
+        Main.wm.removeKeybinding(key);
     },
 
     _toggle_random: function (state) {

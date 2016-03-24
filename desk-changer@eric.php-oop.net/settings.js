@@ -113,5 +113,13 @@ const DeskChangerSettings = new Lang.Class({
         if (index > -1) {
             this._handlers.splice(index, 1);
         }
+    },
+
+    getKeybinding: function (name) {
+        return this.schema.get_strv(name);
+    },
+
+    setKeybinding: function (name, value) {
+        this.schema.set_strv(name, value);
     }
 });
