@@ -19,6 +19,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+const Gio = imports.gi.Gio;
+const GLib = imports.gi.GLib;
 const GObject = imports.gi.GObject;
 const Gtk = imports.gi.Gtk;
 const Lang = imports.lang;
@@ -38,6 +40,9 @@ const DeskChangerPrefs = new Lang.Class({
             orientation: Gtk.Orientation.VERTICAL,
             spacing: 10
         });
+
+        // init settings holders
+        this._settingsKeybind = new Array();
 
         this._settings = new DeskChangerSettings();
         this.notebook = new Gtk.Notebook();
@@ -150,6 +155,18 @@ const DeskChangerPrefs = new Lang.Class({
         cellrend = new Gtk.CellRendererAccel({editable: true, 'accel-mode': Gtk.CellRendererAccelMode.GTK});
         cellrend.connect('accel-edited', Lang.bind(this, function (rend, iter, key, mods) {
             let value = Gtk.accelerator_name(key, mods);
+            if (this._keybindingExists(value)) {
+                // don't set the keybinding, it exists
+                let dialog = new Gtk.MessageDialog({
+                    buttons: Gtk.ButtonsType.OK,
+                    message_type: Gtk.MessageType.ERROR,
+                    text: 'The keybinding ' + value + ' is already in use'
+                });
+                dialog.run();
+                dialog.destroy();
+                return;
+            }
+
             let [success, iterator] = model.get_iter_from_string(iter);
 
             if (!success) {
@@ -323,6 +340,41 @@ const DeskChangerPrefs = new Lang.Class({
             this._load_profiles();
         }
         dialog.destroy();
+    },
+
+    _keybindingExists: function (value) {
+        if (this._settingsKeybind.length == 0) {
+            this._settingsKeybind.push(new Gio.Settings({schema: 'org.gnome.desktop.wm.keybindings'}));
+            this._settingsKeybind.push(new Gio.Settings({schema: 'org.gnome.mutter.keybindings'}));
+            this._settingsKeybind.push(new Gio.Settings({schema: 'org.gnome.mutter.wayland.keybindings'}));
+            this._settingsKeybind.push(new Gio.Settings({schema: 'org.gnome.shell.keybindings'}));
+            this._settingsKeybind.push(new Gio.Settings({schema: 'org.gnome.settings-daemon.plugins.media-keys'}));
+        }
+
+        for (let i = 0; i < this._settingsKeybind.length; i++) {
+            let keys = this._settingsKeybind[i].list_keys();
+            for (let x = 0; x < keys.length; x++) {
+                let _value = this._settingsKeybind[i].get_value(keys[x]);
+                if (!_value) continue;
+                debug(_value.get_type_string());
+                if (_value.get_type_string() == 's') {
+                    debug(_value.get_string());
+                    if (_value.get_string() == value) {
+                        return true;
+                    }
+                } else if (_value.get_type_string() == 'as') {
+                    _value = _value.get_strv(_value);
+                    for (let n = 0; n < _value.length; n++) {
+                        debug(_value[n]);
+                        if (_value[n] == value) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+
+        return false;
     },
 
     _load_profiles: function () {
