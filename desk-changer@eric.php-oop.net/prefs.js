@@ -23,8 +23,10 @@ const GObject = imports.gi.GObject;
 const Gtk = imports.gi.Gtk;
 const Lang = imports.lang;
 const Me = imports.misc.extensionUtils.getCurrentExtension();
+
 const DeskChangerSettings = Me.imports.settings.DeskChangerSettings;
 const DeskChangerDaemon = Me.imports.daemon.DeskChangerDaemon;
+const debug = Me.imports.utils.debug;
 
 const DeskChangerPrefs = new Lang.Class({
     Name: 'DeskChangerPrefs',
@@ -290,12 +292,6 @@ const DeskChangerPrefs = new Lang.Class({
 function buildPrefsWidget() {
     var widget = new DeskChangerPrefs();
     return (widget.box);
-}
-
-function debug(output) {
-    var date = new Date();
-    output = '[' + date.toLocaleString() + ']' + Me.metadata.uuid + '[PREFS]: ' + output;
-    log(output);
 }
 
 function init() {

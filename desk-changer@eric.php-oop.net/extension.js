@@ -33,6 +33,7 @@ const Util = imports.misc.util;
 const DeskChangerDaemon = Me.imports.daemon.DeskChangerDaemon;
 const DeskChangerSettings = Me.imports.settings.DeskChangerSettings;
 const DeskChangerVersion = Me.metadata.version;
+const debug = Me.imports.utils.debug;
 
 const DeskChangerButton = new Lang.Class({
     Name: 'DeskChangerButton',
@@ -437,12 +438,6 @@ const DeskChangerSwitch = new Lang.Class({
         this._settings[this._setting] = this.state;
     }
 });
-
-function debug(output) {
-    var date = new Date();
-    output = '[' + date.toLocaleString() + ']' + Me.metadata.uuid + ': ' + output;
-    log(output);
-}
 
 function disable() {
     debug('disabling extension');

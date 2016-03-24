@@ -25,6 +25,8 @@ const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
 const Signals = imports.signals;
 
+const debug = Me.imports.utils.debug;
+
 const DeskChangerDaemon = new Lang.Class({
     Name: 'DeskChangerDaemon',
 
@@ -106,9 +108,3 @@ const DeskChangerDaemon = new Lang.Class({
 });
 
 Signals.addSignalMethods(DeskChangerDaemon.prototype);
-
-function debug(output) {
-    var date = new Date();
-    output = '[' + date.toLocaleString() + ']' + Me.metadata.uuid + '[daemon]: ' + output;
-    log(output);
-}
