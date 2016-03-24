@@ -26,7 +26,7 @@ system `/usr/share/gnome-shell/extensions/` folder.
 
 or
 
-`cp -r desk-changer@eric.php-oop.net/ /usr/share/gname-shell/extensions/`
+`cp -r desk-changer@eric.php-oop.net/ /usr/share/gnome-shell/extensions/`
 
 Then restart gnome-shell and enable the extension. Once it is enabled, you can use the extension to start the daemon
 with the built in toggle switch.

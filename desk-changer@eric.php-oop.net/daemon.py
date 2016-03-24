@@ -90,7 +90,7 @@ class DeskChangerDaemon(GObject.GObject):
         self.mainloop = GLib.MainLoop()
         if _dbus:
             self.dbus = DeskChangerDBus(self)
-            self.wallpapers.connect('wallpaper_next', lambda obj, file: self.dbus.next_file(file))
+            self.wallpapers.connect('wallpaper_next', lambda obj, _file: self.dbus.next_file(_file))
             self.dbus.next_file(self.wallpapers.next_uri)
         if self.settings.auto_rotate:
             self.next(False)
@@ -183,8 +183,8 @@ class DeskChangerDBus(dbus.service.Object):
         super(DeskChangerDBus, self).__init__(bus_name, self.bus_path)
 
     @dbus.service.signal(bus_name)
-    def changed(self, file):
-        _logger.info('[DBUS] SIGNAL changed %s', file)
+    def changed(self, _file):
+        _logger.info('[DBUS] SIGNAL changed %s', _file)
 
     @dbus.service.method(bus_name)
     def next(self, history=True):
@@ -192,8 +192,8 @@ class DeskChangerDBus(dbus.service.Object):
         self.daemon.next(history)
 
     @dbus.service.signal(bus_name)
-    def next_file(self, file):
-        _logger.info('[DBUS] SIGNAL next_file %s', file)
+    def next_file(self, _file):
+        _logger.info('[DBUS] SIGNAL next_file %s', _file)
 
     @dbus.service.method(bus_name)
     def prev(self):
@@ -327,20 +327,20 @@ class DeskChangerWallpapers(GObject.GObject):
         for child in enumerator:
             self._parse_info(enumerator.get_container(), child, recursive)
 
-    def _files_changed(self, monitor, file, other_file, event_type):
-        _logger.debug('file monitor %s changed with event type %s', file.get_uri(), event_type)
-        if event_type == Gio.FileMonitorEvent.CREATED and self._is_image(file.get_uri()):
+    def _files_changed(self, monitor, _file, other_file, event_type):
+        _logger.debug('file monitor %s changed with event type %s', _file.get_uri(), event_type)
+        if event_type == Gio.FileMonitorEvent.CREATED and self._is_image(_file.get_uri()):
             try:
-                self._wallpapers.index(file.get_uri())
+                self._wallpapers.index(_file.get_uri())
             except ValueError:
-                _logger.debug('adding new file to the list: %s', file.get_uri())
-                self._wallpapers.append(file.get_uri())
+                _logger.debug('adding new file to the list: %s', _file.get_uri())
+                self._wallpapers.append(_file.get_uri())
                 self._wallpapers.sort()
         elif event_type == Gio.FileMonitorEvent.DELETED:
             try:
-                i = self._wallpapers.index(file.get_uri())
+                i = self._wallpapers.index(_file.get_uri())
                 if i:
-                    _logger.debug('removing deleted file from the list: %s', file.get_uri())
+                    _logger.debug('removing deleted file from the list: %s', _file.get_uri())
                     self._wallpapers.pop(i)
                     self._wallpapers.sort()
             except ValueError:
@@ -361,9 +361,9 @@ class DeskChangerWallpapers(GObject.GObject):
 
     def _is_image(self, uri):
         uri = parse.unquote(uri)
-        file = uri.replace('file://', '')
+        _file = uri.replace('file://', '')
         try:
-            is_img = bool(imghdr.what(file))
+            is_img = bool(imghdr.what(_file))
         except FileNotFoundError:
             is_img = False
         return is_img
