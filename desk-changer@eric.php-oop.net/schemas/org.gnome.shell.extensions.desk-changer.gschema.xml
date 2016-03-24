@@ -22,12 +22,26 @@
 			</description>
 			<summary>test</summary>
 		</key>
+		<key name="next-wallpaper" type="as">
+			<default><![CDATA[['<Ctrl>Right']]]></default>
+			<description>
+				Keyboard shortcut to cause the daemon to display the next wallpaper.
+			</description>
+			<summary>Change to next wallpaper</summary>
+		</key>
 		<key name="notifications" type="b">
 			<default>true</default>
 			<description>
 				Display a notification each time an event happens with desk-changer.
 			</description>
 			<summary>test</summary>
+		</key>
+		<key name="prev-wallpaper" type="as">
+			<default><![CDATA[['<Ctrl>Left']]]></default>
+			<description>
+				Keyboard shortcut to cause the daemon to display the previous wallpaper.
+			</description>
+			<summary>Change to previous wallpaper</summary>
 		</key>
 		<key name="profiles" type="s">
 			<default>'{"default": [["file:///usr/share/backgrounds", true]]}'</default>

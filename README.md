@@ -22,11 +22,11 @@ on the fly without reloading the daemon.
 Just simply copy the desk-changer&commat;eric.php-oop.net folder to your `~/.local/share/gnome-shell/extensions/` folder or the
 system `/usr/share/gnome-shell/extensions/` folder.
 
-`cp desk-changer@eric.php-oop.net/ ~/.local/share/gnome-shell/extensions/`
+`cp -r desk-changer@eric.php-oop.net/ ~/.local/share/gnome-shell/extensions/`
 
 or
 
-`cp desk-changer@eric.php-oop.net/ /usr/share/gname-shell/extensions/`
+`cp -r desk-changer@eric.php-oop.net/ /usr/share/gnome-shell/extensions/`
 
 Then restart gnome-shell and enable the extension. Once it is enabled, you can use the extension to start the daemon
 with the built in toggle switch.
