@@ -114,13 +114,8 @@ const DeskChangerPrefs = new Lang.Class({
     },
 
     _initKeyboard: function () {
-        var keyboard_box = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL});
-        var box = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL});
-        var label = new Gtk.Label({label: 'Please note I do no checking against existing keyboard shortcuts. Use the keyboard shortcuts at your own risk.'});
-        box.pack_start(label, true, true, 5);
-        keyboard_box.pack_start(box, false, false, 10);
-
-        box = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL});
+        let keyboard_box = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL});
+        let box = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL});
         // Create the storage for the keybindings
         let name, model = new Gtk.ListStore();
         model.set_column_types([
@@ -311,7 +306,7 @@ const DeskChangerPrefs = new Lang.Class({
             this._add_item('Add Folder', Gtk.FileChooserAction.SELECT_FOLDER);
         }));
         hbox.pack_start(this.add, false, true, 10);
-        profiles_box.pack_end(hbox, true, true, 10);
+        profiles_box.pack_end(hbox, false, true, 10);
 
         profiles_box.pack_start(this.profiles, true, true, 10);
         this.notebook.append_page(profiles_box, new Gtk.Label({label: 'Profiles'}));
