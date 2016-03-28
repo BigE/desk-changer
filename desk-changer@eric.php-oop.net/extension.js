@@ -335,8 +335,10 @@ const DeskChangerPreview = new Lang.Class({
         } catch (e) {
             this.actor.add_actor(this._box, {align: St.Align.MIDDLE, span: -1});
         }
-        this._label = new St.Label({text: "Next Wallpaper\n"});
+        this._label = new St.Label({text: "Open Next Wallpaper"});
         this._box.add(this._label);
+        // This causes a HUGE memory leak... not sure why yet, disabling until I can figure it out
+        /*
         this._wallpaper = new St.Bin({});
         this._box.add(this._wallpaper);
         this._texture = new Clutter.Texture({
@@ -345,6 +347,7 @@ const DeskChangerPreview = new Lang.Class({
             width: 220
         });
         this._wallpaper.set_child(this._texture);
+        */
         this._next_file_id = this._dbus.connectSignal('next_file', Lang.bind(this, function (emitter, signalName, parameters) {
             var file = parameters[0];
             this.set_wallpaper(file);
@@ -362,8 +365,8 @@ const DeskChangerPreview = new Lang.Class({
         debug('removing preview activate handler ' + this._activate_id);
         this.disconnect(this._activate_id);
 
-        this._wallpaper.destroy();
-        this._texture.destroy();
+        //this._wallpaper.destroy();
+        //this._texture.destroy();
         this._label.destroy();
         this._box.destroy();
         this.parent();
@@ -372,10 +375,10 @@ const DeskChangerPreview = new Lang.Class({
     set_wallpaper: function (file) {
         this._file = file;
         file = file.replace('file://', '');
-        debug('setting preview to ' + file);
-        if (this._texture.set_from_file(file) === false) {
-            debug('ERROR: Failed to set preview of ' + file);
-        }
+        //debug('setting preview to ' + file);
+        //if (this._texture.set_from_file(file) === false) {
+            //debug('ERROR: Failed to set preview of ' + file);
+        //}
     },
 
     _clicked: function () {
