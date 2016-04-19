@@ -47,8 +47,8 @@ const DeskChangerPrefs = new Lang.Class({
         this._settings = new DeskChangerSettings();
         this.notebook = new Gtk.Notebook();
         this._initProfiles();
-        this._initDaemon();
         this._initKeyboard();
+        this._initMisc();
         this.box.pack_start(this.notebook, true, true, 0);
         this.box.show_all();
     },
@@ -62,29 +62,31 @@ const DeskChangerPrefs = new Lang.Class({
         this._load_profiles();
     },
 
-    _initDaemon: function () {
-        var daemon_box = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL});
+    _initMisc: function () {
+        var misc_box = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL});
+        var frame = new Gtk.Frame({label: 'Daemon'});
+        var frame_box = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL});
         var box = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL});
-        var label = new Gtk.Label({label: 'DeskChanger Daemon:'});
-        box.pack_start(label, false, true, 5);
+        var label = new Gtk.Label({label: 'DeskChanger Daemon Status:'});
+        box.pack_start(label, false, false, 5);
         label = new Gtk.Label({label: ' '});
         box.pack_start(label, true, true, 5);
-        this._switch = new Gtk.Switch();
-        this._switch.set_active(this._daemon.is_running);
-        this._switch_handler = this._switch.connect('notify::active', Lang.bind(this._daemon, this._daemon.toggle));
+        this._switchDaemon = new Gtk.Switch();
+        this._switchDaemon.set_active(this._daemon.is_running);
+        this._switch_handler = this._switchDaemon.connect('notify::active', Lang.bind(this._daemon, this._daemon.toggle));
         this._daemon.connect('toggled', Lang.bind(this, function (obj, state, pid) {
             if (this._switch_handler) {
-                this._switch.disconnect(this._switch_handler);
+                this._switchDaemon.disconnect(this._switch_handler);
                 this._switch_handler = null;
             }
             debug('toggled(' + state + ', ' + pid + ')');
-            this._switch.set_active(state);
-            this._switch_handler = this._switch.connect('notify::active', Lang.bind(this._daemon, this._daemon.toggle));
+            this._switchDaemon.set_active(state);
+            this._switch_handler = this._switchDaemon.connect('notify::active', Lang.bind(this._daemon, this._daemon.toggle));
         }));
-        box.pack_start(this._switch, false, true, 5);
-        daemon_box.pack_start(box, true, false, 10);
+        box.pack_start(this._switchDaemon, false, false, 5);
+        frame_box.pack_start(box, false, false, 10);
         box = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL});
-        label = new Gtk.Label({label: 'Timer Interval (seconds)'});
+        label = new Gtk.Label({label: 'Wallpaper Timer Interval (seconds)'});
         box.pack_start(label, false, true, 5);
         label = new Gtk.Label({label: ' '});
         box.pack_start(label, true, true, 5);
@@ -100,17 +102,33 @@ const DeskChangerPrefs = new Lang.Class({
         this._interval.set_value(this._settings.interval);
         this._interval.update();
         box.pack_start(this._interval, false, true, 5);
-        daemon_box.pack_start(box, true, false, 10);
-        box = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL});
-        label = new Gtk.Label({label: ' '});
-        box.pack_start(label, true, true, 5);
         var button = new Gtk.Button({label: 'Save'});
         button.connect('clicked', Lang.bind(this, function () {
             this._settings.interval = this._interval.get_value();
         }));
-        box.pack_start(button, false, true, 5);
-        daemon_box.pack_start(box, true, false, 10);
-        this.notebook.append_page(daemon_box, new Gtk.Label({label: 'Daemon'}));
+        box.pack_end(button, false, false, 5);
+        frame_box.pack_start(box, false, false, 5);
+        frame.add(frame_box);
+        misc_box.pack_start(frame, false, false, 10);
+        
+        // Extension settings
+        frame = new Gtk.Frame({label: 'Extension'});
+        frame_box = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL});
+        box = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL});
+        label = new Gtk.Label({label: 'Show Preview as Icon'});
+        box.pack_start(label, false, false, 5);
+        label = new Gtk.Label({label: ' '});
+        box.pack_start(label, true, true, 5);
+        this._switchIconPreview = new Gtk.Switch();
+        this._switchIconPreview.set_active(this._settings.icon_preview);
+        this._switchIconPreview.connect('notify::active', Lang.bind(this, function() {
+            this._settings.icon_preview = this._switchIconPreview.get_state();
+        }));
+        box.pack_end(this._switchIconPreview, false, false, 5);
+        frame_box.pack_start(box, false, false, 5);
+        frame.add(frame_box);
+        misc_box.pack_start(frame, true, true, 10);
+        this.notebook.append_page(misc_box, new Gtk.Label({label: 'Other'}));
     },
 
     _initKeyboard: function () {
@@ -191,7 +209,6 @@ const DeskChangerPrefs = new Lang.Class({
         var hbox = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL});
         var label = new Gtk.Label({label: 'Profile'});
         hbox.pack_start(label, false, false, 10);
-        profiles_box.pack_start(hbox, false, false, 10);
         this.profiles_combo_box = new Gtk.ComboBoxText();
         this.profiles_combo_box.connect('changed', Lang.bind(this, function (object) {
             for (var profile in this._settings.profiles) {
