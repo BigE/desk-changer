@@ -15,6 +15,14 @@
 			</description>
 			<summary>test</summary>
 		</key>
+		<key name="icon-preview" type="b">
+			<default>false</default>
+			<description>
+				If this is enabled and the daemon is running, the icon of the extension will change to a small
+				preview of the next wallpaper to be displayed.
+			</description>
+			<summary>Show preview of next wallpaper for extension icon</summary>
+		</key>
 		<key name="interval" type="i">
 			<default>300</default>
 			<description>

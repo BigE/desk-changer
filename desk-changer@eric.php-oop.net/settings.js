@@ -53,6 +53,14 @@ const DeskChangerSettings = new Lang.Class({
     set current_profile(value) {
         this.schema.set_string('current-profile', value);
     },
+    
+    get icon_preview() {
+        return this.schema.get_boolean('icon-preview');
+    },
+    
+    set icon_preview(value) {
+        this.schema.set_boolean('icon-preview', Boolean(value));
+    },
 
     get interval() {
         return this.schema.get_int('interval');
