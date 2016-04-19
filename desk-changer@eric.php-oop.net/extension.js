@@ -162,7 +162,8 @@ const DeskChangerControls = new Lang.Class({
         if (success) {
             debug('added keybinding ' + key);
         } else {
-            debug('fuck... failed');
+            debug('failed to add keybinding ' + key);
+            debug(success);
         }
     },
 
