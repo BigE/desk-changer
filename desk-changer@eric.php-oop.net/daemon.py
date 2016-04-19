@@ -44,7 +44,7 @@ except ImportError:
 
 __author__ = 'Eric Gach <eric@php-oop.net>'
 __daemon_path__ = os.path.dirname(os.path.realpath(__file__))
-__version__ = '8'
+__version__ = '9'
 
 _logger = logging.getLogger('desk-changer')
 
