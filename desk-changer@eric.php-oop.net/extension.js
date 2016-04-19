@@ -239,7 +239,8 @@ const DeskChangerIcon = new Lang.Class({
     Name: 'DeskChangerIcon',
     Extends: St.Bin,
 
-    _init: function (_dbus) {
+    _init: function (_dbus, settings) {
+        this._settings = settings;
         this.parent({style_class: 'panel-status-menu-box'});
         // fallback when the daemon is not running
         this._icon = new St.Icon({
@@ -247,23 +248,28 @@ const DeskChangerIcon = new Lang.Class({
             style_class: 'system-status-icon'
         });
         // the preview can be shown as the icon instead
-        //this._preview = new DeskChangerPreview(34, _dbus, Lang.bind(this, this.update_child));
-        //if (this._preview.file) {
-        //    this.set_child(this._preview);
-        //} else {
+        this._preview = new DeskChangerPreview(34, _dbus, Lang.bind(this, this.update_child));
+        this._settings.connect('changed::icon-preview', Lang.bind(this, this.update_child));
+        if (this._preview.file && this._settings.icon_preview) {
+            this.set_child(this._preview);
+        } else {
             this.set_child(this._icon);
-        //}
+        }
     },
     
     destroy: function () {
         this._icon.destroy();
-        //this._preview.destroy();
+        this._preview.destroy();
         this.parent();
     },
     
-    update_child: function (file) {
-        debug('updating icon to preview');
-        this.set_child(this._preview);
+    update_child: function () {
+        if (this._preview.file && this._settings.icon_preview) {
+            debug('updating icon to preview');
+            this.set_child(this._preview);
+        } else {
+            this.set_child(this._icon);
+        }
     }
 });
 
@@ -291,7 +297,7 @@ const DeskChangerIndicator = new Lang.Class({
             if (this.settings.notifications)
                 Main.notify('Desk Changer', 'Wallpaper Changed: ' + parameters[0]);
         }));
-        this.actor.add_child(new DeskChangerIcon(this._dbus));
+        this.actor.add_child(new DeskChangerIcon(this._dbus, this.settings));
         this.menu.addMenuItem(new DeskChangerProfile(this.settings));
         this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
         this.menu.addMenuItem(new DeskChangerSwitch('Change with Profile', 'auto_rotate', this.settings));
