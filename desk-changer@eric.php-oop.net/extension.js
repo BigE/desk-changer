@@ -162,7 +162,8 @@ const DeskChangerControls = new Lang.Class({
         if (success) {
             debug('added keybinding ' + key);
         } else {
-            debug('fuck... failed');
+            debug('failed to add keybinding ' + key);
+            debug(success);
         }
     },
 
@@ -236,14 +237,39 @@ const DeskChangerDBusProxy = Gio.DBusProxy.makeProxyWrapper(DeskChangerDBusInter
 
 const DeskChangerIcon = new Lang.Class({
     Name: 'DeskChangerIcon',
-    Extends: St.BoxLayout,
+    Extends: St.Bin,
 
-    _init: function () {
+    _init: function (_dbus, settings) {
+        this._settings = settings;
         this.parent({style_class: 'panel-status-menu-box'});
-        this.add_child(new St.Icon({
+        // fallback when the daemon is not running
+        this._icon = new St.Icon({
             icon_name: 'emblem-photos-symbolic',
             style_class: 'system-status-icon'
-        }));
+        });
+        // the preview can be shown as the icon instead
+        this._preview = new DeskChangerPreview(34, _dbus, Lang.bind(this, this.update_child));
+        this._settings.connect('changed::icon-preview', Lang.bind(this, this.update_child));
+        if (this._preview.file && this._settings.icon_preview) {
+            this.set_child(this._preview);
+        } else {
+            this.set_child(this._icon);
+        }
+    },
+    
+    destroy: function () {
+        this._icon.destroy();
+        this._preview.destroy();
+        this.parent();
+    },
+    
+    update_child: function () {
+        if (this._preview.file && this._settings.icon_preview) {
+            debug('updating icon to preview');
+            this.set_child(this._preview);
+        } else {
+            this.set_child(this._icon);
+        }
     }
 });
 
@@ -271,13 +297,13 @@ const DeskChangerIndicator = new Lang.Class({
             if (this.settings.notifications)
                 Main.notify('Desk Changer', 'Wallpaper Changed: ' + parameters[0]);
         }));
-        this.actor.add_child(new DeskChangerIcon());
+        this.actor.add_child(new DeskChangerIcon(this._dbus, this.settings));
         this.menu.addMenuItem(new DeskChangerProfile(this.settings));
         this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
         this.menu.addMenuItem(new DeskChangerSwitch('Change with Profile', 'auto_rotate', this.settings));
         this.menu.addMenuItem(new DeskChangerSwitch('Notifications', 'notifications', this.settings));
         this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
-        this.menu.addMenuItem(new DeskChangerPreview(this._dbus));
+        this.menu.addMenuItem(new DeskChangerPreviewMenuItem(this._dbus));
         this.menu.addMenuItem(new DeskChangerOpenCurrent());
         this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
         this.menu.addMenuItem(new DeskChangerControls(this._dbus, this.settings));
@@ -323,11 +349,55 @@ const DeskChangerOpenCurrent = new Lang.Class({
 
 const DeskChangerPreview = new Lang.Class({
     Name: 'DeskChangerPreview',
+    Extends: St.Bin,
+    
+    _init: function (width, _dbus, callback) {
+        this.parent({});
+        this._file = null;
+        this._callback = callback;
+        this._dbus = _dbus;
+        this._texture = new Clutter.Texture({
+            filter_quality: Clutter.TextureQuality.HIGH,
+            keep_aspect_ratio: true,
+            width: width
+        });
+        this.set_child(this._texture);
+        this._next_file_id = this._dbus.connectSignal('next_file', Lang.bind(this, function (emitter, signalName, parameters) {
+            var file = parameters[0];
+            this.set_wallpaper(file);
+        }));
+        this._dbus.up_nextRemote(Lang.bind(this, function (result, e) {
+            if (result)
+                this.set_wallpaper(result[0]);
+        }));
+    },
+    
+    destroy: function () {
+        debug('removing dbus next_file handler ' + this._next_file_id);
+        this._dbus.disconnectSignal(this._next_file_id);
+    },
+
+    set_wallpaper: function (file) {
+        this._file = file;
+        file = file.replace('file://', '');
+        debug('setting preview to ' + file);
+        if (this._texture.set_from_file(file) === false) {
+            debug('ERROR: Failed to set preview of ' + file);
+        } else if (this._callback && typeof this._callback == 'function') {
+            this._callback(file);
+        }
+    },
+    
+    get file() {
+        return this._file;
+    }
+});
+
+const DeskChangerPreviewMenuItem = new Lang.Class({
+    Name: 'DeskChangerPreviewMenuItem',
     Extends: PopupMenu.PopupBaseMenuItem,
 
     _init: function (_dbus) {
-        this._file = null;
-        this._dbus = _dbus;
         this.parent({reactive: true});
         this._box = new St.BoxLayout({vertical: true});
         try {
@@ -337,54 +407,25 @@ const DeskChangerPreview = new Lang.Class({
         }
         this._label = new St.Label({text: "Open Next Wallpaper"});
         this._box.add(this._label);
-        // This causes a HUGE memory leak... not sure why yet, disabling until I can figure it out
-        /*
-        this._wallpaper = new St.Bin({});
-        this._box.add(this._wallpaper);
-        this._texture = new Clutter.Texture({
-            filter_quality: Clutter.TextureQuality.HIGH,
-            keep_aspect_ratio: true,
-            width: 220
-        });
-        this._wallpaper.set_child(this._texture);
-        */
-        this._next_file_id = this._dbus.connectSignal('next_file', Lang.bind(this, function (emitter, signalName, parameters) {
-            var file = parameters[0];
-            this.set_wallpaper(file);
-        }));
-        this._dbus.up_nextRemote(Lang.bind(this, function (result, e) {
-            if (result)
-                this.set_wallpaper(result[0]);
-        }));
+        this._preview = new DeskChangerPreview(220, _dbus);
+        this._box.add(this._preview);
         this._activate_id = this.connect('activate', Lang.bind(this, this._clicked));
     },
 
     destroy: function () {
-        debug('removing dbus next_file handler ' + this._next_file_id);
-        this._dbus.disconnectSignal(this._next_file_id);
         debug('removing preview activate handler ' + this._activate_id);
         this.disconnect(this._activate_id);
 
-        //this._wallpaper.destroy();
-        //this._texture.destroy();
+        this._preview.destroy();
         this._label.destroy();
         this._box.destroy();
         this.parent();
     },
 
-    set_wallpaper: function (file) {
-        this._file = file;
-        file = file.replace('file://', '');
-        //debug('setting preview to ' + file);
-        //if (this._texture.set_from_file(file) === false) {
-            //debug('ERROR: Failed to set preview of ' + file);
-        //}
-    },
-
     _clicked: function () {
-        if (this._file) {
-            debug('opening file ' + this._file);
-            Util.spawn(['xdg-open', this._file]);
+        if (this._preview.file) {
+            debug('opening file ' + this._preview.file);
+            Util.spawn(['xdg-open', this._preview.file]);
         } else {
             debug('ERROR: no preview currently set');
         }
