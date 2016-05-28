@@ -27,79 +27,92 @@ const Signals = imports.signals;
 
 const debug = Me.imports.utils.debug;
 
+const DeskChangerDaemonInterface = '<node>\
+    <interface name="org.gnome.Shell.Extensions.DeskChanger.Daemon">\
+        <method name="LoadProfile">\
+            <arg direction="in" name="profile" type="s" />\
+        </method>\
+        <method name="Next">\
+            <arg direction="out" name="uri" type="s" />\
+        </method>\
+        <method name="Prev">\
+            <arg direction="out" name="uri" type="s" />\
+        </method>\
+        <method name="Quit"></method>\
+        <signal name="preview">\
+            <arg direction="out" name="uri" type="s" />\
+        </signal>\
+    </interface>\
+</node>';
+const DeskChangerDaemonProxy = Gio.DBusProxy.makeProxyWrapper(DeskChangerDaemonInterface);
+
+const DBusInterface = '<node>\
+  <interface name="org.freedesktop.DBus">\
+    <method name="ListNames">\
+      <arg direction="out" type="as"/>\
+    </method>\
+    <signal name="NameOwnerChanged">\
+      <arg type="s"/>\
+      <arg type="s"/>\
+      <arg type="s"/>\
+    </signal>\
+  </interface>\
+</node>';
+const DBusProxy = Gio.DBusProxy.makeProxyWrapper(DBusInterface);
+
 const DeskChangerDaemon = new Lang.Class({
     Name: 'DeskChangerDaemon',
 
     _init: function () {
-        this._pid = null;
-        this._is_running = false;
-        this._cancel = new Gio.Cancellable();
-        this._path = Me.dir.get_path();
-        this._daemon_pid = Gio.File.new_for_path(this._path + '/daemon.pid');
-        if (this._daemon_pid.query_exists(null)) {
-            this._on();
-        }
-
-        // add the file monitor to watch the daemon pid file
-        this._file_monitor = this._daemon_pid.monitor_file(Gio.FileMonitorFlags.NONE, this._cancel);
-        debug('added file monitor ' + this._file_monitor);
-        this._file_monitor.connect('changed', Lang.bind(this, function (monitor, file, other_file, event_type) {
-            debug('changed(' + monitor + ', ' + file + ', ' + other_file + ', ' + event_type + ')');
-            if (event_type == Gio.FileMonitorEvent.DELETED) {
-                this._off();
-            } else if (event_type == Gio.FileMonitorEvent.CHANGED) {
-                this._on();
+        this.bus = new DeskChangerDaemonProxy(Gio.DBus.session, 'org.gnome.Shell.Extensions.DeskChanger.Daemon', '/org/gnome/Shell/Extensions/DeskChanger/Daemon');
+        this._bus = new DBusProxy(Gio.DBus.session, 'org.freedesktop.DBus', '/org/freedesktop/DBus');
+        this._owner_changed_id = this._bus.connectSignal('NameOwnerChanged', Lang.bind(this, function (emitter, signalName, params) {
+            if (params[0] == "org.gnome.Shell.Extensions.DeskChanger.Daemon") {
+                if (params[1] != "" && params[2] == "") {
+                    this._off();
+                }
+                if (params[1] == "" && params[2] != "") {
+                    this._on();
+                }
             }
         }));
+        this._bus.ListNamesRemote(Lang.bind(this, function (result, error) {
+            result = String(result).split(',');
+            for (let item in result) {
+                if (result[item] == "org.gnome.Shell.Extensions.DeskChanger.Daemon") {
+                    this._on();
+                }
+            }
+        }));
+        this._is_running = false;
+        this._path = Me.dir.get_path();
     },
 
     destroy: function () {
-        if (this._file_monitor)
-            this._file_monitor.cancel();
-        if (this._child_watch)
-            GLib.source_remove(this._child_watch);
+        this._bus.disconnectSignal(this._owner_changed_id);
     },
 
     toggle: function () {
         if (this._is_running) {
             debug('stopping daeomn');
-            GLib.spawn_async(this._path, ['/usr/bin/python', this._path + '/daemon.py', 'stop'], null, GLib.SpawnFlags.DO_NOT_REAP_CHILD, null);
+            this.bus.QuitSync();
         } else {
             debug('starting daemon');
-            GLib.spawn_async(this._path, ['/usr/bin/python', this._path + '/daemon.py', 'start'], null, GLib.SpawnFlags.DO_NOT_REAP_CHILD, null);
+            GLib.spawn_async(this._path, [this._path + '/daemon'], null, GLib.SpawnFlags.DO_NOT_REAP_CHILD, null);
         }
     },
 
     _off: function () {
         this._is_running = false;
-        this._pid = null;
-
-        if (this._child_watch) {
-            GLib.source_remove(this._child_watch);
-            this._child_watch = null;
-        }
-
-        debug('emit(\'toggled\', false, null)');
-        this.emit('toggled', false, null);
+        debug('emit(\'toggled\', false)');
+        this.emit('toggled', false);
     },
 
     _on: function () {
-        var [success, pid] = this._daemon_pid.load_contents(null);
-        if (success) {
-            debug('the desk-changer daemon is running with pid of ' + pid);
-            this._pid = pid;
-            this._is_running = true;
-            this._watch(pid);
-            debug('emit(\'toggled\', true, ' + pid + ')');
-            this.emit('toggled', true, pid);
-        }
-    },
-
-    _watch: function (pid) {
-        if (!this._child_watch) {
-            this._child_watch = GLib.child_watch_add(GLib.PRIORITY_DEFAULT, pid, Lang.bind(this, this._off), {});
-            debug('added child watch on pid (' + pid + '): ' + this._child_watch);
-        }
+        debug('the desk-changer daemon is running');
+        this._is_running = true;
+        debug('emit(\'toggled\', true)');
+        this.emit('toggled', true);
     },
 
     get is_running() {
