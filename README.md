@@ -15,18 +15,17 @@ on the fly without reloading the daemon.
 ## Requirements
 
 * gnome-shell 3.8 or higher
-* Python 2 with [PyGObject](https://wiki.gnome.org/action/show/Projects/PyGObject?action=show&redirect=PyGObject)
 
 ### Install
 
-Just simply copy the desk-changer&commat;eric.php-oop.net folder to your `~/.local/share/gnome-shell/extensions/` folder or the
+Just simply copy the desk-changer&commat;eric.gach.gmail.com folder to your `~/.local/share/gnome-shell/extensions/` folder or the
 system `/usr/share/gnome-shell/extensions/` folder.
 
-`cp -r desk-changer@eric.php-oop.net/ ~/.local/share/gnome-shell/extensions/`
+`cp -r desk-changer@eric.gach.gmail.com/ ~/.local/share/gnome-shell/extensions/`
 
 or
 
-`cp -r desk-changer@eric.php-oop.net/ /usr/share/gnome-shell/extensions/`
+`cp -r desk-changer@eric.gach.gmail.com/ /usr/share/gnome-shell/extensions/`
 
 Then restart gnome-shell and enable the extension. Once it is enabled, you can use the extension to start the daemon
 with the built in toggle switch.
@@ -37,7 +36,7 @@ with the built in toggle switch.
 
 To view more information about the daemon, run it from the command line with the `-h` or `--help` option.
 
->$ ./desk-changer@eric.php-oop.net/daemon.py -h  
+>$ ./desk-changer@eric.gach.gmail.com/daemon.py -h  
 >usage: daemon.py \[-h] \[--logfile LOGFILE] \[--logformat FORMAT] \[--loglevel {DEBUG,INFO,WARNING,ERROR,CRITICAL}]
 >                 \[-v] \[--version] {start,stop,restart,status}  
 >  
@@ -49,7 +48,7 @@ To view more information about the daemon, run it from the command line with the
 >  
 >optional arguments:  
 >  -h, --help            show this help message and exit  
->  --logfile LOGFILE     Log file to output logging to, default: ./desk-changer@eric.php-oop.net/daemon.log  
+>  --logfile LOGFILE     Log file to output logging to, default: ./desk-changer@eric.gach.gmail.com/daemon.log  
 >  --logformat FORMAT    Change the logging format  
 >  --loglevel {DEBUG,INFO,WARNING,ERROR,CRITICAL}
 >                        Set the default logging level  
