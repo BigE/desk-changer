@@ -22,7 +22,6 @@ namespace DeskChanger
             settings = _settings;
             // initalize and load the current profile
             _load_profiles();
-            load_profile(settings.get_string("current-profile"));
             // connect the callbacks
             settings.changed["current-profile"].connect(() => {
                 load_profile(settings.get_string("current-profile"));
@@ -47,13 +46,15 @@ namespace DeskChanger
                                     "org.gnome.Shell.Extensions.DeskChanger.Daemon",
                                     BusNameOwnerFlags.ALLOW_REPLACEMENT
                                     | BusNameOwnerFlags.REPLACE,
-                                    _on_bus_acquired, null, quit);
+                                    _on_bus_acquired, () => {load_profile(settings.get_string("current-profile"));}, quit);
         }
 
         ~Daemon()
         {
             Bus.unown_name(name_id);
         }
+
+        public signal void changed(string wallpaper_uri);
 
         public void load_profile(string profile)
         {
@@ -80,6 +81,9 @@ namespace DeskChanger
 
             wallpapers.sort(strcmp);
             _load_next();
+            if (settings.get_boolean("auto-rotate")) {
+                _next(false);
+            }
             info("profile %s loaded with %d wallpapers", profile, (int)wallpapers.length);
         }
 
@@ -154,6 +158,10 @@ namespace DeskChanger
         {
                 debug("setting %s as background", uri);
                 background.set_string("picture-uri", uri);
+                debug("emitting signal Changed(%s)", uri);
+                changed(uri);
+                debug("emitting signal Preview(%s)", queue.index(0));
+                preview(queue.index(0));
         }
 
         private void _load_children(File location, bool recursive)
@@ -214,8 +222,6 @@ namespace DeskChanger
                 queue.append_val(wallpapers.index(position));
                 position++;
             }
-
-            preview(queue.index(0));
         }
 
         private void _load_profiles()
