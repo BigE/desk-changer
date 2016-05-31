@@ -2,7 +2,8 @@ desk-changer@eric.php-oop.net/daemon.log
 desk-changer@eric.php-oop.net/daemon.pid
 
 # ide ignores
-*.iml
-.idea/
-.nbproject/
-.settings
+/*.iml
+/.idea/
+/.nbproject/private/
+/.settings
+/desk-changer@eric.php-oop.net/desk-changer-daemon
