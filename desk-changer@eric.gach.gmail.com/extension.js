@@ -73,14 +73,10 @@ const DeskChangerControls = new Lang.Class({
         this.parent({can_focus: false, reactive: false});
 
         this._addKeyBinding('next-wallpaper', Lang.bind(this, this.next));
-        this._addKeyBinding('prev-wallpaper', Lang.bind(this._dbus, function () {
-            this.prevSync();
-        }));
+        this._addKeyBinding('prev-wallpaper', Lang.bind(this._dbus, this.prev));
 
         this._next = new DeskChangerButton('media-skip-forward', Lang.bind(this, this.next));
-        this._prev = new DeskChangerButton('media-skip-backward', Lang.bind(this._dbus, function () {
-            this.prevSync();
-        }));
+        this._prev = new DeskChangerButton('media-skip-backward', Lang.bind(this, this.prev));
         this._random = new DeskChangerStateButton([
             {
                 icon: 'media-playlist-shuffle',
@@ -135,7 +131,12 @@ const DeskChangerControls = new Lang.Class({
 
     next: function () {
         debug('next');
-        this._dbus.nextSync(true);
+        this._dbus.NextSync();
+    },
+    
+    prev: function() {
+        debug('prev');
+        this._dbus.PrevSync();
     },
 
     _addKeyBinding: function (key, handler) {
@@ -191,14 +192,14 @@ const DeskChangerDaemonControls = new Lang.Class({
     Name: 'DeskChangerDaemonControls',
     Extends: PopupMenu.PopupSwitchMenuItem,
 
-    _init: function () {
-        this._daemon = new DeskChangerDaemon();
+    _init: function (daemon) {
+        this._daemon = daemon;
         this.parent('DeskChanger Daemon');
         this.setToggleState(this._daemon.is_running);
         this._handler = this.connect('toggled', Lang.bind(this, function () {
             this._daemon.toggle();
         }));
-        this._daemon_handler = this._daemon.connect('toggled', Lang.bind(this, function (obj, state, pid) {
+        this._daemon_handler = this._daemon.connect('toggled', Lang.bind(this, function (obj, state) {
             this.setToggleState(state);
         }));
     },
@@ -213,27 +214,6 @@ const DeskChangerDaemonControls = new Lang.Class({
         this.parent();
     }
 });
-
-const DeskChangerDBusInterface = '<node>\
-	<interface name="org.gnome.shell.extensions.desk_changer">\
-		<method name="next">\
-			<arg direction="in" name="history" type="b" />\
-		</method>\
-		<method name="prev">\
-		</method>\
-		<method name="up_next">\
-			<arg direction="out" name="next_file" type="s" />\
-		</method>\
-		<signal name="changed">\
-			<arg direction="out" name="file" type="s" />\
-		</signal>\
-		<signal name="next_file">\
-			<arg direction="out" name="file" type="s" />\
-		</signal>\
-	</interface>\
-</node>';
-
-const DeskChangerDBusProxy = Gio.DBusProxy.makeProxyWrapper(DeskChangerDBusInterface);
 
 const DeskChangerIcon = new Lang.Class({
     Name: 'DeskChangerIcon',
@@ -292,8 +272,9 @@ const DeskChangerIndicator = new Lang.Class({
             Main.notify('Desk Changer', 'Notifications are now ' + ((this.settings.notifications) ? 'enabled' : 'disabled'));
         }));
         this.parent(0.0, 'DeskChanger');
-        this._dbus = new DeskChangerDBusProxy(Gio.DBus.session, 'org.gnome.shell.extensions.desk_changer', '/org/gnome/shell/extensions/desk_changer');
-        this._dbus_handler = this._dbus.connectSignal('changed', Lang.bind(this, function (emitter, signalName, parameters) {
+        this.daemon = new DeskChangerDaemon();
+        this._dbus = this.daemon.bus;
+        this._dbus_handler = this._dbus.connectSignal('Changed', Lang.bind(this, function (emitter, signalName, parameters) {
             if (this.settings.notifications)
                 Main.notify('Desk Changer', 'Wallpaper Changed: ' + parameters[0]);
         }));
@@ -308,7 +289,7 @@ const DeskChangerIndicator = new Lang.Class({
         this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
         this.menu.addMenuItem(new DeskChangerControls(this._dbus, this.settings));
         this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
-        this.menu.addMenuItem(new DeskChangerDaemonControls());
+        this.menu.addMenuItem(new DeskChangerDaemonControls(this.daemon));
         // Simple settings for the extension
         var settings = new PopupMenu.PopupMenuItem('DeskChanger Settings');
         settings.connect('activate', function () {
@@ -362,18 +343,15 @@ const DeskChangerPreview = new Lang.Class({
             width: width
         });
         this.set_child(this._texture);
-        this._next_file_id = this._dbus.connectSignal('next_file', Lang.bind(this, function (emitter, signalName, parameters) {
+        this._next_file_id = this._dbus.connectSignal('Preview', Lang.bind(this, function (emitter, signalName, parameters) {
             var file = parameters[0];
             this.set_wallpaper(file);
         }));
-        this._dbus.up_nextRemote(Lang.bind(this, function (result, e) {
-            if (result)
-                this.set_wallpaper(result[0]);
-        }));
+        debug('added dbus Preview handler ' + this._next_file_id);
     },
     
     destroy: function () {
-        debug('removing dbus next_file handler ' + this._next_file_id);
+        debug('removing dbus Preview handler ' + this._next_file_id);
         this._dbus.disconnectSignal(this._next_file_id);
     },
 
