@@ -98,7 +98,7 @@ const DeskChangerDaemon = new Lang.Class({
             this.bus.QuitSync();
         } else {
             debug('starting daemon');
-            GLib.spawn_async(this._path, [this._path + '/daemon'], null, GLib.SpawnFlags.DO_NOT_REAP_CHILD, null);
+            GLib.spawn_async(this._path, [this._path + '/desk-changer-daemon'], null, GLib.SpawnFlags.DO_NOT_REAP_CHILD, null);
         }
     },
 
