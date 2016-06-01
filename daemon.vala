@@ -169,21 +169,39 @@ namespace DeskChanger
 
         private void _load_children(File location, bool recursive)
         {
-            FileEnumerator enumerator = location.enumerate_children("standard::*", FileQueryInfoFlags.NONE, null);
+            FileEnumerator enumerator = null;
+            try {
+                enumerator = location.enumerate_children("standard::*", FileQueryInfoFlags.NONE, null);
+            } catch (Error e) {
+                critical("failed to load %s: %s", location.get_uri(), e.message);
+            }
             FileInfo info = null;
 
-            while ((info = enumerator.next_file(null)) != null) {
+            do {
+            //while ((info = enumerator.next_file(null)) != null) {
+                try {
+                    info = enumerator.next_file(null);
+                } catch (Error e) {
+                    critical("failed to load sub-item of %s: %s", location.get_uri(), e.message);
+                }
                 File child = location.resolve_relative_path(info.get_name());
                 _load_location(child, recursive, false);
-            }
+            } while(info != null);
         }
 
         private void _load_location(File location, bool recursive, bool topLevel)
         {
-            FileInfo info = location.query_info("standard::*", FileQueryInfoFlags.NONE, null);
+            FileInfo info = null;
+            try {
+                info = location.query_info("standard::*", FileQueryInfoFlags.NONE, null);
+            } catch (Error e) {
+                critical("failed to load %s: %s", location.get_uri(), e.message);
+                return;
+            }
             string content_type = info.get_content_type();
 
             if ((recursive || topLevel) && info.get_file_type() == FileType.DIRECTORY) {
+                // TODO: LIES! all lies. we watch nothing. yet.
                 debug("watching %s for changes", location.get_uri());
                 _load_children(location, recursive);
             } else if (info.get_file_type() == FileType.REGULAR && content_type in accepted) {
@@ -199,7 +217,6 @@ namespace DeskChanger
                 return;
             }
 
-            uint qsize = queue.length, hsize = history.length;
             if (settings.get_boolean("random")) {
                 string wallpaper = "";
                 while (wallpaper.length == 0) {
