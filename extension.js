@@ -230,11 +230,7 @@ const DeskChangerIcon = new Lang.Class({
         // the preview can be shown as the icon instead
         this._preview = new DeskChangerPreview(34, _dbus, Lang.bind(this, this.update_child));
         this._settings.connect('changed::icon-preview', Lang.bind(this, this.update_child));
-        if (this._preview.file && this._settings.icon_preview) {
-            this.set_child(this._preview);
-        } else {
-            this.set_child(this._icon);
-        }
+        this.update_child(); 
     },
     
     destroy: function () {
@@ -244,7 +240,7 @@ const DeskChangerIcon = new Lang.Class({
     },
     
     update_child: function () {
-        if (this._preview.file && this._settings.icon_preview) {
+        if (this._preview && this._preview.file && this._settings.icon_preview) {
             debug('updating icon to preview');
             this.set_child(this._preview);
         } else {
@@ -348,6 +344,9 @@ const DeskChangerPreview = new Lang.Class({
             this.set_wallpaper(file);
         }));
         debug('added dbus Preview handler ' + this._next_file_id);
+        if (this._dbus.UpNext) {
+            this.set_wallpaper(this._dbus.UpNext, false);
+        }
     },
     
     destroy: function () {
@@ -355,13 +354,13 @@ const DeskChangerPreview = new Lang.Class({
         this._dbus.disconnectSignal(this._next_file_id);
     },
 
-    set_wallpaper: function (file) {
+    set_wallpaper: function (file, c) {
         this._file = file;
         file = file.replace('file://', '');
         debug('setting preview to ' + file);
         if (this._texture.set_from_file(file) === false) {
             debug('ERROR: Failed to set preview of ' + file);
-        } else if (this._callback && typeof this._callback == 'function') {
+        } else if (c == true && this._callback && typeof this._callback == 'function') {
             this._callback(file);
         }
     },

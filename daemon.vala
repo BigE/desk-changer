@@ -14,6 +14,11 @@ namespace DeskChanger
         Settings settings = null;
         TimeoutSource timeout = null;
         GenericArray<string> wallpapers = null;
+        public string up_next {
+            get {
+                return queue.get(0);
+            }
+        }
 
         private Daemon(Settings _settings)
         {
@@ -297,13 +302,13 @@ namespace DeskChanger
                     debug("cleaning up old timer");
                     timeout.destroy();
                 }
-                info("enabling automatic timer for %d seconds", settings.get_int("interval"));
                 timeout = new TimeoutSource.seconds(settings.get_int("interval"));
                 timeout.set_callback(() => {
                     next();
                     return true;
                 });
                 timeout.attach(loop.get_context());
+                info("enabled automatic timer for %d seconds", settings.get_int("interval"));
             } else if (timeout != null) {
                 info("disabling automatic timer");
                 timeout.destroy();

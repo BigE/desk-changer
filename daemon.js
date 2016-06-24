@@ -42,6 +42,7 @@ const DeskChangerDaemonInterface = '<node>\
         <signal name="preview">\
             <arg direction="out" name="uri" type="s" />\
         </signal>\
+        <property type="s" name="UpNext" access="read" />\
     </interface>\
 </node>';
 const DeskChangerDaemonProxy = Gio.DBusProxy.makeProxyWrapper(DeskChangerDaemonInterface);
