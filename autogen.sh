@@ -1,18 +1,22 @@
-#!/usr/bin/env sh
+#!/bin/bash
+# Run this to generate all the initial makefiles, etc.
 
-set -e
+srcdir=`dirname $0`
+test -z "$srcdir" && srcdir=.
 
-test -n "$srcdir" || srcdir=`dirname "$0"`
-test -n "$srcdir" || srcdir=.
+PKG_NAME="gnome-shell-extension-desk-changer"
 
-olddir=`pwd`
-cd "$srcdir"
+touch ChangeLog
 
-# This will run autoconf, automake, etc. for us
-autoreconf --force --install
+test -f $srcdir/configure.ac || {
+    echo -n "**Error**: Directory "\`$srcdir\'" does not look like the"
+    echo " top-level gnome-shell-extensions directory"
+    exit 1
+}
 
-cd "$olddir"
-
-if test -z "$NOCONFIGURE"; then
-  "$srcdir"/configure "$@"
-fi
+which gnome-autogen.sh || {
+    echo "You need to install gnome-common from GNOME Git (or from"
+    echo "your OS vendor's package manager)."
+    exit 1
+}
+. gnome-autogen.sh

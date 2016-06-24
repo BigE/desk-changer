@@ -5,15 +5,20 @@ namespace DeskChanger
     {
         string[] accepted = {"image/jpeg", "image/png", "application/xml"};
         Settings background = null;
-        Array<string> history = null;
+        GenericArray<string> history = null;
         MainLoop loop = null;
         uint name_id;
         Json.Parser profiles = null;
         uint position = 0;
-        Array<string> queue = null;
+        GenericArray<string> queue = null;
         Settings settings = null;
         TimeoutSource timeout = null;
-        Array<string> wallpapers = null;
+        GenericArray<string> wallpapers = null;
+        public string up_next {
+            get {
+                return queue.get(0);
+            }
+        }
 
         private Daemon(Settings _settings)
         {
@@ -59,10 +64,10 @@ namespace DeskChanger
         public void load_profile(string profile)
         {
             unowned Json.Array _profile = null;
-            history = new Array<string>();
-            queue = new Array<string>();
+            history = new GenericArray<string>();
+            queue = new GenericArray<string>();
             position = 0;
-            wallpapers = new Array<string>();
+            wallpapers = new GenericArray<string>();
 
             info("loading profile %s", profile);
             try {
@@ -79,12 +84,15 @@ namespace DeskChanger
                 _load_location(location, item.get_boolean_element(1), true);
             }
 
-            wallpapers.sort(strcmp);
+            info("profile %s loaded with %u wallpapers", profile, wallpapers.length);
+            if (wallpapers.length < 100) {
+                warning("you have less than 100 wallpapers avaialable, disabling stricter random checking");
+            }
+            wallpapers.sort(GLib.strcmp);
             _load_next();
             if (settings.get_boolean("auto-rotate")) {
                 _next(false);
             }
-            info("profile %s loaded with %d wallpapers", profile, (int)wallpapers.length);
         }
 
         public static int main(string[] args)
@@ -132,8 +140,8 @@ namespace DeskChanger
                 warning("no available history");
             } else {
                 string current = background.get_string("picture-uri");
-                queue.prepend_val(current);
-                wallpaper = history.index(0);
+                queue.add(current);
+                wallpaper = history.get(0);
                 history.remove_index(0);
                 _background(wallpaper);
             }
@@ -160,32 +168,50 @@ namespace DeskChanger
                 background.set_string("picture-uri", uri);
                 debug("emitting signal Changed(%s)", uri);
                 changed(uri);
-                debug("emitting signal Preview(%s)", queue.index(0));
-                preview(queue.index(0));
+                debug("emitting signal Preview(%s)", queue.get(0));
+                preview(queue.get(0));
         }
 
         private void _load_children(File location, bool recursive)
         {
-            FileEnumerator enumerator = location.enumerate_children("standard::*", FileQueryInfoFlags.NONE, null);
+            FileEnumerator enumerator = null;
+            try {
+                enumerator = location.enumerate_children("standard::*", FileQueryInfoFlags.NONE, null);
+            } catch (Error e) {
+                critical("failed to load %s: %s", location.get_uri(), e.message);
+            }
             FileInfo info = null;
 
-            while ((info = enumerator.next_file(null)) != null) {
+            do {
+            //while ((info = enumerator.next_file(null)) != null) {
+                try {
+                    info = enumerator.next_file(null);
+                } catch (Error e) {
+                    critical("failed to load sub-item of %s: %s", location.get_uri(), e.message);
+                }
                 File child = location.resolve_relative_path(info.get_name());
                 _load_location(child, recursive, false);
-            }
+            } while(info != null);
         }
 
         private void _load_location(File location, bool recursive, bool topLevel)
         {
-            FileInfo info = location.query_info("standard::*", FileQueryInfoFlags.NONE, null);
+            FileInfo info = null;
+            try {
+                info = location.query_info("standard::*", FileQueryInfoFlags.NONE, null);
+            } catch (Error e) {
+                critical("failed to load %s: %s", location.get_uri(), e.message);
+                return;
+            }
             string content_type = info.get_content_type();
 
             if ((recursive || topLevel) && info.get_file_type() == FileType.DIRECTORY) {
+                // TODO: LIES! all lies. we watch nothing. yet.
                 debug("watching %s for changes", location.get_uri());
                 _load_children(location, recursive);
             } else if (info.get_file_type() == FileType.REGULAR && content_type in accepted) {
                 debug("adding wallpaper %s", location.get_uri());
-                wallpapers.append_val(location.get_uri());
+                wallpapers.add(location.get_uri());
             }
         }
 
@@ -199,27 +225,29 @@ namespace DeskChanger
             if (settings.get_boolean("random")) {
                 string wallpaper = "";
                 while (wallpaper.length == 0) {
-                    wallpaper = wallpapers.index(Random.int_range(0, (int)wallpapers.length - 1));
+                    wallpaper = wallpapers.get(Random.int_range(0, (int)wallpapers.length - 1));
                     debug("got %s as a possible next wallpaper", wallpaper);
-                    if ((queue.length + history.length) >= wallpapers.length) {
-                        // all randomness is lost
-                        warning("Your history is larger than the available wallpapers on the current profile, try adding more locations");
-                    } else if (_wallpaper_search(wallpaper, history) != -1) {
-                        debug("%s has already been shown recently, choosing another wallpaper", wallpaper);
-                        wallpaper = "";
-                    } else if (_wallpaper_search(wallpaper, queue) != -1) {
-                        debug("%s is already in the queue, choosing another wallpaper", wallpaper);
+                    if (wallpapers.length > 100) {
+                        if (_wallpaper_search(wallpaper, history) != -1) {
+                            debug("%s has already been shown recently, choosing another wallpaper", wallpaper);
+                            wallpaper = "";
+                        } else if (_wallpaper_search(wallpaper, queue) != -1) {
+                            debug("%s is already in the queue, choosing another wallpaper", wallpaper);
+                            wallpaper = "";
+                        }
+                    } else if ((history.length > 0 && wallpaper == history.get(0)) || (queue.length > 0 && wallpaper == queue.get(0))) {
+                        warning("%s is too similar, grabbing a different one", wallpaper);
                         wallpaper = "";
                     }
                 }
                 info("adding %s to the wallpaper queue", wallpaper);
-                queue.append_val(wallpaper);
+                queue.add(wallpaper);
             } else {
                 if (position >= wallpapers.length) {
                     debug("reached end of sequential wallpaper list, restarting");
                     position = 0;
                 }
-                queue.append_val(wallpapers.index(position));
+                queue.add(wallpapers.get(position));
                 position++;
             }
         }
@@ -241,15 +269,15 @@ namespace DeskChanger
             } else {
                 if (_history) {
                     debug("adding %s to the history", background.get_string("picture-uri"));
-                    history.prepend_val(background.get_string("picture-uri"));
+                    history.insert(history.length, background.get_string("picture-uri"));
                     while (history.length > 100) {
-                        debug("[GC] removing %s from history", history.index(history.length - 1));
+                        debug("[GC] removing %s from history", history.get(history.length - 1));
                         history.remove_index(history.length - 1);
                     }
                 }
 
                 _load_next();
-                wallpaper = queue.index(0);
+                wallpaper = queue.get(0);
                 queue.remove_index(0);
                 _background(wallpaper);
             }
@@ -274,13 +302,13 @@ namespace DeskChanger
                     debug("cleaning up old timer");
                     timeout.destroy();
                 }
-                info("enabling automatic timer for %d seconds", settings.get_int("interval"));
                 timeout = new TimeoutSource.seconds(settings.get_int("interval"));
                 timeout.set_callback(() => {
                     next();
                     return true;
                 });
                 timeout.attach(loop.get_context());
+                info("enabled automatic timer for %d seconds", settings.get_int("interval"));
             } else if (timeout != null) {
                 info("disabling automatic timer");
                 timeout.destroy();
@@ -288,11 +316,11 @@ namespace DeskChanger
             }
         }
 
-        private int _wallpaper_search(string needle, Array<string> haystack)
+        private int _wallpaper_search(string needle, GenericArray<string> haystack)
         {
             int result = -1;
             for (int i = 0; i < haystack.length; i++) {
-                if (needle == haystack.index(i)) return i;
+                if (needle == haystack.get(i)) return i;
             }
             return result;
         }
