@@ -3,6 +3,9 @@ namespace DeskChanger
 	[DBus (name = "org.gnome.Shell.Extensions.DeskChanger.Daemon")]
 	class Daemon : Object
 	{
+		/**
+		 * These are the accepted MIME types.
+		 */
 		string[] accepted = {"image/jpeg", "image/png", "application/xml"};
 
 		Settings background = null;
@@ -31,16 +34,52 @@ namespace DeskChanger
 			settings = _settings;
 		}
 
-		public int load_profile()
+		public bool load_profile(string profileName)
 		{
-			int success = -1;
-			string profile = settings.get_string("profile");
+			bool success = false;
 
-			info("loading profile %s", profile);
+			info("loading profile %s", profileName);
 			history = new GenericArray<string>();
 			queue = new GenericArray<string>();
 			wallpapers = new GenericArray<string>();
 			Variant profiles = settings.get_value("profiles");
+			Variant profile = profiles.lookup_value(profileName, VariantType.ARRAY);
+
+			// Profile was found, load it.
+			if (profile != null) {
+				debug("profile %s was found - loading files", profileName);
+				string path = null;
+				bool recursive = false;
+				VariantIter iter = profile.iterator();
+				while (iter.next("(sb)", &path, &recursive)) {
+					string message = null;
+					File location = null;
+					debug("finding all files in %s %s", path, (recursive)? "recursively" : "");
+
+					try {
+						location = File.new_for_uri(path);
+					} catch (Error e) {
+						message = e.message;
+					}
+
+					if (location != null) {
+						_load_location(location, recursive, true);
+					} else {
+						critical("Unable to load URL %s: %s", path, message);
+					}
+				}
+
+				if (wallpapers.length == 0) {
+					critical("No wallpapers loaded for profile %s", profileName);
+				} else {
+					success = true;
+					if (wallpapers.length < 100) {
+						warning("you have less than 100 wallpapers available, disabling strict random checking");
+					}
+
+					info("profile %s loaded with %d wallpapers", profileName, wallpapers.length);
+				}
+			}
 
 			return success;
 		}
@@ -90,10 +129,73 @@ namespace DeskChanger
 		[DBus (visible = false)]
 		public void run()
 		{
-			Variant profiles = settings.get_value("profiles");
+			if (!load_profile(settings.get_string("current-profile"))) {
+				error("failed to load the current profile");
+			}
+
 			loop = new MainLoop();
 			toggle_timer();
 			loop.run();
+		}
+
+		private void _load_children(File location, bool recursive)
+		{
+			FileEnumerator enumerator = null;
+
+			try {
+				enumerator = location.enumerate_children("standard::*", FileQueryInfoFlags.NONE, null);
+			} catch (Error e) {
+				critical("failed to load %s: %s", location.get_uri(), e.message);
+			}
+
+			FileInfo info = null;
+
+			do {
+				string message = null;
+
+				try {
+					info = enumerator.next_file(null);
+				} catch (Error e) {
+					message = e.message;
+				}
+
+				if (info != null) {
+					File child = location.resolve_relative_path(info.get_name());
+					if (child != null) {
+						_load_location(child, recursive, false);
+					} else {
+						critical("failed to load children for %s", info.get_name());
+					}
+				}
+			} while(info != null);
+		}
+
+		private void _load_location(File location, bool recursive, bool topLevel)
+		{
+			FileInfo info = null;
+			string message = "no error";
+
+			try {
+				info = location.query_info("standard::*", FileQueryInfoFlags.NONE, null);
+			} catch (Error e) {
+				message = e.message;
+			}
+
+			if (info == null) {
+				critical("failed to load %s: %s", location.get_uri(), message);
+				return;
+			}
+
+			string content_type = info.get_content_type();
+
+			if ((recursive || topLevel) && info.get_file_type() == FileType.DIRECTORY) {
+				// TODO: LIES! all lies. we watch nothing. yet.
+				debug("watching %s for changes", location.get_uri());
+				_load_children(location, recursive);
+			} else if (info.get_file_type() == FileType.REGULAR && content_type in accepted) {
+				debug("adding wallpaper %s", location.get_uri());
+				wallpapers.add(location.get_uri());
+			}
 		}
 
 		private void toggle_timer()
