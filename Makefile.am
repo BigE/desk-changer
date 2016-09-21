@@ -38,8 +38,7 @@ local-install: zip-file
 	$(MKDIR_P) $(localprefix)/$(uuid); \
 	(cd $(localprefix)/$(uuid); \
 	unzip -q $${zip_file}; \
-	chmod +x desk-changer-daemon
-	);
+	chmod +x desk-changer-daemon);
 
 install-data-hook:
 	cd $(DESTDIR)$(extensiondir) && chmod +x desk-changer-daemon
