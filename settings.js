@@ -20,6 +20,7 @@
  * THE SOFTWARE.
  */
 const Gio = imports.gi.Gio;
+const GLib = imports.gi.GLib;
 const Lang = imports.lang;
 const Me = imports.misc.extensionUtils.getCurrentExtension();
 
@@ -53,11 +54,11 @@ const DeskChangerSettings = new Lang.Class({
     set current_profile(value) {
         this.schema.set_string('current-profile', value);
     },
-    
+
     get icon_preview() {
         return this.schema.get_boolean('icon-preview');
     },
-    
+
     set icon_preview(value) {
         this.schema.set_boolean('icon-preview', Boolean(value));
     },
@@ -79,11 +80,11 @@ const DeskChangerSettings = new Lang.Class({
     },
 
     get profiles() {
-        return JSON.parse(this.schema.get_string('profiles'));
+        return this.schema.get_value('profiles').deep_unpack();
     },
 
     set profiles(value) {
-        this.schema.set_string('profiles', JSON.stringify(value));
+        this.schema.set_value('profiles', new GLib.Variant("a{sa(sb)}", value));
     },
 
     get random() {
