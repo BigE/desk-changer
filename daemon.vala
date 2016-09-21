@@ -14,6 +14,10 @@ namespace DeskChanger
 
 		MainLoop loop = null;
 
+		uint name_id;
+
+		uint position;
+
 		GenericArray<string> queue = null;
 
 		Settings settings = null;
@@ -22,6 +26,9 @@ namespace DeskChanger
 
 		GenericArray<string> wallpapers = null;
 
+		/**
+		 * DBUS property to pull the next wallpaper
+		 */
 		public string up_next {
 			get {
 				return queue.get(0);
@@ -32,7 +39,45 @@ namespace DeskChanger
 		{
 			background = new Settings("org.gnome.desktop.background");
 			settings = _settings;
+
+			settings.changed["current-profile"].connect(() => {
+				load_profile(settings.get_string("current-profile"));
+				if (settings.get_boolean("auto-rotate")) {
+					_next(false);
+				}
+			});
+
+			settings.changed["random"].connect(() => {
+				string mode;
+				if (settings.get_boolean("random")) {
+					mode = "random";
+				} else {
+					mode = "ordered";
+				}
+
+				debug("showing wallpapers in %s mode", mode);
+				_next(true);
+			});
+
+			settings.changed["interval"].connect(_toggle_timer);
+			settings.changed["timer-enabled"].connect(_toggle_timer);
+			name_id = Bus.own_name (
+				BusType.SESSION,
+				"org.gnome.Shell.Extensions.DeskChanger.Daemon",
+				BusNameOwnerFlags.ALLOW_REPLACEMENT
+				| BusNameOwnerFlags.REPLACE,
+				_on_bus_acquired,
+				 () => { load_profile(settings.get_string("current-profile")); },
+				 quit
+			 );
 		}
+
+		~Daemon()
+		{
+			Bus.unown_name(name_id);
+		}
+
+		public signal void changed(string wallpaper);
 
 		public bool load_profile(string profileName)
 		{
@@ -72,6 +117,8 @@ namespace DeskChanger
 				if (wallpapers.length == 0) {
 					critical("No wallpapers loaded for profile %s", profileName);
 				} else {
+					wallpapers.sort(GLib.strcmp);
+					_load_next();
 					success = true;
 					if (wallpapers.length < 100) {
 						warning("you have less than 100 wallpapers available, disabling strict random checking");
@@ -114,17 +161,36 @@ namespace DeskChanger
 
 		public string next()
 		{
-			string wallpaper = null;
+			string wallpaper = "";
+			wallpaper = _next(true);
 			return wallpaper;
 		}
 
 		public string prev()
 		{
-			string wallpaper = null;
+			string wallpaper = "";
+
+			if (history.length > 0) {
+				int index = history.length - 1;
+				string current = background.get_string("picture-uri");
+				queue.insert(0, current);
+				debug("added %s back to queue", current);
+				wallpaper = history[index];
+				history.remove_index(index);
+				_background(wallpaper);
+			} else {
+				warning("no history available");
+			}
+
 			return wallpaper;
 		}
 
 		public signal void preview(string wallpaper);
+
+		public void quit()
+		{
+			loop.quit();
+		}
 
 		[DBus (visible = false)]
 		public void run()
@@ -134,8 +200,18 @@ namespace DeskChanger
 			}
 
 			loop = new MainLoop();
-			toggle_timer();
+			_toggle_timer();
 			loop.run();
+		}
+
+		private void _background(string uri)
+		{
+			debug("setting %s as background", uri);
+			background.set_string("picture-uri", uri);
+			debug("emitting signal Changed(%s)", uri);
+			changed(uri);
+			debug("emitting signal Preview(%s)", queue.get(0));
+			preview(queue.get(0));
 		}
 
 		private void _load_children(File location, bool recursive)
@@ -198,7 +274,79 @@ namespace DeskChanger
 			}
 		}
 
-		private void toggle_timer()
+		private void _load_next()
+		{
+			if (queue.length > 1) {
+				debug("%d wallpapers already in queue, skipping", (int)queue.length);
+				return;
+			}
+
+			if (settings.get_boolean("random")) {
+				string wallpaper = "";
+				while (wallpaper.length == 0) {
+					wallpaper = wallpapers.get(Random.int_range(0, (int)wallpapers.length - 1));
+					debug("got %s as a possible next wallpaper", wallpaper);
+					if (wallpapers.length > 100) {
+						if (_wallpaper_search(wallpaper, history) != -1) {
+							debug("%s has already been shown recently, choosing another wallpaper", wallpaper);
+							wallpaper = "";
+						} else if (_wallpaper_search(wallpaper, queue) != -1) {
+							debug("%s is already in the queue, choosing another wallpaper", wallpaper);
+							wallpaper = "";
+						}
+					} else if ((history.length > 0 && wallpaper == history.get(0)) || (queue.length > 0 && wallpaper == queue.get(0))) {
+						warning("%s is too similar, grabbing a different one", wallpaper);
+						wallpaper = "";
+					}
+				}
+				info("adding %s to the wallpaper queue", wallpaper);
+				queue.add(wallpaper);
+			} else {
+				if (position >= wallpapers.length) {
+					debug("reached end of sequential wallpaper list, restarting");
+					position = 0;
+				}
+				queue.add(wallpapers.get(position));
+				position++;
+			}
+		}
+
+		private string _next(bool enable_history)
+		{
+			string wallpaper = "";
+
+			if (wallpapers.length > 0) {
+				if (enable_history) {
+					history.add(background.get_string("picture-uri"));
+					debug("added %s to the history", background.get_string("picture-uri"));
+					while (history.length > 100) {
+						debug("[GC] removing %s from the history", history[0]);
+						history.remove_index(0);
+					}
+				}
+
+				_load_next();
+				wallpaper = queue.get(0);
+				queue.remove_index(0);
+				_background(wallpaper);
+			} else {
+				critical("no wallpapers loaded");
+			}
+
+			return wallpaper;
+		}
+
+		private void _on_bus_acquired(DBusConnection conn)
+		{
+			try {
+				conn.register_object ("/org/gnome/Shell/Extensions/DeskChanger/Daemon", this);
+				info("registered DBus name");
+			} catch (IOError e) {
+				error ("Could not register D-Bus service: %s", e.message);
+			}
+		}
+
+		private void _toggle_timer()
 		{
 			if (settings.get_boolean("timer-enabled")) {
 				if (timeout != null) {
@@ -218,6 +366,15 @@ namespace DeskChanger
 				timeout.destroy();
 				timeout = null;
 			}
+		}
+
+		private int _wallpaper_search(string needle, GenericArray<string> haystack)
+		{
+			int result = -1;
+			for (int i = 0; i < haystack.length; i++) {
+				if (needle == haystack.get(i)) return i;
+			}
+			return result;
 		}
 	}
 }
