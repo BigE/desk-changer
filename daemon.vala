@@ -199,6 +199,10 @@ namespace DeskChanger
 				error("failed to load the current profile");
 			}
 
+			if (settings.get_boolean("auto-rotate")) {
+				_next(false);
+			}
+
 			loop = new MainLoop();
 			_toggle_timer();
 			loop.run();
