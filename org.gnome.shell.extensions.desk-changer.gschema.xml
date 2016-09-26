@@ -51,8 +51,8 @@
 			</description>
 			<summary>Change to previous wallpaper</summary>
 		</key>
-		<key name="profiles" type="s">
-			<default>'{"default": [["file:///usr/share/backgrounds", true]]}'</default>
+		<key name="profiles" type="a{sa(sb)}">
+			<default>[{"default",[("file:///usr/share/backgrounds", true)]}]</default>
 			<description>
 				These are the profiles available to the daemon.
 			</description>

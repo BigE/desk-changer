@@ -38,15 +38,14 @@ local-install: zip-file
 	$(MKDIR_P) $(localprefix)/$(uuid); \
 	(cd $(localprefix)/$(uuid); \
 	unzip -q $${zip_file}; \
-	chmod +x desk-changer-daemon
-	);
+	chmod +x desk-changer-daemon);
 
 install-data-hook:
 	cd $(DESTDIR)$(extensiondir) && chmod +x desk-changer-daemon
 
 noinst_PROGRAMS = desk-changer-daemon
-desk_changer_daemon_CFLAGS=$(glib_CFLAGS) $(jsonglib_CFLAGS)
-desk_changer_daemon_LDADD=$(glib_LIBS) $(jsonglib_LIBS)
-desk_changer_daemon_VALAFLAGS = --pkg gio-2.0 --pkg json-glib-1.0
+desk_changer_daemon_CFLAGS=$(gio_CFLAGS)
+desk_changer_daemon_LDADD=$(gio_LIBS)
+desk_changer_daemon_VALAFLAGS = --pkg=gio-2.0
 desk_changer_daemon_SOURCES = daemon.vala
 
