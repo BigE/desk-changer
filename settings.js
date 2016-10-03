@@ -47,6 +47,16 @@ const DeskChangerSettings = new Lang.Class({
         this.schema.set_boolean('auto-rotate', Boolean(value));
     },
 
+    get auto_start()
+    {
+        return this.schema.get_boolean('auto-start');
+    },
+
+    set auto_start(value)
+    {
+        this.schema.set_boolean('auto-start', Boolean(value));
+    },
+
     get current_profile() {
         return this.schema.get_string('current-profile');
     },

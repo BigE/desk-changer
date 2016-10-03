@@ -296,6 +296,11 @@ const DeskChangerIndicator = new Lang.Class({
             Util.spawn(['gnome-shell-extension-prefs', Me.metadata.uuid]);
         });
         this.menu.addMenuItem(settings);
+
+        if (!this.daemon.is_running && this.settings.auto_start) {
+            // start the auto start goodness.
+            this.daemon.toggle();
+        }
     },
 
     destroy: function () {

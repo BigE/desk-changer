@@ -86,6 +86,18 @@ const DeskChangerPrefs = new Lang.Class({
         box.pack_start(this._switchDaemon, false, false, 5);
         frame_box.pack_start(box, false, false, 10);
         box = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL});
+        label = new Gtk.Label({label: 'DeskChanger Autostart Daemon:'});
+        box.pack_start(label, false, false, 5);
+        label = new Gtk.Label({label: ' '});
+        box.pack_start(label, true, true, 5);
+        this._switchAutoStart = new Gtk.Switch();
+        this._switchAutoStart.set_active(this._settings.auto_start);
+        this._switchAutoStart.connect('notify::active', Lang.bind(this, function() {
+            this._settings.auto_start = this._switchAutoStart.get_state();
+        }));
+        box.pack_end(this._switchAutoStart, false, false, 5);
+        frame_box.pack_start(box, false, false, 10);
+        box = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL});
         label = new Gtk.Label({label: 'Wallpaper Timer Interval (seconds)'});
         box.pack_start(label, false, true, 5);
         label = new Gtk.Label({label: ' '});
@@ -110,7 +122,7 @@ const DeskChangerPrefs = new Lang.Class({
         frame_box.pack_start(box, false, false, 5);
         frame.add(frame_box);
         misc_box.pack_start(frame, false, false, 10);
-        
+
         // Extension settings
         frame = new Gtk.Frame({label: 'Extension'});
         frame_box = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL});
