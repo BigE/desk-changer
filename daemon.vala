@@ -18,6 +18,8 @@ namespace DeskChanger
 
 		uint name_id;
 
+		Variant profile = null;
+
 		uint position;
 
 		GenericArray<string> queue = null;
@@ -31,9 +33,17 @@ namespace DeskChanger
 		/**
 		 * DBUS property to pull the next wallpaper
 		 */
-		public string up_next {
+		[DBus (name = "queue")]
+		public string[] dbus_queue {
 			get {
-				return queue.get(0);
+				return queue.data;
+			}
+		}
+
+		[DBus (name = "history")]
+		public string[] dbus_history {
+			get {
+				return history.data;
 			}
 		}
 
@@ -47,6 +57,11 @@ namespace DeskChanger
 				if (settings.get_boolean("auto-rotate")) {
 					_next(false);
 				}
+			});
+
+			// TODO: optimize this - should only load the profile if the profile changed
+			settings.changed["profiles"].connect(() => {
+				load_profile(settings.get_string("current-profile"));
 			});
 
 			settings.changed["random"].connect(() => {
@@ -98,7 +113,7 @@ namespace DeskChanger
 			queue = new GenericArray<string>();
 			wallpapers = new GenericArray<string>();
 			Variant profiles = settings.get_value("profiles");
-			Variant profile = profiles.lookup_value(profileName, VariantType.ARRAY);
+			profile = profiles.lookup_value(profileName, VariantType.ARRAY);
 
 			// Profile was found, load it.
 			if (profile != null) {
@@ -275,31 +290,36 @@ namespace DeskChanger
 			string content_type = location_info.get_content_type();
 
 			if (location_info.get_file_type() == FileType.DIRECTORY) {
-				FileMonitor monitor = location.monitor_directory(FileMonitorFlags.NONE, new Cancellable());
-				debug("watching %s for changes", location.get_uri());
-				monitor.changed.connect((file, other_file, event_type) => {
-					debug("file monitor %s changed with %s", file.get_uri(), event_type.to_string());
-					if (event_type == FileMonitorEvent.CREATED) {
-						_load_location(file, recursive, false);
-					} else if (event_type == FileMonitorEvent.DELETED) {
-						debug("attempting to remove %s", file.get_uri());
-						for (int i = 0; i < wallpapers.length; i++) {
-							if (strcmp(file.get_uri(), wallpapers.get(i)) == 0) {
-								wallpapers.remove_index(i);
-								history.remove(file.get_uri());
+				try {
+					FileMonitor monitor = location.monitor_directory(FileMonitorFlags.NONE, new Cancellable());
+					debug("watching %s for changes", location.get_uri());
+					monitor.changed.connect((file, other_file, event_type) => {
+						debug("file monitor %s changed with %s", file.get_uri(), event_type.to_string());
+						if (event_type == FileMonitorEvent.CREATED) {
+							_load_location(file, recursive, false);
+						} else if (event_type == FileMonitorEvent.DELETED) {
+							debug("attempting to remove %s", file.get_uri());
+							for (int i = 0; i < wallpapers.length; i++) {
+								if (strcmp(file.get_uri(), wallpapers.get(i)) == 0) {
+									wallpapers.remove_index(i);
+									history.remove(file.get_uri());
 
-								if (queue.remove(file.get_uri())) {
-									// In case we remove our queue...
-									_load_next();
+									if (queue.remove(file.get_uri())) {
+										// In case we remove our queue...
+										_load_next();
+									}
+
+									info("purged deleted file %s", file.get_uri());
+									break;
 								}
-
-								info("purged deleted file %s", file.get_uri());
-								break;
 							}
 						}
-					}
-				});
-				monitors.add(monitor);
+					});
+					monitors.add(monitor);
+				} catch (IOError e) {
+					critical("failed to setup watch for %s: %s", location.get_uri(), e.message);
+				}
+
 				if (topLevel || recursive) {
 					debug("descending into %s", location.get_uri());
 					_load_children(location, recursive);

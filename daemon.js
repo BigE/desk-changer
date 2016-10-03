@@ -39,10 +39,14 @@ const DeskChangerDaemonInterface = '<node>\
             <arg direction="out" name="uri" type="s" />\
         </method>\
         <method name="Quit"></method>\
+        <signal name="changed">\
+            <arg direction="out" name="uri" type="s" />\
+        </signal>\
         <signal name="preview">\
             <arg direction="out" name="uri" type="s" />\
         </signal>\
-        <property type="s" name="UpNext" access="read" />\
+        <property type="as" name="history" access="read" />\
+        <property type="as" name="queue" access="read" />\
     </interface>\
 </node>';
 const DeskChangerDaemonProxy = Gio.DBusProxy.makeProxyWrapper(DeskChangerDaemonInterface);

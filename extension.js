@@ -133,10 +133,14 @@ const DeskChangerControls = new Lang.Class({
         debug('next');
         this._dbus.NextSync();
     },
-    
+
     prev: function() {
         debug('prev');
-        this._dbus.PrevSync();
+        this._dbus.PrevRemote(function (result) {
+            if (result[0].length == 0) {
+                Main.notifyError('Desk Changer', 'Unable to go back any further, no history available');
+            }
+        });
     },
 
     _addKeyBinding: function (key, handler) {
@@ -230,15 +234,15 @@ const DeskChangerIcon = new Lang.Class({
         // the preview can be shown as the icon instead
         this._preview = new DeskChangerPreview(34, _dbus, Lang.bind(this, this.update_child));
         this._settings.connect('changed::icon-preview', Lang.bind(this, this.update_child));
-        this.update_child(); 
+        this.update_child();
     },
-    
+
     destroy: function () {
         this._icon.destroy();
         this._preview.destroy();
         this.parent();
     },
-    
+
     update_child: function () {
         if (this._preview && this._preview.file && this._settings.icon_preview) {
             debug('updating icon to preview');
@@ -327,7 +331,7 @@ const DeskChangerOpenCurrent = new Lang.Class({
 const DeskChangerPreview = new Lang.Class({
     Name: 'DeskChangerPreview',
     Extends: St.Bin,
-    
+
     _init: function (width, _dbus, callback) {
         this.parent({});
         this._file = null;
@@ -344,11 +348,11 @@ const DeskChangerPreview = new Lang.Class({
             this.set_wallpaper(file);
         }));
         debug('added dbus Preview handler ' + this._next_file_id);
-        if (this._dbus.UpNext) {
-            this.set_wallpaper(this._dbus.UpNext, false);
+        if (this._dbus.queue) {
+            this.set_wallpaper(this._dbus.queue[0], false);
         }
     },
-    
+
     destroy: function () {
         debug('removing dbus Preview handler ' + this._next_file_id);
         this._dbus.disconnectSignal(this._next_file_id);
@@ -364,7 +368,7 @@ const DeskChangerPreview = new Lang.Class({
             this._callback(file);
         }
     },
-    
+
     get file() {
         return this._file;
     }
