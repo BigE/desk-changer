@@ -14,6 +14,8 @@ namespace DeskChanger
 
 		MainLoop loop = null;
 
+		GenericArray<FileMonitor> monitors = null;
+
 		uint name_id;
 
 		uint position;
@@ -83,7 +85,15 @@ namespace DeskChanger
 		{
 			bool success = false;
 
+			if (monitors != null) {
+				debug("cleaning up old file monitors");
+				monitors.foreach((monitor) => {
+					monitor.cancel();
+				});
+			}
+
 			info("loading profile %s", profileName);
+			monitors = new GenericArray<FileMonitor>();
 			history = new GenericArray<string>();
 			queue = new GenericArray<string>();
 			wallpapers = new GenericArray<string>();
@@ -248,27 +258,53 @@ namespace DeskChanger
 
 		private void _load_location(File location, bool recursive, bool topLevel)
 		{
-			FileInfo info = null;
+			FileInfo location_info = null;
 			string message = "no error";
 
 			try {
-				info = location.query_info("standard::*", FileQueryInfoFlags.NONE, null);
+				location_info = location.query_info("standard::*", FileQueryInfoFlags.NONE, null);
 			} catch (Error e) {
 				message = e.message;
 			}
 
-			if (info == null) {
+			if (location_info == null) {
 				critical("failed to load %s: %s", location.get_uri(), message);
 				return;
 			}
 
-			string content_type = info.get_content_type();
+			string content_type = location_info.get_content_type();
 
-			if ((recursive || topLevel) && info.get_file_type() == FileType.DIRECTORY) {
-				// TODO: LIES! all lies. we watch nothing. yet.
+			if (location_info.get_file_type() == FileType.DIRECTORY) {
+				FileMonitor monitor = location.monitor_directory(FileMonitorFlags.NONE, new Cancellable());
 				debug("watching %s for changes", location.get_uri());
-				_load_children(location, recursive);
-			} else if (info.get_file_type() == FileType.REGULAR && content_type in accepted) {
+				monitor.changed.connect((file, other_file, event_type) => {
+					debug("file monitor %s changed with %s", file.get_uri(), event_type.to_string());
+					if (event_type == FileMonitorEvent.CREATED) {
+						_load_location(file, recursive, false);
+					} else if (event_type == FileMonitorEvent.DELETED) {
+						debug("attempting to remove %s", file.get_uri());
+						for (int i = 0; i < wallpapers.length; i++) {
+							if (strcmp(file.get_uri(), wallpapers.get(i)) == 0) {
+								wallpapers.remove_index(i);
+								history.remove(file.get_uri());
+
+								if (queue.remove(file.get_uri())) {
+									// In case we remove our queue...
+									_load_next();
+								}
+
+								info("purged deleted file %s", file.get_uri());
+								break;
+							}
+						}
+					}
+				});
+				monitors.add(monitor);
+				if (topLevel || recursive) {
+					debug("descending into %s", location.get_uri());
+					_load_children(location, recursive);
+				}
+			} else if (location_info.get_file_type() == FileType.REGULAR && content_type in accepted) {
 				debug("adding wallpaper %s", location.get_uri());
 				wallpapers.add(location.get_uri());
 			}
