@@ -224,32 +224,62 @@ const DeskChangerIcon = new Lang.Class({
     Extends: St.Bin,
 
     _init: function (_dbus, settings) {
+        this._dbus = _dbus;
         this._settings = settings;
         this.parent({style_class: 'panel-status-menu-box'});
         // fallback when the daemon is not running
-        this._icon = new St.Icon({
-            icon_name: 'emblem-photos-symbolic',
-            style_class: 'system-status-icon'
-        });
+        this._icon = null;
         // the preview can be shown as the icon instead
-        this._preview = new DeskChangerPreview(34, _dbus, Lang.bind(this, this.update_child));
+        this._preview = null;
         this._settings.connect('changed::icon-preview', Lang.bind(this, this.update_child));
         this.update_child();
     },
 
     destroy: function () {
-        this._icon.destroy();
-        this._preview.destroy();
+        if (this._icon) {
+            this._icon.destroy();
+        }
+
+        if (this._preview) {
+            this._preview.destroy();
+        }
+
         this.parent();
     },
 
     update_child: function () {
-        if (this._preview && this._preview.file && this._settings.icon_preview) {
+        if (this._settings.icon_preview && this._createPreview()) {
             debug('updating icon to preview');
             this.set_child(this._preview);
-        } else {
+
+            if (this._icon) {
+                this._icon.destroy();
+                this._icon = null;
+            }
+        } else if (!(this._icon)) {
+            this._icon = new St.Icon({
+                icon_name: 'emblem-photos-symbolic',
+                style_class: 'system-status-icon'
+            });
             this.set_child(this._icon);
+
+            if (this._preview) {
+                this._preview.destroy();
+                this._preview = null;
+            }
         }
+    },
+
+    _createPreview: function () {
+        this._preview = new DeskChangerPreview(34, this._dbus, Lang.bind(this, this.update_child));
+
+        if (!(this._preview.file)) {
+            this._preview.destroy();
+            this._preview = null;
+            return false;
+        }
+
+        return true;
     }
 });
 
