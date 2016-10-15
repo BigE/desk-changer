@@ -10,6 +10,8 @@ namespace DeskChanger
 
 		Settings background = null;
 
+		static Daemon daemon = null;
+
 		GenericArray<string> history = null;
 
 		MainLoop loop = null;
@@ -89,6 +91,14 @@ namespace DeskChanger
 			info("activated");
 		}
 
+		public signal void changed(string wallpaper);
+
+		[DBus (name = "Quit")]
+		public void dbus_quit()
+		{
+			quit();
+		}
+
 		public override bool dbus_register(DBusConnection connection, string object_path) throws Error
 		{
 			base.dbus_register(connection, object_path);
@@ -108,8 +118,6 @@ namespace DeskChanger
 			connection.unregister_object(name_id);
 			base.dbus_unregister(connection, object_path);
 		}
-
-		public signal void changed(string wallpaper);
 
 		public bool load_profile(string profileName)
 		{
@@ -177,7 +185,6 @@ namespace DeskChanger
 
 		public static int main(string[] args)
 		{
-			Daemon daemon = null;
 			string settings_path = Path.get_dirname(args[0]) + "/schemas/";
 			Settings _settings = null;
 			SettingsSchema schema = null;
@@ -199,8 +206,18 @@ namespace DeskChanger
 
 			_settings = new Settings.full(schema, null, null);
 			daemon = new Daemon(_settings);
-			daemon.run();
-			return 0;
+			Process.signal (ProcessSignal.INT, sig_handler);
+			Process.signal (ProcessSignal.KILL, sig_handler);
+			Process.signal (ProcessSignal.TERM, sig_handler);
+
+			try {
+				daemon.register();
+			} catch (Error e) {
+				debug(e.message);
+				critical("couldn't register daemon");
+			}
+
+			return daemon.run(args);
 		}
 
 		public string next()
@@ -227,6 +244,11 @@ namespace DeskChanger
 			}
 
 			return wallpaper;
+		}
+
+		public static void sig_handler(int sig)
+		{
+			daemon.quit();
 		}
 
 		public override void startup()
