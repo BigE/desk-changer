@@ -1,7 +1,7 @@
 namespace DeskChanger
 {
 	[DBus (name = "org.gnome.Shell.Extensions.DeskChanger.Daemon")]
-	class Daemon : Object
+	class Daemon : Application
 	{
 		/**
 		 * These are the accepted MIME types.
@@ -49,6 +49,8 @@ namespace DeskChanger
 
 		private Daemon(Settings _settings)
 		{
+			Object(application_id: "org.gnome.Shell.Extensions.DeskChanger.Daemon", flags: ApplicationFlags.IS_SERVICE);
+
 			background = new Settings("org.gnome.desktop.background");
 			settings = _settings;
 
@@ -75,23 +77,36 @@ namespace DeskChanger
 				debug("showing wallpapers in %s mode", mode);
 				_next(true);
 			});
-
-			settings.changed["interval"].connect(_toggle_timer);
-			settings.changed["timer-enabled"].connect(_toggle_timer);
-			name_id = Bus.own_name (
-				BusType.SESSION,
-				"org.gnome.Shell.Extensions.DeskChanger.Daemon",
-				BusNameOwnerFlags.ALLOW_REPLACEMENT
-				| BusNameOwnerFlags.REPLACE,
-				_on_bus_acquired,
-				 () => { load_profile(settings.get_string("current-profile")); },
-				 quit
-			 );
 		}
 
 		~Daemon()
 		{
-			Bus.unown_name(name_id);
+			release();
+		}
+
+		public override void activate()
+		{
+			info("activated");
+		}
+
+		public override bool dbus_register(DBusConnection connection, string object_path) throws Error
+		{
+			base.dbus_register(connection, object_path);
+
+			name_id = connection.register_object(object_path, this);
+
+			if (name_id == 0) {
+				return false;
+			}
+
+			info("registered DBus name %s", object_path);
+			return true;
+		}
+
+		public override void dbus_unregister(DBusConnection connection, string object_path)
+		{
+			connection.unregister_object(name_id);
+			base.dbus_unregister(connection, object_path);
 		}
 
 		public signal void changed(string wallpaper);
@@ -214,20 +229,22 @@ namespace DeskChanger
 			return wallpaper;
 		}
 
+		public override void startup()
+		{
+			base.startup();
+			load_profile(settings.get_string("current-profile"));
+			hold();
+
+			Timeout.add_seconds_full(Priority.LOW, settings.get_int("interval"), () => {
+				if (settings.get_boolean("timer-enabled")) {
+					next();
+				}
+
+				return true;
+			});
+		}
+
 		public signal void preview(string wallpaper);
-
-		public void quit()
-		{
-			loop.quit();
-		}
-
-		[DBus (visible = false)]
-		public void run()
-		{
-			loop = new MainLoop();
-			_toggle_timer();
-			loop.run();
-		}
 
 		private void _background(string uri)
 		{
@@ -390,38 +407,6 @@ namespace DeskChanger
 			}
 
 			return wallpaper;
-		}
-
-		private void _on_bus_acquired(DBusConnection conn)
-		{
-			try {
-				conn.register_object ("/org/gnome/Shell/Extensions/DeskChanger/Daemon", this);
-				info("registered DBus name");
-			} catch (IOError e) {
-				error ("Could not register D-Bus service: %s", e.message);
-			}
-		}
-
-		private void _toggle_timer()
-		{
-			if (settings.get_boolean("timer-enabled")) {
-				if (timeout != null) {
-					debug("cleaning up old timer");
-					timeout.destroy();
-				}
-				int interval = settings.get_int("interval");
-				timeout = new TimeoutSource.seconds(interval);
-				timeout.set_callback(() => {
-					next();
-					return true;
-				});
-				timeout.attach(loop.get_context());
-				info("automatic timer enabled for %d seconds", interval);
-			} else if (timeout != null) {
-				info("disabling automatic timer");
-				timeout.destroy();
-				timeout = null;
-			}
 		}
 
 		private int _wallpaper_search(string needle, GenericArray<string> haystack)
