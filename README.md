@@ -18,8 +18,14 @@ on the fly without reloading the daemon.
 
 ### Install
 
-There are some dependencies needed to install the extension from source. You must have `vala` installed to compile the
-daemon software. Run the `./autogen.sh` script to configure the project, then run `make local-install` to build and
+There are some dependencies needed to install the extension from source.
+ 
+  * vala
+  * gnome-common
+  * autoconf
+  * automake
+ 
+ Run the `./autogen.sh` script to configure the project, then run `make local-install` to build and
 install the extension locally. Restart gnome-shell and enable the extension. Once it is enabled, you can use the
 extension to start the daemon with the built in toggle switch.
 
