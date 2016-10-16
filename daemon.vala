@@ -1,7 +1,7 @@
 namespace DeskChanger
 {
 	[DBus (name = "org.gnome.Shell.Extensions.DeskChanger.Daemon")]
-	class Daemon : Object
+	class Daemon : Application
 	{
 		/**
 		 * These are the accepted MIME types.
@@ -9,6 +9,8 @@ namespace DeskChanger
 		string[] accepted = {"image/jpeg", "image/png", "application/xml"};
 
 		Settings background = null;
+
+		static Daemon daemon = null;
 
 		GenericArray<string> history = null;
 
@@ -26,7 +28,7 @@ namespace DeskChanger
 
 		Settings settings = null;
 
-		TimeoutSource timeout = null;
+		uint timeout = 0;
 
 		GenericArray<string> wallpapers = null;
 
@@ -49,6 +51,8 @@ namespace DeskChanger
 
 		private Daemon(Settings _settings)
 		{
+			Object(application_id: "org.gnome.Shell.Extensions.DeskChanger.Daemon", flags: ApplicationFlags.IS_SERVICE);
+
 			background = new Settings("org.gnome.desktop.background");
 			settings = _settings;
 
@@ -78,23 +82,45 @@ namespace DeskChanger
 
 			settings.changed["interval"].connect(_toggle_timer);
 			settings.changed["timer-enabled"].connect(_toggle_timer);
-			name_id = Bus.own_name (
-				BusType.SESSION,
-				"org.gnome.Shell.Extensions.DeskChanger.Daemon",
-				BusNameOwnerFlags.ALLOW_REPLACEMENT
-				| BusNameOwnerFlags.REPLACE,
-				_on_bus_acquired,
-				 () => { load_profile(settings.get_string("current-profile")); },
-				 quit
-			 );
 		}
 
 		~Daemon()
 		{
-			Bus.unown_name(name_id);
+			release();
+		}
+
+		public override void activate()
+		{
+			info("activated");
 		}
 
 		public signal void changed(string wallpaper);
+
+		[DBus (name = "Quit")]
+		public void dbus_quit()
+		{
+			quit();
+		}
+
+		public override bool dbus_register(DBusConnection connection, string object_path) throws Error
+		{
+			base.dbus_register(connection, object_path);
+
+			name_id = connection.register_object(object_path, this);
+
+			if (name_id == 0) {
+				return false;
+			}
+
+			info("registered DBus name %s", object_path);
+			return true;
+		}
+
+		public override void dbus_unregister(DBusConnection connection, string object_path)
+		{
+			connection.unregister_object(name_id);
+			base.dbus_unregister(connection, object_path);
+		}
 
 		public bool load_profile(string profileName)
 		{
@@ -162,7 +188,6 @@ namespace DeskChanger
 
 		public static int main(string[] args)
 		{
-			Daemon daemon = null;
 			string settings_path = Path.get_dirname(args[0]) + "/schemas/";
 			Settings _settings = null;
 			SettingsSchema schema = null;
@@ -184,8 +209,18 @@ namespace DeskChanger
 
 			_settings = new Settings.full(schema, null, null);
 			daemon = new Daemon(_settings);
-			daemon.run();
-			return 0;
+			Process.signal (ProcessSignal.INT, sig_handler);
+			Process.signal (ProcessSignal.KILL, sig_handler);
+			Process.signal (ProcessSignal.TERM, sig_handler);
+
+			try {
+				daemon.register();
+			} catch (Error e) {
+				debug(e.message);
+				critical("couldn't register daemon");
+			}
+
+			return daemon.run(args);
 		}
 
 		public string next()
@@ -214,20 +249,20 @@ namespace DeskChanger
 			return wallpaper;
 		}
 
-		public signal void preview(string wallpaper);
-
-		public void quit()
+		public static void sig_handler(int sig)
 		{
-			loop.quit();
+			daemon.quit();
 		}
 
-		[DBus (visible = false)]
-		public void run()
+		public override void startup()
 		{
-			loop = new MainLoop();
+			base.startup();
+			load_profile(settings.get_string("current-profile"));
+			hold();
 			_toggle_timer();
-			loop.run();
 		}
+
+		public signal void preview(string wallpaper);
 
 		private void _background(string uri)
 		{
@@ -392,35 +427,25 @@ namespace DeskChanger
 			return wallpaper;
 		}
 
-		private void _on_bus_acquired(DBusConnection conn)
-		{
-			try {
-				conn.register_object ("/org/gnome/Shell/Extensions/DeskChanger/Daemon", this);
-				info("registered DBus name");
-			} catch (IOError e) {
-				error ("Could not register D-Bus service: %s", e.message);
-			}
-		}
-
 		private void _toggle_timer()
 		{
 			if (settings.get_boolean("timer-enabled")) {
-				if (timeout != null) {
+				if (timeout != 0) {
 					debug("cleaning up old timer");
-					timeout.destroy();
+					Source.remove(timeout);
+					timeout = 0;
 				}
+
 				int interval = settings.get_int("interval");
-				timeout = new TimeoutSource.seconds(interval);
-				timeout.set_callback(() => {
+				timeout = Timeout.add_seconds_full(Priority.LOW, interval, () => {
 					next();
 					return true;
 				});
-				timeout.attach(loop.get_context());
 				info("automatic timer enabled for %d seconds", interval);
-			} else if (timeout != null) {
+			} else if (timeout != 0) {
 				info("disabling automatic timer");
-				timeout.destroy();
-				timeout = null;
+				Source.remove(timeout);
+				timeout = 0;
 			}
 		}
 
