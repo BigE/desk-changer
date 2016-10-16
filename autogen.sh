@@ -4,8 +4,6 @@
 srcdir=`dirname $0`
 test -z "$srcdir" && srcdir=.
 
-PKG_NAME="gnome-shell-extension-desk-changer"
-
 touch ChangeLog
 
 test -f $srcdir/configure.ac || {
