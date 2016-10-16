@@ -28,7 +28,7 @@ namespace DeskChanger
 
 		Settings settings = null;
 
-		TimeoutSource timeout = null;
+		uint timeout = 0;
 
 		GenericArray<string> wallpapers = null;
 
@@ -79,6 +79,9 @@ namespace DeskChanger
 				debug("showing wallpapers in %s mode", mode);
 				_next(true);
 			});
+
+			settings.changed["interval"].connect(_toggle_timer);
+			settings.changed["timer-enabled"].connect(_toggle_timer);
 		}
 
 		~Daemon()
@@ -256,14 +259,7 @@ namespace DeskChanger
 			base.startup();
 			load_profile(settings.get_string("current-profile"));
 			hold();
-
-			Timeout.add_seconds_full(Priority.LOW, settings.get_int("interval"), () => {
-				if (settings.get_boolean("timer-enabled")) {
-					next();
-				}
-
-				return true;
-			});
+			_toggle_timer();
 		}
 
 		public signal void preview(string wallpaper);
@@ -429,6 +425,28 @@ namespace DeskChanger
 			}
 
 			return wallpaper;
+		}
+
+		private void _toggle_timer()
+		{
+			if (settings.get_boolean("timer-enabled")) {
+				if (timeout != 0) {
+					debug("cleaning up old timer");
+					Source.remove(timeout);
+					timeout = 0;
+				}
+
+				int interval = settings.get_int("interval");
+				timeout = Timeout.add_seconds_full(Priority.LOW, interval, () => {
+					next();
+					return true;
+				});
+				info("automatic timer enabled for %d seconds", interval);
+			} else if (timeout != 0) {
+				info("disabling automatic timer");
+				Source.remove(timeout);
+				timeout = 0;
+			}
 		}
 
 		private int _wallpaper_search(string needle, GenericArray<string> haystack)
