@@ -18,17 +18,10 @@ on the fly without reloading the daemon.
 
 ### Install
 
-Just simply copy the desk-changer&commat;eric.gach.gmail.com folder to your `~/.local/share/gnome-shell/extensions/` folder or the
-system `/usr/share/gnome-shell/extensions/` folder.
-
-`cp -r desk-changer@eric.gach.gmail.com/ ~/.local/share/gnome-shell/extensions/`
-
-or
-
-`cp -r desk-changer@eric.gach.gmail.com/ /usr/share/gnome-shell/extensions/`
-
-Then restart gnome-shell and enable the extension. Once it is enabled, you can use the extension to start the daemon
-with the built in toggle switch.
+There are some dependencies needed to install the extension from source. You must have `vala` installed to compile the
+daemon software. Run the `./autogen.sh` script to configure the project, then run `make local-install` to build and
+install the extension locally. Restart gnome-shell and enable the extension. Once it is enabled, you can use the
+extension to start the daemon with the built in toggle switch.
 
 ---
 
