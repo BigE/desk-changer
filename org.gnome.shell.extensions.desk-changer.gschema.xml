@@ -8,6 +8,14 @@
 			</description>
 			<summary>Auto rotate wallpaper when the profile is changed</summary>
 		</key>
+		<key name="auto-start" type="b">
+			<default>true</default>
+			<description>
+				When enabled, the daemon will be automatically started when the extension is loaded. If it is already
+				running or this is disabled, no action will be taken.
+			</description>
+			<summary>Automatically start the daemon when the extension loads</summary>
+		</key>
 		<key name="current-profile" type="s">
 			<default>"default"</default>
 			<description>
@@ -51,8 +59,8 @@
 			</description>
 			<summary>Change to previous wallpaper</summary>
 		</key>
-		<key name="profiles" type="s">
-			<default>'{"default": [["file:///usr/share/backgrounds", true]]}'</default>
+		<key name="profiles" type="a{sa(sb)}">
+			<default>[{"default",[("file:///usr/share/backgrounds", true)]}]</default>
 			<description>
 				These are the profiles available to the daemon.
 			</description>

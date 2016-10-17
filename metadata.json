@@ -10,9 +10,11 @@
     "3.14",
     "3.16",
     "3.18",
-    "3.20"
+    "3.20",
+    "3.21.91",
+    "3.22"
   ],
   "url": "https://github.com/BigE/desk-changer/",
-  "uuid": "desk-changer@eric.php-oop.net",
-  "version": "9"
+  "uuid": "desk-changer@eric.gach.gmail.com",
+  "version": "10"
 }

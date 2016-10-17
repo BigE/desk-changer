@@ -73,14 +73,10 @@ const DeskChangerControls = new Lang.Class({
         this.parent({can_focus: false, reactive: false});
 
         this._addKeyBinding('next-wallpaper', Lang.bind(this, this.next));
-        this._addKeyBinding('prev-wallpaper', Lang.bind(this._dbus, function () {
-            this.prevSync();
-        }));
+        this._addKeyBinding('prev-wallpaper', Lang.bind(this._dbus, this.prev));
 
         this._next = new DeskChangerButton('media-skip-forward', Lang.bind(this, this.next));
-        this._prev = new DeskChangerButton('media-skip-backward', Lang.bind(this._dbus, function () {
-            this.prevSync();
-        }));
+        this._prev = new DeskChangerButton('media-skip-backward', Lang.bind(this, this.prev));
         this._random = new DeskChangerStateButton([
             {
                 icon: 'media-playlist-shuffle',
@@ -135,7 +131,16 @@ const DeskChangerControls = new Lang.Class({
 
     next: function () {
         debug('next');
-        this._dbus.nextSync(true);
+        this._dbus.NextSync();
+    },
+
+    prev: function() {
+        debug('prev');
+        this._dbus.PrevRemote(function (result) {
+            if (result[0].length == 0) {
+                Main.notifyError('Desk Changer', 'Unable to go back any further, no history available');
+            }
+        });
     },
 
     _addKeyBinding: function (key, handler) {
@@ -191,14 +196,14 @@ const DeskChangerDaemonControls = new Lang.Class({
     Name: 'DeskChangerDaemonControls',
     Extends: PopupMenu.PopupSwitchMenuItem,
 
-    _init: function () {
-        this._daemon = new DeskChangerDaemon();
+    _init: function (daemon) {
+        this._daemon = daemon;
         this.parent('DeskChanger Daemon');
         this.setToggleState(this._daemon.is_running);
         this._handler = this.connect('toggled', Lang.bind(this, function () {
             this._daemon.toggle();
         }));
-        this._daemon_handler = this._daemon.connect('toggled', Lang.bind(this, function (obj, state, pid) {
+        this._daemon_handler = this._daemon.connect('toggled', Lang.bind(this, function (obj, state) {
             this.setToggleState(state);
         }));
     },
@@ -214,62 +219,67 @@ const DeskChangerDaemonControls = new Lang.Class({
     }
 });
 
-const DeskChangerDBusInterface = '<node>\
-	<interface name="org.gnome.shell.extensions.desk_changer">\
-		<method name="next">\
-			<arg direction="in" name="history" type="b" />\
-		</method>\
-		<method name="prev">\
-		</method>\
-		<method name="up_next">\
-			<arg direction="out" name="next_file" type="s" />\
-		</method>\
-		<signal name="changed">\
-			<arg direction="out" name="file" type="s" />\
-		</signal>\
-		<signal name="next_file">\
-			<arg direction="out" name="file" type="s" />\
-		</signal>\
-	</interface>\
-</node>';
-
-const DeskChangerDBusProxy = Gio.DBusProxy.makeProxyWrapper(DeskChangerDBusInterface);
-
 const DeskChangerIcon = new Lang.Class({
     Name: 'DeskChangerIcon',
     Extends: St.Bin,
 
     _init: function (_dbus, settings) {
+        this._dbus = _dbus;
         this._settings = settings;
         this.parent({style_class: 'panel-status-menu-box'});
         // fallback when the daemon is not running
-        this._icon = new St.Icon({
-            icon_name: 'emblem-photos-symbolic',
-            style_class: 'system-status-icon'
-        });
+        this._icon = null;
         // the preview can be shown as the icon instead
-        this._preview = new DeskChangerPreview(34, _dbus, Lang.bind(this, this.update_child));
+        this._preview = null;
         this._settings.connect('changed::icon-preview', Lang.bind(this, this.update_child));
-        if (this._preview.file && this._settings.icon_preview) {
-            this.set_child(this._preview);
-        } else {
-            this.set_child(this._icon);
-        }
+        this.update_child();
     },
-    
+
     destroy: function () {
-        this._icon.destroy();
-        this._preview.destroy();
+        if (this._icon) {
+            this._icon.destroy();
+        }
+
+        if (this._preview) {
+            this._preview.destroy();
+        }
+
         this.parent();
     },
-    
+
     update_child: function () {
-        if (this._preview.file && this._settings.icon_preview) {
+        if (this._settings.icon_preview && this._createPreview()) {
             debug('updating icon to preview');
             this.set_child(this._preview);
-        } else {
+
+            if (this._icon) {
+                this._icon.destroy();
+                this._icon = null;
+            }
+        } else if (!(this._icon)) {
+            this._icon = new St.Icon({
+                icon_name: 'emblem-photos-symbolic',
+                style_class: 'system-status-icon'
+            });
             this.set_child(this._icon);
+
+            if (this._preview) {
+                this._preview.destroy();
+                this._preview = null;
+            }
         }
+    },
+
+    _createPreview: function () {
+        this._preview = new DeskChangerPreview(34, this._dbus, Lang.bind(this, this.update_child));
+
+        if (!(this._preview.file)) {
+            this._preview.destroy();
+            this._preview = null;
+            return false;
+        }
+
+        return true;
     }
 });
 
@@ -292,8 +302,9 @@ const DeskChangerIndicator = new Lang.Class({
             Main.notify('Desk Changer', 'Notifications are now ' + ((this.settings.notifications) ? 'enabled' : 'disabled'));
         }));
         this.parent(0.0, 'DeskChanger');
-        this._dbus = new DeskChangerDBusProxy(Gio.DBus.session, 'org.gnome.shell.extensions.desk_changer', '/org/gnome/shell/extensions/desk_changer');
-        this._dbus_handler = this._dbus.connectSignal('changed', Lang.bind(this, function (emitter, signalName, parameters) {
+        this.daemon = new DeskChangerDaemon();
+        this._dbus = this.daemon.bus;
+        this._dbus_handler = this._dbus.connectSignal('Changed', Lang.bind(this, function (emitter, signalName, parameters) {
             if (this.settings.notifications)
                 Main.notify('Desk Changer', 'Wallpaper Changed: ' + parameters[0]);
         }));
@@ -308,13 +319,18 @@ const DeskChangerIndicator = new Lang.Class({
         this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
         this.menu.addMenuItem(new DeskChangerControls(this._dbus, this.settings));
         this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
-        this.menu.addMenuItem(new DeskChangerDaemonControls());
+        this.menu.addMenuItem(new DeskChangerDaemonControls(this.daemon));
         // Simple settings for the extension
         var settings = new PopupMenu.PopupMenuItem('DeskChanger Settings');
         settings.connect('activate', function () {
             Util.spawn(['gnome-shell-extension-prefs', Me.metadata.uuid]);
         });
         this.menu.addMenuItem(settings);
+
+        if (!this.daemon.is_running && this.settings.auto_start) {
+            // start the auto start goodness.
+            this.daemon.toggle();
+        }
     },
 
     destroy: function () {
@@ -350,44 +366,57 @@ const DeskChangerOpenCurrent = new Lang.Class({
 const DeskChangerPreview = new Lang.Class({
     Name: 'DeskChangerPreview',
     Extends: St.Bin,
-    
+
     _init: function (width, _dbus, callback) {
         this.parent({});
         this._file = null;
         this._callback = callback;
         this._dbus = _dbus;
-        this._texture = new Clutter.Texture({
-            filter_quality: Clutter.TextureQuality.HIGH,
-            keep_aspect_ratio: true,
-            width: width
-        });
-        this.set_child(this._texture);
-        this._next_file_id = this._dbus.connectSignal('next_file', Lang.bind(this, function (emitter, signalName, parameters) {
+        this._texture = null;
+        this._width = width;
+        this._next_file_id = this._dbus.connectSignal('Preview', Lang.bind(this, function (emitter, signalName, parameters) {
             var file = parameters[0];
             this.set_wallpaper(file);
         }));
-        this._dbus.up_nextRemote(Lang.bind(this, function (result, e) {
-            if (result)
-                this.set_wallpaper(result[0]);
-        }));
-    },
-    
-    destroy: function () {
-        debug('removing dbus next_file handler ' + this._next_file_id);
-        this._dbus.disconnectSignal(this._next_file_id);
+        debug('added dbus Preview handler ' + this._next_file_id);
+        if (this._dbus.queue) {
+            this.set_wallpaper(this._dbus.queue[0], false);
+        }
     },
 
-    set_wallpaper: function (file) {
+    destroy: function () {
+        debug('removing dbus Preview handler ' + this._next_file_id);
+        this._dbus.disconnectSignal(this._next_file_id);
+        if (this._texture) {
+            this._texture.destroy();
+        }
+    },
+
+    set_wallpaper: function (file, c) {
+        if (this._texture) {
+            this._texture.destroy();
+        }
+
+        this._texture = new Clutter.Texture({
+            filter_quality: Clutter.TextureQuality.HIGH,
+            keep_aspect_ratio: true,
+            width: this._width
+        });
         this._file = file;
         file = file.replace('file://', '');
         debug('setting preview to ' + file);
         if (this._texture.set_from_file(file) === false) {
             debug('ERROR: Failed to set preview of ' + file);
-        } else if (this._callback && typeof this._callback == 'function') {
-            this._callback(file);
+            this._texture.destroy();
+            this._texture = null;
+        } else {
+            if (c == true && this._callback && typeof this._callback == 'function') {
+                this._callback(file);
+            }
+            this.set_child(this._texture);
         }
     },
-    
+
     get file() {
         return this._file;
     }
