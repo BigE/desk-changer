@@ -372,12 +372,8 @@ const DeskChangerPreview = new Lang.Class({
         this._file = null;
         this._callback = callback;
         this._dbus = _dbus;
-        this._texture = new Clutter.Texture({
-            filter_quality: Clutter.TextureQuality.HIGH,
-            keep_aspect_ratio: true,
-            width: width
-        });
-        this.set_child(this._texture);
+        this._texture = null;
+        this._width = width;
         this._next_file_id = this._dbus.connectSignal('Preview', Lang.bind(this, function (emitter, signalName, parameters) {
             var file = parameters[0];
             this.set_wallpaper(file);
@@ -391,16 +387,33 @@ const DeskChangerPreview = new Lang.Class({
     destroy: function () {
         debug('removing dbus Preview handler ' + this._next_file_id);
         this._dbus.disconnectSignal(this._next_file_id);
+        if (this._texture) {
+            this._texture.destroy();
+        }
     },
 
     set_wallpaper: function (file, c) {
+        if (this._texture) {
+            this._texture.destroy();
+        }
+
+        this._texture = new Clutter.Texture({
+            filter_quality: Clutter.TextureQuality.HIGH,
+            keep_aspect_ratio: true,
+            width: this._width
+        });
         this._file = file;
         file = file.replace('file://', '');
         debug('setting preview to ' + file);
         if (this._texture.set_from_file(file) === false) {
             debug('ERROR: Failed to set preview of ' + file);
-        } else if (c == true && this._callback && typeof this._callback == 'function') {
-            this._callback(file);
+            this._texture.destroy();
+            this._texture = null;
+        } else {
+            if (c == true && this._callback && typeof this._callback == 'function') {
+                this._callback(file);
+            }
+            this.set_child(this._texture);
         }
     },
 
