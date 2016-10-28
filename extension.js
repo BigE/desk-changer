@@ -22,6 +22,7 @@
 
 const Clutter = imports.gi.Clutter;
 const Gio = imports.gi.Gio;
+const GLib = imports.gi.GLib;
 const Lang = imports.lang;
 const Main = imports.ui.main;
 const Me = imports.misc.extensionUtils.getCurrentExtension();
@@ -402,7 +403,7 @@ const DeskChangerPreview = new Lang.Class({
             keep_aspect_ratio: true,
             width: this._width
         });
-        this._file = file;
+        this._file = file = GLib.uri_unescape_string(file, null);
         file = file.replace('file://', '');
         debug('setting preview to ' + file);
         if (this._texture.set_from_file(file) === false) {
