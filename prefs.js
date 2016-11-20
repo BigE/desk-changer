@@ -138,6 +138,18 @@ const DeskChangerPrefs = new Lang.Class({
         }));
         box.pack_end(this._switchIconPreview, false, false, 5);
         frame_box.pack_start(box, false, false, 5);
+        box = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL});
+        label = new Gtk.Label({label: 'Show Notifications'})
+        box.pack_start(label, false, false, 5);
+        label = new Gtk.Label({label: ' '});
+        box.pack_start(label, true, true, 5);
+        this._switchNotifications = new Gtk.Switch();
+        this._switchNotifications.set_active(this._settings.notifications);
+        this._switchNotifications.connect('notify::active', Lang.bind(this, function() {
+            this._settings.notifications = this._switchIconPreview.get_state();
+        }));
+        box.pack_end(this._switchNotifications, false, false, 5);
+        frame_box.pack_start(box, false, false, 5);
         frame.add(frame_box);
         misc_box.pack_start(frame, true, true, 10);
         this.notebook.append_page(misc_box, new Gtk.Label({label: 'Other'}));
