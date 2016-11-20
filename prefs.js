@@ -138,6 +138,18 @@ const DeskChangerPrefs = new Lang.Class({
         }));
         box.pack_end(this._switchIconPreview, false, false, 5);
         frame_box.pack_start(box, false, false, 5);
+        box = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL});
+        label = new Gtk.Label({label: 'Show Notifications'})
+        box.pack_start(label, false, false, 5);
+        label = new Gtk.Label({label: ' '});
+        box.pack_start(label, true, true, 5);
+        this._switchNotifications = new Gtk.Switch();
+        this._switchNotifications.set_active(this._settings.notifications);
+        this._switchNotifications.connect('notify::active', Lang.bind(this, function() {
+            this._settings.notifications = this._switchIconPreview.get_state();
+        }));
+        box.pack_end(this._switchNotifications, false, false, 5);
+        frame_box.pack_start(box, false, false, 5);
         frame.add(frame_box);
         misc_box.pack_start(frame, true, true, 10);
         this.notebook.append_page(misc_box, new Gtk.Label({label: 'Other'}));
@@ -202,6 +214,18 @@ const DeskChangerPrefs = new Lang.Class({
             debug('updating keybinding ' + name + ' to ' + value);
             model.set(iterator, [1, 2], [mods, key]);
             this._settings.setKeybinding(name, [value]);
+        }));
+        cellrend.connect('accel-cleared', Lang.bind(this, function (rend, iter) {
+            let [success, iterator] = model.get_iter_from_string(iter);
+
+            if (!success) {
+                throw new Error('Failed to update keybinding');
+            }
+
+            let name = model.get_value(iterator, 3);
+            debug('clearing keybinding ' + name);
+            model.set(iterator, [1,2], [0,0]);
+            this._settings.setKeybinding(name, ['']);
         }));
         col = new Gtk.TreeViewColumn({title: 'Modify'});
         col.pack_end(cellrend, false);
@@ -380,16 +404,13 @@ const DeskChangerPrefs = new Lang.Class({
             for (let x = 0; x < keys.length; x++) {
                 let _value = this._settingsKeybind[i].get_value(keys[x]);
                 if (!_value) continue;
-                debug(_value.get_type_string());
                 if (_value.get_type_string() == 's') {
-                    debug(_value.get_string());
                     if (_value.get_string() == value) {
                         return true;
                     }
                 } else if (_value.get_type_string() == 'as') {
                     _value = _value.get_strv(_value);
                     for (let n = 0; n < _value.length; n++) {
-                        debug(_value[n]);
                         if (_value[n] == value) {
                             return true;
                         }
