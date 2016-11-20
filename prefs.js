@@ -203,6 +203,18 @@ const DeskChangerPrefs = new Lang.Class({
             model.set(iterator, [1, 2], [mods, key]);
             this._settings.setKeybinding(name, [value]);
         }));
+        cellrend.connect('accel-cleared', Lang.bind(this, function (rend, iter) {
+            let [success, iterator] = model.get_iter_from_string(iter);
+
+            if (!success) {
+                throw new Error('Failed to update keybinding');
+            }
+
+            let name = model.get_value(iterator, 3);
+            debug('clearing keybinding ' + name);
+            model.set(iterator, [1,2], [0,0]);
+            this._settings.setKeybinding(name, ['']);
+        }));
         col = new Gtk.TreeViewColumn({title: 'Modify'});
         col.pack_end(cellrend, false);
         col.add_attribute(cellrend, 'accel-mods', 1);
@@ -380,16 +392,13 @@ const DeskChangerPrefs = new Lang.Class({
             for (let x = 0; x < keys.length; x++) {
                 let _value = this._settingsKeybind[i].get_value(keys[x]);
                 if (!_value) continue;
-                debug(_value.get_type_string());
                 if (_value.get_type_string() == 's') {
-                    debug(_value.get_string());
                     if (_value.get_string() == value) {
                         return true;
                     }
                 } else if (_value.get_type_string() == 'as') {
                     _value = _value.get_strv(_value);
                     for (let n = 0; n < _value.length; n++) {
-                        debug(_value[n]);
                         if (_value[n] == value) {
                             return true;
                         }
