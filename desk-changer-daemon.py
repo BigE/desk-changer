@@ -134,6 +134,7 @@ class DeskChangerDaemon(Gio.Application):
         self._connect_settings_signal('changed::timer-enabled', lambda s, k: self._toggle_timer())
         self._connect_settings_signal('changed::current-profile',
                                       lambda s, k: self.load_profile(s.get_string('current-profile')))
+        self._connect_settings_signal('changed::random', lambda s, k: self._toggle_random())
         # just because we're a service... activate is not called. can someone actually help me understand this?
         # https://git.gnome.org/browse/glib/tree/gio/gapplication.c?h=2.50.0#n1023
         self.activate()
@@ -329,7 +330,6 @@ class DeskChangerDaemon(Gio.Application):
                 self._debug('reached end of wallpapers, resetting counter')
                 self._position = 0
             self._queue.append(self._wallpapers[self._position])
-            self._position += 1
 
     def _load_profile_children(self, location, recursive):
         try:
@@ -381,9 +381,17 @@ class DeskChangerDaemon(Gio.Application):
             self._history.append(self._background.get_string('picture-uri'))
         self._background.set_string('picture-uri', wallpaper)
         self._emit_signal('changed', wallpaper)
+        if self._settings.get_boolean('random') is False:
+            self._position += 1
         self._load_next()
         self._emit_signal('preview', self._queue[0])
         return wallpaper
+
+    def _toggle_random(self):
+        self._debug('clearing queue since randomness was toggled')
+        self._queue = []
+        self._load_next()
+        self._emit_signal('preview', self._queue[0])
 
     def _toggle_timer(self):
         if self._settings.get_boolean('timer-enabled'):
