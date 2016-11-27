@@ -305,7 +305,7 @@ const DeskChangerIndicator = new Lang.Class({
         this.parent(0.0, 'DeskChanger');
         this.daemon = new DeskChangerDaemon();
         this._dbus = this.daemon.bus;
-        this._dbus_handler = this._dbus.connectSignal('Changed', Lang.bind(this, function (emitter, signalName, parameters) {
+        this._dbus_handler = this._dbus.connectSignal('changed', Lang.bind(this, function (emitter, signalName, parameters) {
             if (this.settings.notifications)
                 Main.notify('Desk Changer', 'Wallpaper Changed: ' + parameters[0]);
         }));
@@ -375,7 +375,7 @@ const DeskChangerPreview = new Lang.Class({
         this._dbus = _dbus;
         this._texture = null;
         this._width = width;
-        this._next_file_id = this._dbus.connectSignal('Preview', Lang.bind(this, function (emitter, signalName, parameters) {
+        this._next_file_id = this._dbus.connectSignal('preview', Lang.bind(this, function (emitter, signalName, parameters) {
             var file = parameters[0];
             this.set_wallpaper(file);
         }));
