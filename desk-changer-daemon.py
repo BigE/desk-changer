@@ -41,7 +41,7 @@ class DeskChangerDaemon(Gio.Application):
         super(DeskChangerDaemon, self).__init__(**kwargs)
         # We use this as our DBus interface name also
         self.set_application_id('org.gnome.Shell.Extensions.DeskChanger.Daemon')
-        # self.set_flags(Gio.ApplicationFlags.IS_SERVICE)
+        self.set_flags(Gio.ApplicationFlags.IS_SERVICE)
         # Load the settings
         settings_path = os.path.abspath(os.path.join(os.curdir, 'schemas'))
 
@@ -72,12 +72,22 @@ class DeskChangerDaemon(Gio.Application):
 
     def do_activate(self):
         self._debug('::activate')
-        self.load_profile(self._settings.get_string('current-profile'))
         self._toggle_timer()
-        # hold! we're a daemon
+        # since we're a service, increase the hold count to stay running
         self.hold()
 
     def do_dbus_register(self, connection, object_path):
+        """Register the application on the DBus, if this fails, the application cannot run
+
+        :param connection: The DBus connection for the application
+        :param object_path: The object path
+        :type connection: Gio.DBusConnection
+        :type object_path: str
+        :return: True if successful, False if not
+        :rtype: bool
+        """
+        self._debug('::dbus_register')
+        Gio.Application.do_dbus_register(self, connection, object_path)
         try:
             self._dbus_id = connection.register_object(
                 object_path,
@@ -97,28 +107,50 @@ class DeskChangerDaemon(Gio.Application):
         return True
 
     def do_dbus_unregister(self, connection, object_path):
+        """Remove the application from the DBus, this happens after shutdown
+
+        :param connection:
+        :param object_path:
+        :type connection: Gio.DBusConnection
+        :type object_path: str
+        """
+        self._debug('::dbus_unregister')
+        Gio.Application.do_dbus_unregister(self, connection, object_path)
         if self._dbus_id:
             self._log(GLib.LogLevelFlags.LEVEL_INFO, 'removing DBus registration for name %s', object_path)
             connection.unregister_object(self._dbus_id)
+            self.release()
 
     def do_startup(self):
-        self._log(GLib.LogLevelFlags.LEVEL_DEBUG, '::startup')
+        """Startup method of application, get everything setup and ready to run here"""
+        self._debug('::startup')
         Gio.Application.do_startup(self)
         action = Gio.SimpleAction.new('quit', None)
         action.connect('activate', self.quit)
         self.add_action(action)
+        # Load the current profile
+        self.load_profile(self._settings.get_string('current-profile'))
         # Connect the settings signals
         self._connect_settings_signal('changed::timer-enabled', lambda s, k: self._toggle_timer())
         self._connect_settings_signal('changed::current-profile',
                                       lambda s, k: self.load_profile(s.get_string('current-profile')))
+        # just because we're a service... activate is not called. can someone actually help me understand this?
+        # https://git.gnome.org/browse/glib/tree/gio/gapplication.c?h=2.50.0#n1023
+        self.activate()
 
     def do_shutdown(self):
+        """Shutdown method of application, cleanup here"""
+        self._debug('::shutdown')
         for signal_id in self._settings_signals:
             self._debug('disconnecting signal handler %d', signal_id)
             self._settings.disconnect(signal_id)
         Gio.Application.do_shutdown(self)
 
     def load_profile(self, profile):
+        """Load the specified profile into the daemon, if the profile fails to load, a ValueError will be thrown
+
+        :param profile: profile to be loaded
+        """
         self._info('loading profile %s', profile)
         profile_items = self._settings.get_value('profiles').unpack().get(profile)
         if profile_items is None:
@@ -157,9 +189,19 @@ class DeskChangerDaemon(Gio.Application):
                 self._next(False)
 
     def next(self):
+        """Switch to the next wallpaper, if there aren't any available, a ValueError will be raised
+
+        :return: wallpaper
+        :rtype: str
+        """
         return self._next()
 
     def prev(self):
+        """Switch to the previous wallpaper, if it is not available, a ValueError will be raised
+
+        :return: wallpaper
+        :rtype: str
+        """
         if len(self._history) > 0:
             wallpaper = self._history.pop()
             self._queue.insert(0, self._background.get_string('picture-uri'))
