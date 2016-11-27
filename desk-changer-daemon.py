@@ -319,17 +319,31 @@ class DeskChangerDaemon(Gio.Application):
             self._debug('there are already %d wallpapers in the queue, skipping', len(self._queue))
             return
 
+        wallpaper = None
         if self._settings.get_boolean('random'):
-            wallpaper = None
             while wallpaper is None:
                 wallpaper = self._wallpapers[random.randint(0, len(self._wallpapers))]
-                self._debug('got %s as possible wallpaper', wallpaper)
+                self._debug("got %s as a possible next wallpaper", wallpaper);
+                if len(self._wallpapers) > 100:
+                    if self._history.count(wallpaper) > 0:
+                        self._debug("%s has already been shown recently, choosing another wallpaper", wallpaper)
+                        wallpaper = None
+                    elif self._queue.count(wallpaper) > 0:
+                        self._debug("%s is already in the queue, choosing another wallpaper", wallpaper)
+                        wallpaper = None
+                elif (len(self._history) > 0 and wallpaper == self._history[0]) or (
+                        len(self._queue) > 0 and wallpaper == self._queue[0]):
+                    self._warning("%s is too similar, grabbing a different one", wallpaper)
+                    wallpaper = None
             self._queue.append(wallpaper)
         else:
             if self._position >= len(self._wallpapers):
                 self._debug('reached end of wallpapers, resetting counter')
                 self._position = 0
-            self._queue.append(self._wallpapers[self._position])
+            wallpaper = self._wallpapers[self._position]
+
+        self._queue.append(wallpaper)
+        self._info('adding %s to the queue', wallpaper)
 
     def _load_profile_children(self, location, recursive):
         try:
