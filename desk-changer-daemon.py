@@ -64,6 +64,7 @@ class DeskChangerDaemon(Gio.Application):
         self._accepted = ['application/xml', 'image/jpeg', 'image/png']
         self._dbus_id = None
         self._history = []
+        self._monitors = []
         self._position = 0
         self._queue = []
         self._timer = None
@@ -124,8 +125,11 @@ class DeskChangerDaemon(Gio.Application):
             self._critical('failed to load profile %s because it doesn\'t exist', profile)
             raise ValueError('failed to load profile %s' % (profile,))
 
+        for monitor in self._monitors:
+            monitor.cancel()
         # reset the values, we're loading a new profile now
         self._history = []
+        self._monitors = []
         self._position = 0
         self._queue = []
         self._wallpapers = []
@@ -145,6 +149,7 @@ class DeskChangerDaemon(Gio.Application):
             if len(self._wallpapers) < 100:
                 self._warning('available total wallpapers is under 100 (%d) - strict random checking is disabled',
                               len(self._wallpapers))
+            self._wallpapers.sort()
             self._load_next()
             self._emit_signal('preview', self._queue[0])
             self._info('profile %s has been loaded with %d wallpapers', profile, len(self._wallpapers))
@@ -192,6 +197,24 @@ class DeskChangerDaemon(Gio.Application):
     def _error(self, message, *args):
         self._log(GLib.LogLevelFlags.LEVEL_ERROR, message, *args)
 
+    def _files_changed(self, monitor, _file, other_file, event_type):
+        self._debug('file monitor %s changed with event type %s', _file.get_uri(), event_type)
+        if event_type == Gio.FileMonitorEvent.CREATED and _file.get_file_type() in self._accepted:
+            try:
+                self._wallpapers.index(_file.get_uri())
+            except ValueError:
+                self._debug('adding new wallpaper %s', _file.get_uri())
+                self._wallpapers.append(_file.get_uri())
+                self._wallpapers.sort()
+        elif event_type == Gio.FileMonitorEvent.DELETED:
+            try:
+                i = self._wallpapers.index(_file.get_uri())
+                self._debug('removing deleted file %s from the list', _file.get_uri())
+                self._wallpapers.pop(i)
+                self._wallpapers.sort()
+            except ValueError:
+                pass
+
     def _handle_dbus_call(self, connection, sender, object_path, interface_name, method_name, parameters, invocation):
         self._debug('[DBUS] %s:%s', interface_name, method_name)
         if interface_name == 'org.freedesktop.DBus.Properties':
@@ -204,9 +227,9 @@ class DeskChangerDaemon(Gio.Application):
             elif method_name == 'Get':
                 interface_name, property_name = parameters.unpack()
                 if property_name == 'history':
-                    invocation.return_value(GLib.Variant('(v)', (GLib.Variant('as', self._history),)))
+                    invocation.return_value(GLib.Variant('(as)', (self._history,)))
                 elif property_name == 'queue':
-                    invocation.return_value(GLib.Variant('(v)', (GLib.Variant('as', self._queue),)))
+                    invocation.return_value(GLib.Variant('(as)', (self._queue,)))
                 else:
                     invocation.return_dbus_error('org.freedesktop.DBus.Error.InvalidArgs',
                                                  'Unknown property %s for interface %s' % (
@@ -289,6 +312,10 @@ class DeskChangerDaemon(Gio.Application):
 
         if info.get_file_type() == Gio.FileType.DIRECTORY:
             if recursive or toplevel:
+                monitor = location.monitor_directory(Gio.FileMonitorFlags.NONE, Gio.Cancellable())
+                self._debug('adding %s as directory to watch', location.get_uri())
+                monitor.connect('changed', self._files_changed)
+                self._monitors.append(monitor)
                 self._debug('descending into %s to find wallpapers', location.get_uri())
                 self._load_profile_children(location, recursive)
         elif info.get_file_type() == Gio.FileType.REGULAR and info.get_content_type() in self._accepted:
