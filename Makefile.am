@@ -8,7 +8,7 @@ extensiondir = $(datadir)/gnome-shell/extensions/$(uuid)
 
 @GSETTINGS_RULES@
 
-dist_extension_DATA = extension.js desk-changer-daemon daemon.js metadata.json prefs.js settings.js utils.js
+dist_extension_DATA = extension.js desk-changer-daemon.py daemon.js metadata.json prefs.js settings.js utils.js
 gsettings_SCHEMAS = org.gnome.shell.extensions.desk-changer.gschema.xml
 
 EXTRA_DIST = $(gsettings_SCHEMAS)
@@ -38,10 +38,10 @@ local-install: zip-file
 	$(MKDIR_P) $(localprefix)/$(uuid); \
 	(cd $(localprefix)/$(uuid); \
 	unzip -q $${zip_file}; \
-	chmod +x desk-changer-daemon);
+	chmod +x desk-changer-daemon.py);
 
 install-data-hook:
-	cd $(DESTDIR)$(extensiondir) && chmod +x desk-changer-daemon
+	cd $(DESTDIR)$(extensiondir) && chmod +x desk-changer-daemon.py
 
 noinst_PROGRAMS = desk-changer-daemon
 desk_changer_daemon_CFLAGS=$(gio_CFLAGS)
