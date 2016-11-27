@@ -335,7 +335,6 @@ class DeskChangerDaemon(Gio.Application):
                         len(self._queue) > 0 and wallpaper == self._queue[0]):
                     self._warning("%s is too similar, grabbing a different one", wallpaper)
                     wallpaper = None
-            self._queue.append(wallpaper)
         else:
             if self._position >= len(self._wallpapers):
                 self._debug('reached end of wallpapers, resetting counter')
