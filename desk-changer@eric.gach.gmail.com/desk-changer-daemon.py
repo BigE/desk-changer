@@ -39,9 +39,11 @@ DeskChangerDaemonDBusInterface = Gio.DBusNodeInfo.new_for_xml('''<node>
 class DeskChangerDaemon(Gio.Application):
     def __init__(self, **kwargs):
         super(DeskChangerDaemon, self).__init__(**kwargs)
+        self.add_main_option('--version', ord('v'), GLib.OptionFlags.NONE, GLib.OptionArg.NONE,
+                             'Show the current daemon version and exit', None)
         # We use this as our DBus interface name also
         self.set_application_id('org.gnome.Shell.Extensions.DeskChanger.Daemon')
-        self.set_flags(Gio.ApplicationFlags.IS_SERVICE)
+        self.set_flags(Gio.ApplicationFlags.IS_SERVICE | Gio.ApplicationFlags.HANDLES_COMMAND_LINE)
         # Load the settings
         settings_path = os.path.abspath(os.path.join(os.curdir, 'schemas'))
 
@@ -120,6 +122,13 @@ class DeskChangerDaemon(Gio.Application):
             self._log(GLib.LogLevelFlags.LEVEL_INFO, 'removing DBus registration for name %s', object_path)
             connection.unregister_object(self._dbus_id)
             self.release()
+
+    def do_handle_local_options(self, options):
+        o = options.end().unpack()
+        if '--version' in o and o['--version']:
+            print('%s: %s' % (__file__, __version__))
+            return 0
+        return Gio.Application.do_handle_local_options(self, options)
 
     def do_startup(self):
         """Startup method of application, get everything setup and ready to run here"""
@@ -332,7 +341,7 @@ class DeskChangerDaemon(Gio.Application):
                         self._debug("%s is already in the queue, choosing another wallpaper", wallpaper)
                         wallpaper = None
                 elif (len(self._history) > 0 and wallpaper == self._history[0]) or (
-                        len(self._queue) > 0 and wallpaper == self._queue[0]):
+                                len(self._queue) > 0 and wallpaper == self._queue[0]):
                     self._warning("%s is too similar, grabbing a different one", wallpaper)
                     wallpaper = None
         else:
