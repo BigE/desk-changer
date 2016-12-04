@@ -74,7 +74,7 @@ const DeskChangerControls = new Lang.Class({
         this.parent({can_focus: false, reactive: false});
 
         this._addKeyBinding('next-wallpaper', Lang.bind(this, this.next));
-        this._addKeyBinding('prev-wallpaper', Lang.bind(this._dbus, this.prev));
+        this._addKeyBinding('prev-wallpaper', Lang.bind(this, this.prev));
 
         this._next = new DeskChangerButton('media-skip-forward', Lang.bind(this, this.next));
         this._prev = new DeskChangerButton('media-skip-backward', Lang.bind(this, this.prev));
