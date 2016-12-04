@@ -10,7 +10,7 @@ from gi._gi import variant_type_from_string
 require_version('Gio', '2.0')
 
 __daemon_path__ = os.path.abspath(os.curdir)
-__version__ = '2.0.0'
+__version__ = '2.0.1-dev'
 
 DeskChangerDaemonDBusInterface = Gio.DBusNodeInfo.new_for_xml('''<node>
     <interface name="org.gnome.Shell.Extensions.DeskChanger.Daemon">
@@ -39,7 +39,7 @@ DeskChangerDaemonDBusInterface = Gio.DBusNodeInfo.new_for_xml('''<node>
 class DeskChangerDaemon(Gio.Application):
     def __init__(self, **kwargs):
         super(DeskChangerDaemon, self).__init__(**kwargs)
-        self.add_main_option('--version', ord('v'), GLib.OptionFlags.NONE, GLib.OptionArg.NONE,
+        self.add_main_option('version', ord('v'), GLib.OptionFlags.NONE, GLib.OptionArg.NONE,
                              'Show the current daemon version and exit', None)
         # We use this as our DBus interface name also
         self.set_application_id('org.gnome.Shell.Extensions.DeskChanger.Daemon')
@@ -105,7 +105,7 @@ class DeskChangerDaemon(Gio.Application):
                 self._critical('failed to register DBus name %s', object_path)
                 return False
 
-        self._log(GLib.LogLevelFlags.LEVEL_INFO, 'successfully registered DBus name %s', object_path)
+        self._info('successfully registered DBus name %s', object_path)
         return True
 
     def do_dbus_unregister(self, connection, object_path):
@@ -119,13 +119,13 @@ class DeskChangerDaemon(Gio.Application):
         self._debug('::dbus_unregister')
         Gio.Application.do_dbus_unregister(self, connection, object_path)
         if self._dbus_id:
-            self._log(GLib.LogLevelFlags.LEVEL_INFO, 'removing DBus registration for name %s', object_path)
+            self._info('removing DBus registration for name %s', object_path)
             connection.unregister_object(self._dbus_id)
-            self.release()
+            self._dbus_id = None
 
     def do_handle_local_options(self, options):
         o = options.end().unpack()
-        if '--version' in o and o['--version']:
+        if 'version' in o and o['version']:
             print('%s: %s' % (__file__, __version__))
             return 0
         return Gio.Application.do_handle_local_options(self, options)
@@ -154,6 +154,11 @@ class DeskChangerDaemon(Gio.Application):
         for signal_id in self._settings_signals:
             self._debug('disconnecting signal handler %d', signal_id)
             self._settings.disconnect(signal_id)
+        if self._timer:
+            self._debug('removing timer')
+            GLib.source_remove(self._timer)
+            self._timer = None
+        self.release()
         Gio.Application.do_shutdown(self)
 
     def load_profile(self, profile):
