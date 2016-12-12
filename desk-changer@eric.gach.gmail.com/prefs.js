@@ -150,6 +150,19 @@ const DeskChangerPrefs = new Lang.Class({
         }));
         box.pack_end(this._switchNotifications, false, false, 5);
         frame_box.pack_start(box, false, false, 5);
+        // Integrate extension into the system menu
+        box = new Gtk.Box();
+        label = new Gtk.Label({label: 'Integrate extension in system menu'})
+        box.pack_start(label, false, false, 5);
+        label = new Gtk.Label({label: ' '});
+        box.pack_start(label, true, true, 5);
+        this._switchIntegrateSystemMenu = new Gtk.Switch();
+        this._switchIntegrateSystemMenu.set_active(this._settings.integrate_system_menu);
+        this._switchIntegrateSystemMenu.connect('notify::active', Lang.bind(this, function () {
+            this._settings.integrate_system_menu = this._switchIntegrateSystemMenu.get_state();
+        }));
+        box.pack_end(this._switchIntegrateSystemMenu, false, false, 5);
+        frame_box.pack_start(box, false, false, 5);
         frame.add(frame_box);
         misc_box.pack_start(frame, true, true, 10);
         this.notebook.append_page(misc_box, new Gtk.Label({label: 'Other'}));

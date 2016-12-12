@@ -73,6 +73,14 @@ const DeskChangerSettings = new Lang.Class({
         this.schema.set_boolean('icon-preview', Boolean(value));
     },
 
+    get integrate_system_menu() {
+        return this.schema.get_boolean('integrate-system-menu');
+    },
+
+    set integrate_system_menu(value) {
+        this.schema.set_boolean('integrate-system-menu', Boolean(value));
+    },
+
     get interval() {
         return this.schema.get_int('interval');
     },
