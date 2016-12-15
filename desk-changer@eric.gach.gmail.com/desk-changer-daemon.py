@@ -10,7 +10,7 @@ from gi._gi import variant_type_from_string
 require_version('Gio', '2.0')
 
 __daemon_path__ = os.path.abspath(os.curdir)
-__version__ = '2.0.0'
+__version__ = '2.0.1'
 
 DeskChangerDaemonDBusInterface = Gio.DBusNodeInfo.new_for_xml('''<node>
     <interface name="org.gnome.Shell.Extensions.DeskChanger.Daemon">
@@ -391,7 +391,14 @@ class DeskChangerDaemon(Gio.Application):
         fields = GLib.Variant('a{sv}', {
             "MESSAGE": GLib.Variant('s', message),
         })
-        GLib.log_variant(None, level, fields)
+
+        # Because this is fairly new to PyGObject... we have to check if it exists
+        # See: https://bugzilla.gnome.org/show_bug.cgi?id=770971
+        if hasattr(GLib, 'log_variant'):
+            GLib.log_variant(None, level, fields)
+        else:
+            # TODO - add something here to replace the above
+            pass
 
     def _next(self, append_history=True):
         if len(self._wallpapers) == 0:
