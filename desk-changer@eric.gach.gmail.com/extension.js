@@ -385,7 +385,7 @@ const DeskChangerPreview = new Lang.Class({
             this.set_wallpaper(file);
         }));
         debug('added dbus Preview handler ' + this._next_file_id);
-        if (this._dbus.queue[0]) {
+        if (this._dbus.queue && this._dbus.queue[0]) {
             this.set_wallpaper(this._dbus.queue[0], false);
         }
     },
