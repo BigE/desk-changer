@@ -27,6 +27,9 @@ DeskChangerDaemonDBusInterface = Gio.DBusNodeInfo.new_for_xml('''<node>
         <signal name="changed">
             <arg direction="out" name="uri" type="s" />
         </signal>
+        <signal name="error">
+            <arg direction="out" name="message" type="s" />
+        </signal>
         <signal name="preview">
             <arg direction="out" name="uri" type="s" />
         </signal>
@@ -138,11 +141,13 @@ class DeskChangerDaemon(Gio.Application):
         action.connect('activate', self.quit)
         self.add_action(action)
         # Load the current profile
-        self.load_profile(self._settings.get_string('current-profile'))
+        try:
+            self.load_profile(self._settings.get_string('current-profile'))
+        except ValueError as e:
+            self._emit_signal('error', str(e))
         # Connect the settings signals
         self._connect_settings_signal('changed::timer-enabled', lambda s, k: self._toggle_timer())
-        self._connect_settings_signal('changed::current-profile',
-                                      lambda s, k: self.load_profile(s.get_string('current-profile')))
+        self._connect_settings_signal('changed::current-profile', self._changed_current_profile)
         self._connect_settings_signal('changed::random', lambda s, k: self._toggle_random())
         # just because we're a service... activate is not called. can someone actually help me understand this?
         # https://git.gnome.org/browse/glib/tree/gio/gapplication.c?h=2.50.0#n1023
@@ -191,7 +196,7 @@ class DeskChangerDaemon(Gio.Application):
 
         if len(self._wallpapers) == 0:
             self._critical('no wallpapers were loaded for profile %s - wallpaper will not change', profile)
-            raise ValueError('no wallpapers were loaded for profile %s', profile)
+            raise ValueError('no wallpapers were loaded for profile %s' % (profile,))
         else:
             if len(self._wallpapers) < 100:
                 self._warning('available total wallpapers is under 100 (%d) - strict random checking is disabled',
@@ -226,6 +231,12 @@ class DeskChangerDaemon(Gio.Application):
             return wallpaper
 
         raise ValueError('no history is available, cannot go back further')
+
+    def _changed_current_profile(self, s, k):
+        try:
+            self.load_profile(s.get_string(k))
+        except ValueError as e:
+            self._emit_signal('error', str(e))
 
     def _connect_settings_signal(self, signal, callback):
         self._settings_signals.append(self._settings.connect(signal, callback))
