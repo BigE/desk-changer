@@ -42,6 +42,9 @@ const DeskChangerDaemonInterface = '<node>\
         <signal name="changed">\
             <arg direction="out" name="uri" type="s" />\
         </signal>\
+        <signal name="error">\
+            <arg direction="out" name="uri" type="s" />\
+        </signal>\
         <signal name="preview">\
             <arg direction="out" name="uri" type="s" />\
         </signal>\
