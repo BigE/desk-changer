@@ -305,9 +305,12 @@ const DeskChangerIndicator = new Lang.Class({
         this.parent(0.0, 'DeskChanger');
         this.daemon = new DeskChangerDaemon();
         this._dbus = this.daemon.bus;
-        this._dbus_handler = this._dbus.connectSignal('changed', Lang.bind(this, function (emitter, signalName, parameters) {
+        this._changed_handler = this._dbus.connectSignal('changed', Lang.bind(this, function (emitter, signalName, parameters) {
             if (this.settings.notifications)
                 Main.notify('Desk Changer', 'Wallpaper Changed: ' + parameters[0]);
+        }));
+        this._error_handler = this._dbus.connectSignal('error', Lang.bind(this, function (emitter, signalName, parameters) {
+            Main.notifyError('Desk Changer', 'Daemon Error: ' + parameters[0]);
         }));
         this.actor.add_child(new DeskChangerIcon(this._dbus, this.settings));
         this.menu.addMenuItem(new DeskChangerProfile(this.settings));
@@ -335,8 +338,10 @@ const DeskChangerIndicator = new Lang.Class({
     },
 
     destroy: function () {
-        debug('removing dbus changed handler ' + this._dbus_handler);
-        this._dbus.disconnectSignal(this._dbus_handler);
+        debug('removing dbus changed handler ' + this._changed_handler);
+        this._dbus.disconnectSignal(this._changed_handler);
+        debug('removing dbus error handler ' + this._changed_handler);
+        this._dbus.disconnectSignal(this._error_handler);
         this.settings.destroy();
         this.parent();
     }
@@ -380,7 +385,7 @@ const DeskChangerPreview = new Lang.Class({
             this.set_wallpaper(file);
         }));
         debug('added dbus Preview handler ' + this._next_file_id);
-        if (this._dbus.queue) {
+        if (this._dbus.queue && this._dbus.queue.length > 0) {
             this.set_wallpaper(this._dbus.queue[0], false);
         }
     },
@@ -406,16 +411,20 @@ const DeskChangerPreview = new Lang.Class({
         this._file = file = GLib.uri_unescape_string(file, null);
         file = file.replace('file://', '');
         debug('setting preview to ' + file);
-        if (this._texture.set_from_file(file) === false) {
+        try{
+            this._texture.set_from_file(file);
+        } catch (Exception) {
             debug('ERROR: Failed to set preview of ' + file);
             this._texture.destroy();
             this._texture = null;
-        } else {
-            if (c == true && this._callback && typeof this._callback == 'function') {
-                this._callback(file);
-            }
-            this.set_child(this._texture);
+            return;
         }
+
+        if (c == true && this._callback && typeof this._callback == 'function') {
+            this._callback(file);
+        }
+
+        this.set_child(this._texture);
     },
 
     get file() {

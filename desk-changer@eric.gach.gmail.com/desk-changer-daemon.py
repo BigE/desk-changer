@@ -10,7 +10,7 @@ from gi._gi import variant_type_from_string
 require_version('Gio', '2.0')
 
 __daemon_path__ = os.path.abspath(os.curdir)
-__version__ = '2.0.1-dev'
+__version__ = '2.0.1'
 
 DeskChangerDaemonDBusInterface = Gio.DBusNodeInfo.new_for_xml('''<node>
     <interface name="org.gnome.Shell.Extensions.DeskChanger.Daemon">
@@ -26,6 +26,9 @@ DeskChangerDaemonDBusInterface = Gio.DBusNodeInfo.new_for_xml('''<node>
         <method name="Quit"></method>
         <signal name="changed">
             <arg direction="out" name="uri" type="s" />
+        </signal>
+        <signal name="error">
+            <arg direction="out" name="message" type="s" />
         </signal>
         <signal name="preview">
             <arg direction="out" name="uri" type="s" />
@@ -138,11 +141,14 @@ class DeskChangerDaemon(Gio.Application):
         action.connect('activate', self.quit)
         self.add_action(action)
         # Load the current profile
-        self.load_profile(self._settings.get_string('current-profile'))
+        try:
+            self.load_profile(self._settings.get_string('current-profile'))
+        except ValueError as e:
+            self._emit_signal('error', str(e))
         # Connect the settings signals
         self._connect_settings_signal('changed::timer-enabled', lambda s, k: self._toggle_timer())
-        self._connect_settings_signal('changed::current-profile',
-                                      lambda s, k: self.load_profile(s.get_string('current-profile')))
+        self._connect_settings_signal('changed::interval', lambda s, k: self._toggle_timer())
+        self._connect_settings_signal('changed::current-profile', self._changed_current_profile)
         self._connect_settings_signal('changed::random', lambda s, k: self._toggle_random())
         # just because we're a service... activate is not called. can someone actually help me understand this?
         # https://git.gnome.org/browse/glib/tree/gio/gapplication.c?h=2.50.0#n1023
@@ -191,7 +197,7 @@ class DeskChangerDaemon(Gio.Application):
 
         if len(self._wallpapers) == 0:
             self._critical('no wallpapers were loaded for profile %s - wallpaper will not change', profile)
-            raise ValueError('no wallpapers were loaded for profile %s', profile)
+            raise ValueError('no wallpapers were loaded for profile %s' % (profile,))
         else:
             if len(self._wallpapers) < 100:
                 self._warning('available total wallpapers is under 100 (%d) - strict random checking is disabled',
@@ -226,6 +232,12 @@ class DeskChangerDaemon(Gio.Application):
             return wallpaper
 
         raise ValueError('no history is available, cannot go back further')
+
+    def _changed_current_profile(self, s, k):
+        try:
+            self.load_profile(s.get_string(k))
+        except ValueError as e:
+            self._emit_signal('error', str(e))
 
     def _connect_settings_signal(self, signal, callback):
         self._settings_signals.append(self._settings.connect(signal, callback))
@@ -336,7 +348,7 @@ class DeskChangerDaemon(Gio.Application):
         wallpaper = None
         if self._settings.get_boolean('random'):
             while wallpaper is None:
-                wallpaper = self._wallpapers[random.randint(0, len(self._wallpapers))]
+                wallpaper = self._wallpapers[random.randint(0, (len(self._wallpapers) - 1))]
                 self._debug("got %s as a possible next wallpaper", wallpaper);
                 if len(self._wallpapers) > 100:
                     if self._history.count(wallpaper) > 0:
@@ -396,7 +408,14 @@ class DeskChangerDaemon(Gio.Application):
         fields = GLib.Variant('a{sv}', {
             "MESSAGE": GLib.Variant('s', message),
         })
-        GLib.log_variant(None, level, fields)
+
+        # Because this is fairly new to PyGObject... we have to check if it exists
+        # See: https://bugzilla.gnome.org/show_bug.cgi?id=770971
+        if hasattr(GLib, 'log_variant'):
+            GLib.log_variant(None, level, fields)
+        else:
+            # TODO - add something here to replace the above
+            pass
 
     def _next(self, append_history=True):
         if len(self._wallpapers) == 0:
@@ -425,8 +444,9 @@ class DeskChangerDaemon(Gio.Application):
             if self._timer is not None:
                 self._debug('removing old timer')
                 GLib.source_remove(self._timer)
-            self._timer = GLib.timeout_add_seconds(300, self._timeout)
-            self._info('automatic timer enabled for 300 seconds')
+            interval = self._settings.get_int('interval')
+            self._timer = GLib.timeout_add_seconds(interval, self._timeout)
+            self._info('automatic timer enabled for %d seconds', interval)
         elif self._settings.get_boolean('timer-enabled') is False and self._timer is not None:
             GLib.source_remove(self._timer)
             self._timer = None

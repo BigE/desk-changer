@@ -49,7 +49,7 @@
 			<summary>Number of seconds between wallpaper changes</summary>
 		</key>
 		<key name="next-wallpaper" type="as">
-			<default><![CDATA[['<Ctrl>Right']]]></default>
+			<default><![CDATA[['']]]></default>
 			<description>
 				Keyboard shortcut to cause the daemon to display the next wallpaper.
 			</description>
@@ -64,7 +64,7 @@
 			<summary>Display notifications with the extension</summary>
 		</key>
 		<key name="prev-wallpaper" type="as">
-			<default><![CDATA[['<Ctrl>Left']]]></default>
+			<default><![CDATA[['']]]></default>
 			<description>
 				Keyboard shortcut to cause the daemon to display the previous wallpaper.
 			</description>

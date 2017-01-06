@@ -42,6 +42,9 @@ const DeskChangerDaemonInterface = '<node>\
         <signal name="changed">\
             <arg direction="out" name="uri" type="s" />\
         </signal>\
+        <signal name="error">\
+            <arg direction="out" name="uri" type="s" />\
+        </signal>\
         <signal name="preview">\
             <arg direction="out" name="uri" type="s" />\
         </signal>\
@@ -69,6 +72,8 @@ const DeskChangerDaemon = new Lang.Class({
     Name: 'DeskChangerDaemon',
 
     _init: function () {
+        this._is_running = false;
+        this._path = Me.dir.get_path();
         this.bus = new DeskChangerDaemonProxy(Gio.DBus.session, 'org.gnome.Shell.Extensions.DeskChanger.Daemon', '/org/gnome/Shell/Extensions/DeskChanger/Daemon');
         this._bus = new DBusProxy(Gio.DBus.session, 'org.freedesktop.DBus', '/org/freedesktop/DBus');
         this._owner_changed_id = this._bus.connectSignal('NameOwnerChanged', Lang.bind(this, function (emitter, signalName, params) {
@@ -81,16 +86,14 @@ const DeskChangerDaemon = new Lang.Class({
                 }
             }
         }));
-        this._bus.ListNamesRemote(Lang.bind(this, function (result, error) {
-            result = String(result).split(',');
-            for (let item in result) {
-                if (result[item] == "org.gnome.Shell.Extensions.DeskChanger.Daemon") {
-                    this._on();
-                }
+
+        var result = this._bus.ListNamesSync();
+        result = String(result).split(',');
+        for (let item in result) {
+            if (result[item] == "org.gnome.Shell.Extensions.DeskChanger.Daemon") {
+                this._on();
             }
-        }));
-        this._is_running = false;
-        this._path = Me.dir.get_path();
+        }
     },
 
     destroy: function () {
