@@ -225,6 +225,7 @@ const DeskChangerIcon = new Lang.Class({
     Extends: St.Bin,
 
     _init: function (_dbus, settings) {
+        this._gicon = Gio.icon_new_for_string(Me.path + '/icons/wallpaper-icon.png');
         this._dbus = _dbus;
         this._settings = settings;
         this.parent({style_class: 'panel-status-menu-box'});
@@ -245,6 +246,7 @@ const DeskChangerIcon = new Lang.Class({
             this._preview.destroy();
         }
 
+        this._gicon.destroy();
         this.parent();
     },
 
@@ -258,10 +260,7 @@ const DeskChangerIcon = new Lang.Class({
                 this._icon = null;
             }
         } else if (!(this._icon)) {
-            this._icon = new St.Icon({
-                icon_name: 'emblem-photos-symbolic',
-                style_class: 'system-status-icon'
-            });
+            this._icon = new St.Icon({gicon: this._gicon, style_class: 'system-status-icon'});
             this.set_child(this._icon);
 
             if (this._preview) {
@@ -576,16 +575,25 @@ const DeskChangerSwitch = new Lang.Class({
     }
 });
 
+let indicator;
+
 function disable() {
     debug('disabling extension');
-    if (Main.panel.statusArea.deskchanger) {
-        Main.panel.statusArea.deskchanger.destroy();
-    }
+    indicator.destroy();
+    indicator = null;
 }
 
 function enable() {
     debug('enabling extension');
-    Main.panel.addToStatusArea('deskchanger', new DeskChangerIndicator());
+    let settings = new DeskChangerSettings();
+
+    if (settings.integrate_system_menu) {
+    } else {
+        indicator = new DeskChangerIndicator();
+        Main.panel.addToStatusArea('deskchanger', indicator);
+    }
+
+    settings.destroy();
 }
 
 function init() {
