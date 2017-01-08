@@ -10,7 +10,7 @@ from gi._gi import variant_type_from_string
 require_version('Gio', '2.0')
 
 __daemon_path__ = os.path.abspath(os.curdir)
-__version__ = '2.0.1'
+__version__ = '2.0.2'
 
 DeskChangerDaemonDBusInterface = Gio.DBusNodeInfo.new_for_xml('''<node>
     <interface name="org.gnome.Shell.Extensions.DeskChanger.Daemon">
@@ -147,6 +147,7 @@ class DeskChangerDaemon(Gio.Application):
             self._emit_signal('error', str(e))
         # Connect the settings signals
         self._connect_settings_signal('changed::timer-enabled', lambda s, k: self._toggle_timer())
+        self._connect_settings_signal('changed::interval', lambda s, k: self._toggle_timer())
         self._connect_settings_signal('changed::current-profile', self._changed_current_profile)
         self._connect_settings_signal('changed::random', lambda s, k: self._toggle_random())
         # just because we're a service... activate is not called. can someone actually help me understand this?
@@ -347,7 +348,7 @@ class DeskChangerDaemon(Gio.Application):
         wallpaper = None
         if self._settings.get_boolean('random'):
             while wallpaper is None:
-                wallpaper = self._wallpapers[random.randint(0, len(self._wallpapers))]
+                wallpaper = self._wallpapers[random.randint(0, (len(self._wallpapers) - 1))]
                 self._debug("got %s as a possible next wallpaper", wallpaper);
                 if len(self._wallpapers) > 100:
                     if self._history.count(wallpaper) > 0:
@@ -358,7 +359,7 @@ class DeskChangerDaemon(Gio.Application):
                         wallpaper = None
                 elif (len(self._history) > 0 and wallpaper == self._history[0]) or (
                                 len(self._queue) > 0 and wallpaper == self._queue[0]):
-                    self._warning("%s is too similar, grabbing a different one", wallpaper)
+                    self._info("%s is too similar, grabbing a different one", wallpaper)
                     wallpaper = None
         else:
             if self._position >= len(self._wallpapers):
@@ -443,8 +444,9 @@ class DeskChangerDaemon(Gio.Application):
             if self._timer is not None:
                 self._debug('removing old timer')
                 GLib.source_remove(self._timer)
-            self._timer = GLib.timeout_add_seconds(300, self._timeout)
-            self._info('automatic timer enabled for 300 seconds')
+            interval = self._settings.get_int('interval')
+            self._timer = GLib.timeout_add_seconds(interval, self._timeout)
+            self._info('automatic timer enabled for %d seconds', interval)
         elif self._settings.get_boolean('timer-enabled') is False and self._timer is not None:
             GLib.source_remove(self._timer)
             self._timer = None

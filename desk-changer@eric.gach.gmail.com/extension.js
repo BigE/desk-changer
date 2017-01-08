@@ -385,7 +385,7 @@ const DeskChangerPreview = new Lang.Class({
             this.set_wallpaper(file);
         }));
         debug('added dbus Preview handler ' + this._next_file_id);
-        if (this._dbus.queue && this._dbus.queue[0]) {
+        if (this._dbus.queue && this._dbus.queue.length > 0) {
             this.set_wallpaper(this._dbus.queue[0], false);
         }
     },
@@ -411,16 +411,20 @@ const DeskChangerPreview = new Lang.Class({
         this._file = file = GLib.uri_unescape_string(file, null);
         file = file.replace('file://', '');
         debug('setting preview to ' + file);
-        if (this._texture.set_from_file(file) === false) {
+        try{
+            this._texture.set_from_file(file);
+        } catch (Exception) {
             debug('ERROR: Failed to set preview of ' + file);
             this._texture.destroy();
             this._texture = null;
-        } else {
-            if (c == true && this._callback && typeof this._callback == 'function') {
-                this._callback(file);
-            }
-            this.set_child(this._texture);
+            return;
         }
+
+        if (c == true && this._callback && typeof this._callback == 'function') {
+            this._callback(file);
+        }
+
+        this.set_child(this._texture);
     },
 
     get file() {
