@@ -359,7 +359,7 @@ class DeskChangerDaemon(Gio.Application):
                         wallpaper = None
                 elif (len(self._history) > 0 and wallpaper == self._history[0]) or (
                                 len(self._queue) > 0 and wallpaper == self._queue[0]):
-                    self._warning("%s is too similar, grabbing a different one", wallpaper)
+                    self._info("%s is too similar, grabbing a different one", wallpaper)
                     wallpaper = None
         else:
             if self._position >= len(self._wallpapers):
