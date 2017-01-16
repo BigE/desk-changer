@@ -346,6 +346,15 @@ const DeskChangerIndicator = new Lang.Class({
     }
 });
 
+const DeskChangerMenuIndicator = new Lang.Class({
+    Name: 'DeskChangerMenuIndicator',
+    Extends: PanelMenu.SystemIndicator,
+
+    _init: function () {
+        this.parent();
+    }
+});
+
 const DeskChangerOpenCurrent = new Lang.Class({
     Name: 'DeskChangerOpenCurrent',
     Extends: PopupMenu.PopupMenuItem,
@@ -576,26 +585,37 @@ const DeskChangerSwitch = new Lang.Class({
 });
 
 let indicator;
+let settings;
 
 function disable() {
     debug('disabling extension');
-    indicator.destroy();
+
+    if (typeof indicator.destroy == "function") {
+        indicator.destroy();
+    }
+
     indicator = null;
 }
 
 function enable() {
     debug('enabling extension');
-    let settings = new DeskChangerSettings();
 
     if (settings.integrate_system_menu) {
+        indicator = new DeskChangerMenuIndicator();
+        Main.panel.statusArea.aggregateMenu._indicators.insert_child_at_index(indicator.indicators, 0);
     } else {
         indicator = new DeskChangerIndicator();
         Main.panel.addToStatusArea('deskchanger', indicator);
     }
-
-    settings.destroy();
 }
 
 function init() {
     debug('initalizing extension version: ' + DeskChangerVersion);
+    settings = new DeskChangerSettings();
+    settings.connect('changed::integrate-system-menu', function () {
+        if (indicator != null) {
+            disable();
+            enable();
+        }
+    });
 }

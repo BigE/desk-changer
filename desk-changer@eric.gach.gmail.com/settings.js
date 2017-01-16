@@ -124,6 +124,7 @@ const DeskChangerSettings = new Lang.Class({
     connect: function (signal, callback) {
         var handler_id = this.schema.connect(signal, callback);
         this._handlers.push(handler_id);
+        return handler_id;
     },
 
     destroy: function () {
