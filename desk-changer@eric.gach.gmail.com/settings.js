@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2014-2015 Eric Gach <eric@php-oop.net>
+ * Copyright (c) 2014-2017 Eric Gach <eric.gach@gmail.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -122,7 +122,7 @@ const DeskChangerSettings = new Lang.Class({
     },
 
     connect: function (signal, callback) {
-        var handler_id = this.schema.connect(signal, callback);
+        let handler_id = this.schema.connect(signal, callback);
         this._handlers.push(handler_id);
         return handler_id;
     },
@@ -135,7 +135,7 @@ const DeskChangerSettings = new Lang.Class({
     },
 
     disconnect: function (handler_id) {
-        var index = this._handlers.indexOf(handler_id);
+        let index = this._handlers.indexOf(handler_id);
         this.schema.disconnect(handler_id);
 
         if (index > -1) {

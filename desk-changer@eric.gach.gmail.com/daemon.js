@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2014-2015 Eric Gach <eric@php-oop.net>
+ * Copyright (c) 2014-2017 Eric Gach <eric.gach@gmail.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -72,6 +72,7 @@ const DeskChangerDaemon = new Lang.Class({
     Name: 'DeskChangerDaemon',
 
     _init: function (settings) {
+        this._bus_handlers = [];
         this.settings = settings;
         this._is_running = false;
         this._path = Me.dir.get_path();
@@ -88,7 +89,7 @@ const DeskChangerDaemon = new Lang.Class({
             }
         }));
 
-        var result = this._bus.ListNamesSync();
+        let result = this._bus.ListNamesSync();
         result = String(result).split(',');
         for (let item in result) {
             if (result[item] == "org.gnome.Shell.Extensions.DeskChanger.Daemon") {
@@ -96,19 +97,39 @@ const DeskChangerDaemon = new Lang.Class({
             }
         }
 
-        this._changed_handler = this.bus.connectSignal('changed', Lang.bind(this, function (emitter, signalName, parameters) {
+        this.connectSignal('changed', Lang.bind(this, function (emitter, signalName, parameters) {
             if (this.settings.notifications)
                 Main.notify('Desk Changer', 'Wallpaper Changed: ' + parameters[0]);
         }));
-        this._error_handler = this.bus.connectSignal('error', Lang.bind(this, function (emitter, signalName, parameters) {
+
+        this.connectSignal('error', Lang.bind(this, function (emitter, signalName, parameters) {
             Main.notifyError('Desk Changer', 'Daemon Error: ' + parameters[0]);
         }));
     },
 
+    connectSignal: function (signal, callback) {
+        handler_id = this.bus.connectSignal(signal, callback);
+        this._bus_handlers.push(handler_id);
+        debug('added dbus handler ' + handler_id);
+        return handler_id;
+    },
+
     destroy: function () {
-        this.bus.disconnectSignal(this._changed_handler);
-        this.bus.disconnectSignal(this._error_handler);
+        while (this._bus_handlers.length) {
+            this.disconnectSignal(this._bus_handlers[0]);
+        }
+
         this._bus.disconnectSignal(this._owner_changed_id);
+    },
+
+    disconnectSignal: function (handler_id) {
+        let index = this._bus_handlers.indexOf(handler_id);
+
+        debug('removing dbus handler ' + handler_id);
+        this.bus.disconnectSignal(handler_id);
+        if (index > -1) {
+            this._bus_handlers.splice(index, 1);
+        }
     },
 
     toggle: function () {
