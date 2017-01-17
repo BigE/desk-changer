@@ -50,15 +50,6 @@ const DeskChangerIndicator = new Lang.Class({
         this.parent(0.0, 'DeskChanger');
         this.daemon = new DeskChangerDaemon(this.settings);
 
-        this.daemon.connectSignal('changed', Lang.bind(this, function (emitter, signalName, parameters) {
-            if (this.settings.notifications)
-                Main.notify('Desk Changer', 'Wallpaper Changed: ' + parameters[0]);
-        }));
-
-        this.daemon.connectSignal('error', Lang.bind(this, function (emitter, signalName, parameters) {
-            Main.notifyError('Desk Changer', 'Daemon Error: ' + parameters[0]);
-        }));
-
         this.actor.add_child(new Ui.DeskChangerIcon(this.daemon, this.settings));
         this.menu.addMenuItem(new Menu.DeskChangerProfile(this.settings));
         this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
@@ -87,6 +78,7 @@ const DeskChangerIndicator = new Lang.Class({
     destroy: function () {
         this.parent();
         this.settings.destroy();
+        this.daemon.destroy();
     }
 });
 
@@ -97,15 +89,6 @@ const DeskChangerSystemIndicator = new Lang.Class({
     _init: function (menu) {
         this.parent();
         this.daemon = new DeskChangerDaemon();
-
-        this.daemon.connectSignal('changed', Lang.bind(this, function (emitter, signalName, parameters) {
-            if (this.settings.notifications)
-                Main.notify('Desk Changer', 'Wallpaper Changed: ' + parameters[0]);
-        }));
-
-        this.daemon.connectSignal('error', Lang.bind(this, function (emitter, signalName, parameters) {
-            Main.notifyError('Desk Changer', 'Daemon Error: ' + parameters[0]);
-        }));
 
         this.settings = new DeskChangerSettings();
         this._menu = new PopupMenu.PopupSubMenuMenuItem('DeskChanger', true);
@@ -133,10 +116,12 @@ const DeskChangerSystemIndicator = new Lang.Class({
         this._menu.destroy();
         this._indicator.destroy();
         this.settings.destroy();
+        this.daemon.destroy();
     }
 });
 
-let indicator, settings, current_profile_id, notifications_id;
+let daemon, indicator, settings;
+let changed_id, current_profile_id, error_id, notifications_id;
 
 function disable() {
     debug('disabling extension');
@@ -153,7 +138,17 @@ function disable() {
         settings.disconnect(notifications_id);
     }
 
+    if (changed_id) {
+        daemon.disconnectSignal(changed_id);
+    }
+
+    if (error_id) {
+        daemon.disconnectSignal(error_id);
+    }
+
+    changed_id = null;
     current_profile_id = null;
+    error_id = null;
     notifications_id = null;
     indicator = null;
 }
@@ -177,11 +172,22 @@ function enable() {
     notifications_id = settings.connect('changed::notifications', function () {
         Main.notify('Desk Changer', 'Notifications are now ' + ((settings.notifications) ? 'enabled' : 'disabled'));
     });
+
+    changed_id = daemon.connectSignal('changed', function (emitter, signalName, parameters) {
+        if (settings.notifications)
+            Main.notify('Desk Changer', 'Wallpaper Changed: ' + parameters[0]);
+    });
+
+    error_id = daemon.connectSignal('error', function (emitter, signalName, parameters) {
+        Main.notifyError('Desk Changer', 'Daemon Error: ' + parameters[0]);
+    });
 }
 
 function init() {
     debug('initalizing extension version: ' + DeskChangerVersion);
     settings = new DeskChangerSettings();
+    daemon = new DeskChangerDaemon(settings);
+
     settings.connect('changed::integrate-system-menu', function () {
         if (indicator != null) {
             disable();

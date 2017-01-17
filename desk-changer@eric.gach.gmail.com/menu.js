@@ -186,7 +186,6 @@ const DeskChangerDaemonControls = new Lang.Class({
         //this.disconnect(this._handler);
         debug('removing daemon toggled handler ' + this._daemon_handler);
         this.daemon.disconnect(this._daemon_handler);
-        this.daemon.destroy();
         this.parent();
     }
 });
