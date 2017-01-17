@@ -108,16 +108,12 @@ const DeskChangerSystemIndicator = new Lang.Class({
         }));
 
         this.settings = new DeskChangerSettings();
-        this._menu = new PopupMenu.PopupSubMenuMenuItem('DeskChanger: ' + this.settings.current_profile, true);
-        this._current_profile_id = this.settings.connect('changed::current-profile', Lang.bind(this, function () {
-            this._menu.label.set_text('DeskChanger: ' + this.settings.current_profile);
-        }));
+        this._menu = new PopupMenu.PopupSubMenuMenuItem('DeskChanger', true);
         this._menu.icon.set_gicon(Gio.icon_new_for_string(Me.path + '/icons/wallpaper-icon.png'));
+        this._menu.menu.addMenuItem(new Menu.DeskChangerProfile(this.settings, false));
         this._menu.menu.addMenuItem(new Menu.DeskChangerPreviewMenuItem(this.daemon));
         this._menu.menu.addMenuItem(new Menu.DeskChangerOpenCurrent());
-        this._menu.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
         this._menu.menu.addMenuItem(new Menu.DeskChangerControls(this.daemon.bus, this.settings));
-        this._menu.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
         this._menu.menu.addMenuItem(new Menu.DeskChangerDaemonControls(this.daemon));
         // Simple settings for the extension
         let settings = new PopupMenu.PopupMenuItem('DeskChanger Settings');
@@ -134,7 +130,6 @@ const DeskChangerSystemIndicator = new Lang.Class({
     },
 
     destroy: function () {
-        this.settings.disconnect(this._current_profile_id);
         this._menu.destroy();
         this._indicator.destroy();
         this.settings.destroy();

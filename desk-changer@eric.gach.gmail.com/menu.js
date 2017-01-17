@@ -256,12 +256,13 @@ const DeskChangerProfile = new Lang.Class({
     Name: 'DeskChangerProfile',
     Extends: PopupMenu.PopupSubMenuMenuItem,
 
-    _init: function (settings) {
+    _init: function (settings, sensitive = true) {
         this._settings = settings;
         this.parent('Profile: ' + this._settings.current_profile);
         this._populate_profiles();
         this._settings.connect('changed::current-profile', Lang.bind(this, this.setLabel));
         this._settings.connect('changed::profiles', Lang.bind(this, this._populate_profiles))
+        this.setSensitive(sensitive);
     },
 
     setLabel: function () {
