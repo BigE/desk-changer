@@ -108,7 +108,7 @@ const DeskChangerDaemon = new Lang.Class({
     },
 
     connectSignal: function (signal, callback) {
-        handler_id = this.bus.connectSignal(signal, callback);
+        let handler_id = this.bus.connectSignal(signal, callback);
         this._bus_handlers.push(handler_id);
         debug('added dbus handler ' + handler_id);
         return handler_id;

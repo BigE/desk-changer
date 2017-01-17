@@ -80,7 +80,6 @@ const DeskChangerIcon = new Lang.Class({
             this._preview.destroy();
         }
 
-        this._gicon.destroy();
         this.parent();
     },
 

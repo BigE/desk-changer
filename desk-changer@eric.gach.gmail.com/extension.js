@@ -49,7 +49,7 @@ const DeskChangerIndicator = new Lang.Class({
         this.settings = new DeskChangerSettings();
         this.parent(0.0, 'DeskChanger');
         this.daemon = new DeskChangerDaemon(this.settings);
-        this.actor.add_child(new Ui.DeskChangerIcon(this.daemon.bus, this.settings));
+        this.actor.add_child(new Ui.DeskChangerIcon(this.daemon, this.settings));
         this.menu.addMenuItem(new Menu.DeskChangerProfile(this.settings));
         this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
         this.menu.addMenuItem(new Menu.DeskChangerSwitch('Change with Profile', 'auto_rotate', this.settings));
@@ -104,8 +104,10 @@ const DeskChangerSystemIndicator = new Lang.Class({
         this._menu.menu.addMenuItem(settings);
         let position = (parseInt(Config.PACKAGE_VERSION.split(".")[1]) < 18)? this._menu.menu.numMenuItems - 2 : this._menu.menu.numMenuItems - 1;
         menu.addMenuItem(this._menu, position);
-        this._indicator = this._addIndicator();
-        this._indicator.set_gicon(Gio.icon_new_for_string(Me.path + '/icons/wallpaper-icon.png'));
+        this._indicator = new Ui.DeskChangerIcon(this.daemon, this.settings);
+        this.indicators.add_actor(this._indicator);
+        this._indicator.connect('notify::visible', Lang.bind(this, this._syncIndicatorsVisible));
+        this._syncIndicatorsVisible();
     },
 
     destroy: function () {
