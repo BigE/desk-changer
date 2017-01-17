@@ -21,6 +21,7 @@
  */
 
 const Clutter = imports.gi.Clutter;
+const Config = imports.misc.config;
 const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
 const Lang = imports.lang;
@@ -294,23 +295,9 @@ const DeskChangerIndicator = new Lang.Class({
 
     _init: function () {
         this.settings = new DeskChangerSettings();
-        this.settings.connect('changed::current-profile', Lang.bind(this, function () {
-            if (this.settings.notifications)
-                Main.notify('Desk Changer', 'Profile changed to ' + this.settings.current_profile);
-        }));
-        this.settings.connect('changed::notifications', Lang.bind(this, function () {
-            Main.notify('Desk Changer', 'Notifications are now ' + ((this.settings.notifications) ? 'enabled' : 'disabled'));
-        }));
         this.parent(0.0, 'DeskChanger');
-        this.daemon = new DeskChangerDaemon();
+        this.daemon = new DeskChangerDaemon(this.settings);
         this._dbus = this.daemon.bus;
-        this._changed_handler = this._dbus.connectSignal('changed', Lang.bind(this, function (emitter, signalName, parameters) {
-            if (this.settings.notifications)
-                Main.notify('Desk Changer', 'Wallpaper Changed: ' + parameters[0]);
-        }));
-        this._error_handler = this._dbus.connectSignal('error', Lang.bind(this, function (emitter, signalName, parameters) {
-            Main.notifyError('Desk Changer', 'Daemon Error: ' + parameters[0]);
-        }));
         this.actor.add_child(new DeskChangerIcon(this._dbus, this.settings));
         this.menu.addMenuItem(new DeskChangerProfile(this.settings));
         this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
@@ -337,21 +324,38 @@ const DeskChangerIndicator = new Lang.Class({
     },
 
     destroy: function () {
-        debug('removing dbus changed handler ' + this._changed_handler);
-        this._dbus.disconnectSignal(this._changed_handler);
-        debug('removing dbus error handler ' + this._changed_handler);
-        this._dbus.disconnectSignal(this._error_handler);
         this.settings.destroy();
         this.parent();
     }
 });
 
-const DeskChangerMenuIndicator = new Lang.Class({
-    Name: 'DeskChangerMenuIndicator',
+const DeskChangerSystemIndicator = new Lang.Class({
+    Name: 'DeskChangerSystemIndicator',
     Extends: PanelMenu.SystemIndicator,
 
-    _init: function () {
+    _init: function (menu) {
         this.parent();
+        this.daemon = new DeskChangerDaemon();
+        this._dbus = this.daemon.bus;
+        this._menu = new PopupMenu.PopupSubMenuMenuItem('DeskChanger', true);
+        this._menu.icon.set_gicon(Gio.icon_new_for_string(Me.path + '/icons/wallpaper-icon.png'));
+        this._menu.menu.addMenuItem(new DeskChangerPreviewMenuItem(this._dbus));
+        // Simple settings for the extension
+        var settings = new PopupMenu.PopupMenuItem('DeskChanger Settings');
+        settings.connect('activate', function () {
+            Util.spawn(['gnome-shell-extension-prefs', Me.metadata.uuid]);
+        });
+        this._menu.menu.addMenuItem(settings);
+        let position = (parseInt(Config.PACKAGE_VERSION.split(".")[1]) < 18)? this._menu.menu.numMenuItems - 2 : this._menu.menu.numMenuItems - 1;
+        debug(position);
+        menu.addMenuItem(this.menu, position);
+        this._indicator = this._addIndicator();
+        this._indicator.set_gicon(Gio.icon_new_for_string(Me.path + '/icons/wallpaper-icon.png'));
+    },
+
+    destroy: function () {
+        this._menu.destroy();
+        this._indicator.destroy();
     }
 });
 
@@ -584,8 +588,7 @@ const DeskChangerSwitch = new Lang.Class({
     }
 });
 
-let indicator;
-let settings;
+let indicator, settings, current_profile_id, notifications_id;
 
 function disable() {
     debug('disabling extension');
@@ -594,6 +597,16 @@ function disable() {
         indicator.destroy();
     }
 
+    if (current_profile_id) {
+        settings.disconnect(current_profile_id);
+    }
+
+    if (notifications_id) {
+        settings.disconnect(notifications_id);
+    }
+
+    current_profile_id = null;
+    notifications_id = null;
     indicator = null;
 }
 
@@ -601,12 +614,21 @@ function enable() {
     debug('enabling extension');
 
     if (settings.integrate_system_menu) {
-        indicator = new DeskChangerMenuIndicator();
+        indicator = new DeskChangerSystemIndicator(Main.panel.statusArea.aggregateMenu.menu);
         Main.panel.statusArea.aggregateMenu._indicators.insert_child_at_index(indicator.indicators, 0);
     } else {
         indicator = new DeskChangerIndicator();
         Main.panel.addToStatusArea('deskchanger', indicator);
     }
+
+    current_profile_id = settings.connect('changed::current-profile', function () {
+        if (settings.notifications)
+            Main.notify('Desk Changer', 'Profile changed to ' + settings.current_profile);
+    });
+
+    notifications_id = settings.connect('changed::notifications', function () {
+        Main.notify('Desk Changer', 'Notifications are now ' + ((settings.notifications) ? 'enabled' : 'disabled'));
+    });
 }
 
 function init() {

@@ -71,7 +71,8 @@ const DBusProxy = Gio.DBusProxy.makeProxyWrapper(DBusInterface);
 const DeskChangerDaemon = new Lang.Class({
     Name: 'DeskChangerDaemon',
 
-    _init: function () {
+    _init: function (settings) {
+        this.settings = settings;
         this._is_running = false;
         this._path = Me.dir.get_path();
         this.bus = new DeskChangerDaemonProxy(Gio.DBus.session, 'org.gnome.Shell.Extensions.DeskChanger.Daemon', '/org/gnome/Shell/Extensions/DeskChanger/Daemon');
@@ -94,9 +95,19 @@ const DeskChangerDaemon = new Lang.Class({
                 this._on();
             }
         }
+
+        this._changed_handler = this.bus.connectSignal('changed', Lang.bind(this, function (emitter, signalName, parameters) {
+            if (this.settings.notifications)
+                Main.notify('Desk Changer', 'Wallpaper Changed: ' + parameters[0]);
+        }));
+        this._error_handler = this.bus.connectSignal('error', Lang.bind(this, function (emitter, signalName, parameters) {
+            Main.notifyError('Desk Changer', 'Daemon Error: ' + parameters[0]);
+        }));
     },
 
     destroy: function () {
+        this.bus.disconnectSignal(this._changed_handler);
+        this.bus.disconnectSignal(this._error_handler);
         this._bus.disconnectSignal(this._owner_changed_id);
     },
 
