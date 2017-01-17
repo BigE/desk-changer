@@ -49,6 +49,16 @@ const DeskChangerIndicator = new Lang.Class({
         this.settings = new DeskChangerSettings();
         this.parent(0.0, 'DeskChanger');
         this.daemon = new DeskChangerDaemon(this.settings);
+
+        this.daemon.connectSignal('changed', Lang.bind(this, function (emitter, signalName, parameters) {
+            if (this.settings.notifications)
+                Main.notify('Desk Changer', 'Wallpaper Changed: ' + parameters[0]);
+        }));
+
+        this.daemon.connectSignal('error', Lang.bind(this, function (emitter, signalName, parameters) {
+            Main.notifyError('Desk Changer', 'Daemon Error: ' + parameters[0]);
+        }));
+
         this.actor.add_child(new Ui.DeskChangerIcon(this.daemon, this.settings));
         this.menu.addMenuItem(new Menu.DeskChangerProfile(this.settings));
         this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
@@ -87,8 +97,21 @@ const DeskChangerSystemIndicator = new Lang.Class({
     _init: function (menu) {
         this.parent();
         this.daemon = new DeskChangerDaemon();
+
+        this.daemon.connectSignal('changed', Lang.bind(this, function (emitter, signalName, parameters) {
+            if (this.settings.notifications)
+                Main.notify('Desk Changer', 'Wallpaper Changed: ' + parameters[0]);
+        }));
+
+        this.daemon.connectSignal('error', Lang.bind(this, function (emitter, signalName, parameters) {
+            Main.notifyError('Desk Changer', 'Daemon Error: ' + parameters[0]);
+        }));
+
         this.settings = new DeskChangerSettings();
-        this._menu = new PopupMenu.PopupSubMenuMenuItem('DeskChanger', true);
+        this._menu = new PopupMenu.PopupSubMenuMenuItem('DeskChanger: ' + this.settings.current_profile, true);
+        this._current_profile_id = this.settings.connect('changed::current-profile', Lang.bind(this, function () {
+            this._menu.label.set_text('DeskChanger: ' + this.settings.current_profile);
+        }));
         this._menu.icon.set_gicon(Gio.icon_new_for_string(Me.path + '/icons/wallpaper-icon.png'));
         this._menu.menu.addMenuItem(new Menu.DeskChangerPreviewMenuItem(this.daemon));
         this._menu.menu.addMenuItem(new Menu.DeskChangerOpenCurrent());
@@ -111,6 +134,7 @@ const DeskChangerSystemIndicator = new Lang.Class({
     },
 
     destroy: function () {
+        this.settings.disconnect(this._current_profile_id);
         this._menu.destroy();
         this._indicator.destroy();
         this.settings.destroy();

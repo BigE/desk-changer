@@ -96,15 +96,6 @@ const DeskChangerDaemon = new Lang.Class({
                 this._on();
             }
         }
-
-        this.connectSignal('changed', Lang.bind(this, function (emitter, signalName, parameters) {
-            if (this.settings.notifications)
-                Main.notify('Desk Changer', 'Wallpaper Changed: ' + parameters[0]);
-        }));
-
-        this.connectSignal('error', Lang.bind(this, function (emitter, signalName, parameters) {
-            Main.notifyError('Desk Changer', 'Daemon Error: ' + parameters[0]);
-        }));
     },
 
     connectSignal: function (signal, callback) {
