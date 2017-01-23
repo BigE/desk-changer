@@ -21,7 +21,7 @@
 			<description>
 				This is the current profile that the daemon will load.
 			</description>
-			<summary>test</summary>
+			<summary>Currently loaded profile</summary>
 		</key>
 		<key name="icon-preview" type="b">
 			<default>false</default>
@@ -31,12 +31,22 @@
 			</description>
 			<summary>Show preview of next wallpaper for extension icon</summary>
 		</key>
+		<key name="integrate-system-menu" type="b">
+			<default>false</default>
+			<description>
+				If this is enabled the extension will integrate itself in with the system menu and display a compressed
+				version of controls there. If it is disabled, the extension will have its own icon and show all
+				available functionality.
+			</description>
+			<summary>Integrate the extension in with the system menu</summary>
+		</key>
 		<key name="interval" type="i">
 			<default>300</default>
 			<description>
-				The interval is the amount of time in seconds between the daemon switching the wallpaper.
+				When timer is enabled, the interval is the amount of time in seconds between the daemon switching the
+				wallpaper to the next available wallpaper. Default is 300 seconds or 5 minutes
 			</description>
-			<summary>test</summary>
+			<summary>Number of seconds between wallpaper changes</summary>
 		</key>
 		<key name="next-wallpaper" type="as">
 			<default><![CDATA[['']]]></default>
@@ -48,9 +58,10 @@
 		<key name="notifications" type="b">
 			<default>true</default>
 			<description>
-				Display a notification each time an event happens with desk-changer.
+				Display a notification each time an event happens with desk-changer. This does not stop the extension
+				from reporting errors.
 			</description>
-			<summary>test</summary>
+			<summary>Display notifications with the extension</summary>
 		</key>
 		<key name="prev-wallpaper" type="as">
 			<default><![CDATA[['']]]></default>
@@ -62,16 +73,17 @@
 		<key name="profiles" type="a{sa(sb)}">
 			<default>[{"default",[("file:///usr/share/backgrounds", true)]}]</default>
 			<description>
-				These are the profiles available to the daemon.
+				These are all the available profiles. By default it contains a single profile that will recursively
+				load /usr/share/backgrouds
 			</description>
-			<summary>test</summary>
+			<summary>All currently available profiles</summary>
 		</key>
 		<key name="random" type="b">
 			<default>true</default>
 			<description>
 				If set to true the daemon will randomize the order in which the wallpapers are displayed
 			</description>
-			<summary>test</summary>
+			<summary>Display wallpapers in a random order</summary>
 		</key>
 		<key name="timer-enabled" type="b">
 			<default>true</default>
@@ -79,7 +91,7 @@
 				The timer controls the automatic switching of wallpapers. If it is enabled, it will use the interval
 				to switch the wallpaper automatically.
 			</description>
-			<summary>test</summary>
+			<summary>Automatically switch wallpapers at every interval</summary>
 		</key>
 	</schema>
 </schemalist>

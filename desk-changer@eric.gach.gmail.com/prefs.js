@@ -34,7 +34,8 @@ const DeskChangerPrefs = new Lang.Class({
     Name: 'DeskChangerPrefs',
 
     _init: function () {
-        this._daemon = new DeskChangerDaemon();
+        this._settings = new DeskChangerSettings();
+        this._daemon = new DeskChangerDaemon(this._settings);
         this.box = new Gtk.Box({
             border_width: 10,
             orientation: Gtk.Orientation.VERTICAL,
@@ -44,11 +45,11 @@ const DeskChangerPrefs = new Lang.Class({
         // init settings holders
         this._settingsKeybind = new Array();
 
-        this._settings = new DeskChangerSettings();
         this.notebook = new Gtk.Notebook();
         this._initProfiles();
         this._initKeyboard();
         this._initMisc();
+        this._load_profiles();
         this.box.pack_start(this.notebook, true, true, 0);
         this.box.show_all();
     },
@@ -67,7 +68,18 @@ const DeskChangerPrefs = new Lang.Class({
         var frame = new Gtk.Frame({label: 'Daemon'});
         var frame_box = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL});
         var box = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL});
-        var label = new Gtk.Label({label: 'DeskChanger Daemon Status:'});
+        var label = new Gtk.Label({label: 'Current Profile'});
+        box.pack_start(label, false, false, 5);
+        label = new Gtk.Label({label: ' '});
+        box.pack_start(label, true, true, 5);
+        this._currentProfile = new Gtk.ComboBoxText();
+        this._currentProfile.connect('changed', Lang.bind(this, function (object) {
+            this._settings.current_profile = object.get_active_text();
+        }));
+        box.pack_start(this._currentProfile, false, false, 5);
+        frame_box.pack_start(box, false, false, 10);
+        box = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL});
+        label = new Gtk.Label({label: 'DeskChanger Daemon Status'});
         box.pack_start(label, false, false, 5);
         label = new Gtk.Label({label: ' '});
         box.pack_start(label, true, true, 5);
@@ -149,6 +161,19 @@ const DeskChangerPrefs = new Lang.Class({
             this._settings.notifications = this._switchIconPreview.get_state();
         }));
         box.pack_end(this._switchNotifications, false, false, 5);
+        frame_box.pack_start(box, false, false, 5);
+        // Integrate extension into the system menu
+        box = new Gtk.Box();
+        label = new Gtk.Label({label: 'Integrate extension in system menu'})
+        box.pack_start(label, false, false, 5);
+        label = new Gtk.Label({label: ' '});
+        box.pack_start(label, true, true, 5);
+        this._switchIntegrateSystemMenu = new Gtk.Switch();
+        this._switchIntegrateSystemMenu.set_active(this._settings.integrate_system_menu);
+        this._switchIntegrateSystemMenu.connect('notify::active', Lang.bind(this, function () {
+            this._settings.integrate_system_menu = this._switchIntegrateSystemMenu.get_state();
+        }));
+        box.pack_end(this._switchIntegrateSystemMenu, false, false, 5);
         frame_box.pack_start(box, false, false, 5);
         frame.add(frame_box);
         misc_box.pack_start(frame, true, true, 10);
@@ -329,7 +354,6 @@ const DeskChangerPrefs = new Lang.Class({
         column.pack_start(renderer, false);
         column.add_attribute(renderer, 'active', 1);
         this.profiles.append_column(column);
-        this._load_profiles();
 
         hbox = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL});
         this.remove = new Gtk.Button({label: 'Remove'});
@@ -425,9 +449,11 @@ const DeskChangerPrefs = new Lang.Class({
     _load_profiles: function () {
         var active = this.profiles_combo_box.get_active(), i = 0, text = this.profiles_combo_box.get_active_text();
         this.profiles_combo_box.remove_all();
+        this._currentProfile.remove_all();
 
         for (var profile in this._settings.profiles) {
             this.profiles_combo_box.insert_text(i, profile);
+            this._currentProfile.insert_text(i, profile);
             if (text == profile || (active == -1 && profile == this._settings.current_profile)) {
                 active = i;
             }
@@ -435,6 +461,7 @@ const DeskChangerPrefs = new Lang.Class({
         }
 
         this.profiles_combo_box.set_active(active);
+        this._currentProfile.set_active(active);
     },
 
     _save_profile: function () {
