@@ -68,11 +68,6 @@ const DeskChangerIndicator = new Lang.Class({
             Util.spawn(['gnome-shell-extension-prefs', Me.metadata.uuid]);
         });
         this.menu.addMenuItem(settings);
-
-        if (!this.daemon.is_running && this.settings.auto_start) {
-            // start the auto start goodness.
-            this.daemon.toggle();
-        }
     },
 
     destroy: function () {
@@ -181,6 +176,11 @@ function enable() {
     error_id = daemon.connectSignal('error', function (emitter, signalName, parameters) {
         Main.notifyError('Desk Changer', 'Daemon Error: ' + parameters[0]);
     });
+
+    if (!daemon.is_running && settings.auto_start) {
+        // run if auto start is enabled and its not already running
+        daemon.toggle();
+    }
 }
 
 function init() {
