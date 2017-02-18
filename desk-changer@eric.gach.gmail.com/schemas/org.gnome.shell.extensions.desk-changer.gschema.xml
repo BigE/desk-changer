@@ -85,6 +85,21 @@
 			</description>
 			<summary>Display wallpapers in a random order</summary>
 		</key>
+		<key name="rotation" type="s">
+			<choices>
+				<choice value="disabled"></choice>
+				<choice value="hourly"></choice>
+				<choice value="timer"></choice>
+			</choices>
+			<default>"timer"</default>
+			<description>
+				Choose how the rotation is handled by the daemon. The timer choice is the default. It enables a timer
+				that uses the interval value to change the wallpaper ever [interval] seconds. For hourly, the wallpaper
+				will be changed at the beginning of every hour of the day. When disabled, rotation is not done by the
+				daemon, but only by user interaction with the extension.
+			</description>
+			<summary>Different options to control when the wallpaper is changed</summary>
+		</key>
 		<key name="timer-enabled" type="b">
 			<default>true</default>
 			<description>
