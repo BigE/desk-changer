@@ -115,7 +115,7 @@ const DeskChangerSystemIndicator = new Lang.Class({
     }
 });
 
-let daemon, indicator, settings;
+let daemon, indicator, settings, shellSettings;
 let changed_id, current_profile_id, error_id, notifications_id;
 
 function disable() {
@@ -146,6 +146,11 @@ function disable() {
     error_id = null;
     notifications_id = null;
     indicator = null;
+
+    if (shellSettings.get_strv('enabled-extensions').indexOf(Me.uuid) === -1 && daemon.is_running) {
+        debug('Extension disabled, stopping daemon');
+        daemon.toggle();
+    }
 }
 
 function enable() {
@@ -186,6 +191,7 @@ function enable() {
 function init() {
     debug('initalizing extension version: ' + DeskChangerVersion);
     settings = new DeskChangerSettings();
+    shellSettings = new Gio.Settings({'schema': 'org.gnome.shell'});
     daemon = new DeskChangerDaemon(settings);
 
     settings.connect('changed::integrate-system-menu', function () {
