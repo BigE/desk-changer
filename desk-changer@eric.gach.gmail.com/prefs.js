@@ -34,6 +34,7 @@ const DeskChangerPrefs = new Lang.Class({
     Name: 'DeskChangerPrefs',
 
     _init: function () {
+        this._is_init = true;
         this._settings = new DeskChangerSettings();
         this._daemon = new DeskChangerDaemon(this._settings);
         this.box = new Gtk.Box({
@@ -52,6 +53,7 @@ const DeskChangerPrefs = new Lang.Class({
         this._load_profiles();
         this.box.pack_start(this.notebook, true, true, 0);
         this.box.show_all();
+        this._is_init = false;
     },
 
     toggle_subfolders: function (widget, path) {
@@ -74,7 +76,9 @@ const DeskChangerPrefs = new Lang.Class({
         box.pack_start(label, true, true, 5);
         this._currentProfile = new Gtk.ComboBoxText();
         this._currentProfile.connect('changed', Lang.bind(this, function (object) {
-            this._settings.current_profile = object.get_active_text();
+            if (!this._is_init) {
+                this._settings.current_profile = object.get_active_text();
+            }
         }));
         box.pack_start(this._currentProfile, false, false, 5);
         frame_box.pack_start(box, false, false, 10);

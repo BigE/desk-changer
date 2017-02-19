@@ -113,12 +113,12 @@ const DeskChangerSettings = new Lang.Class({
         this.schema.set_boolean('random', Boolean(value));
     },
 
-    get timer_enabled() {
-        return this.schema.get_boolean('timer-enabled');
+    get rotation() {
+        return this.schema.get_string('rotation');
     },
 
-    set timer_enabled(value) {
-        this.schema.set_boolean('timer-enabled', Boolean(value));
+    set rotation(value) {
+        this.schema.set_string('rotation', value);
     },
 
     connect: function (signal, callback) {
