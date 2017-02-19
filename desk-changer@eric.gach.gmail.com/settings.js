@@ -29,7 +29,7 @@ const DeskChangerSettings = new Lang.Class({
 
 
     _init: function () {
-        var source = Gio.SettingsSchemaSource.new_from_directory(
+        let source = Gio.SettingsSchemaSource.new_from_directory(
             Me.dir.get_child('schemas').get_path(),
             Gio.SettingsSchemaSource.get_default(),
             false
