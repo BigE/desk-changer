@@ -29,7 +29,7 @@ const DeskChangerSettings = new Lang.Class({
 
 
     _init: function () {
-        var source = Gio.SettingsSchemaSource.new_from_directory(
+        let source = Gio.SettingsSchemaSource.new_from_directory(
             Me.dir.get_child('schemas').get_path(),
             Gio.SettingsSchemaSource.get_default(),
             false
@@ -113,12 +113,12 @@ const DeskChangerSettings = new Lang.Class({
         this.schema.set_boolean('random', Boolean(value));
     },
 
-    get timer_enabled() {
-        return this.schema.get_boolean('timer-enabled');
+    get rotation() {
+        return this.schema.get_string('rotation');
     },
 
-    set timer_enabled(value) {
-        this.schema.set_boolean('timer-enabled', Boolean(value));
+    set rotation(value) {
+        this.schema.set_string('rotation', value);
     },
 
     connect: function (signal, callback) {

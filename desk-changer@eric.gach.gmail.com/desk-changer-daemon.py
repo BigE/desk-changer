@@ -3,6 +3,7 @@
 import os.path
 import random
 import sys
+from datetime import datetime
 from gi import require_version
 from gi.repository import GLib, Gio, GObject
 from gi._gi import variant_type_from_string
@@ -10,7 +11,7 @@ from gi._gi import variant_type_from_string
 require_version('Gio', '2.0')
 
 __daemon_path__ = os.path.abspath(os.curdir)
-__version__ = '2.0.2'
+__version__ = '2.1.0'
 
 DeskChangerDaemonDBusInterface = Gio.DBusNodeInfo.new_for_xml('''<node>
     <interface name="org.gnome.Shell.Extensions.DeskChanger.Daemon">
@@ -68,6 +69,7 @@ class DeskChangerDaemon(Gio.Application):
         # internal stuffs
         self._accepted = ['application/xml', 'image/jpeg', 'image/png']
         self._dbus_id = None
+        self._did_hourly = False
         self._history = []
         self._monitors = []
         self._position = 0
@@ -146,7 +148,7 @@ class DeskChangerDaemon(Gio.Application):
         except ValueError as e:
             self._emit_signal('error', str(e))
         # Connect the settings signals
-        self._connect_settings_signal('changed::timer-enabled', lambda s, k: self._toggle_timer())
+        self._connect_settings_signal('changed::rotation', lambda s, k: self._toggle_timer())
         self._connect_settings_signal('changed::interval', lambda s, k: self._toggle_timer())
         self._connect_settings_signal('changed::current-profile', self._changed_current_profile)
         self._connect_settings_signal('changed::random', lambda s, k: self._toggle_random())
@@ -337,6 +339,18 @@ class DeskChangerDaemon(Gio.Application):
                                          'Method %s in %s does not exist' % (method_name, interface_name))
         return
 
+    def _hourly(self):
+        d = datetime.utcnow()
+        if d.minute == 0 and d.second < 10:
+            if not self._did_hourly:
+                # This should trigger once per hour, right around the beginning of the hour... I hope... I tried to
+                # account for it not being accurately 5 second intervals
+                self._did_hourly = True
+                return self._timeout()
+            return True
+        self._did_hourly = False
+        return True
+
     def _info(self, message, *args):
         self._log(GLib.LogLevelFlags.LEVEL_INFO, message, *args)
 
@@ -440,14 +454,19 @@ class DeskChangerDaemon(Gio.Application):
         self._emit_signal('preview', self._queue[0])
 
     def _toggle_timer(self):
-        if self._settings.get_boolean('timer-enabled'):
+        rotation = self._settings.get_string('rotation')
+        if rotation != 'disabled':
             if self._timer is not None:
                 self._debug('removing old timer')
                 GLib.source_remove(self._timer)
-            interval = self._settings.get_int('interval')
-            self._timer = GLib.timeout_add_seconds(interval, self._timeout)
-            self._info('automatic timer enabled for %d seconds', interval)
-        elif self._settings.get_boolean('timer-enabled') is False and self._timer is not None:
+            if rotation == 'interval':
+                interval = self._settings.get_int('interval')
+                self._timer = GLib.timeout_add_seconds(interval, self._timeout)
+                self._info('automatic timer enabled for %d seconds', interval)
+            elif rotation == 'hourly':
+                self._timer = GLib.timeout_add_seconds(5, self._hourly)
+                self._info('timer enabled for every 5 seconds, wallpaper will change as close to the hour as possible')
+        elif self._settings.get_string('rotation') == 'disabled' and self._timer is not None:
             GLib.source_remove(self._timer)
             self._timer = None
             self._info('removed automatic timer')

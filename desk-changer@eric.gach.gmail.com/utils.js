@@ -12,7 +12,7 @@ function debug(message) {
  */
 
 function getCaller() {
-    var stack = getStack();
+    let stack = getStack();
 
     // Remove superfluous function calls on stack
     stack.shift(); // getCaller --> getStack
@@ -24,7 +24,7 @@ function getCaller() {
 
 function getStack() {
     // Save original Error.prepareStackTrace
-    var origPrepareStackTrace = Error.prepareStackTrace;
+    let origPrepareStackTrace = Error.prepareStackTrace;
 
     // Override with function that just returns `stack`
     Error.prepareStackTrace = function (_, stack) {
@@ -32,10 +32,10 @@ function getStack() {
     };
 
     // Create a new `Error`, which automatically gets `stack`
-    var err = new Error();
+    let err = new Error();
 
     // Evaluate `err.stack`, which calls our new `Error.prepareStackTrace`
-    var stack = err.stack.split("\n");
+    let stack = err.stack.split("\n");
 
     // Restore original `Error.prepareStackTrace`
     Error.prepareStackTrace = origPrepareStackTrace;
