@@ -100,13 +100,5 @@
 			</description>
 			<summary>Different options to control when the wallpaper is changed</summary>
 		</key>
-		<key name="timer-enabled" type="b">
-			<default>true</default>
-			<description>
-				The timer controls the automatic switching of wallpapers. If it is enabled, it will use the interval
-				to switch the wallpaper automatically.
-			</description>
-			<summary>Automatically switch wallpapers at every interval</summary>
-		</key>
 	</schema>
 </schemalist>
