@@ -459,7 +459,7 @@ class DeskChangerDaemon(Gio.Application):
             if self._timer is not None:
                 self._debug('removing old timer')
                 GLib.source_remove(self._timer)
-            if rotation == 'timer':
+            if rotation == 'interval':
                 interval = self._settings.get_int('interval')
                 self._timer = GLib.timeout_add_seconds(interval, self._timeout)
                 self._info('automatic timer enabled for %d seconds', interval)

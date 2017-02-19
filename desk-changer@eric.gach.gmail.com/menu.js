@@ -60,29 +60,33 @@ const DeskChangerControls = new Lang.Class({
             }
         ], Lang.bind(this, this._toggle_random));
         this._random.set_state((this._settings.random) ? 'random' : 'ordered');
-        this._timer = new Ui.DeskChangerStateButton([
+        this._rotation = new Ui.DeskChangerStateButton([
             {
                 icon: 'media-playback-stop',
-                name: 'enable'
+                name: 'interval'
             },
             {
                 icon: 'media-playback-start',
-                name: 'disable'
+                name: 'disabled'
+            },
+            {
+                icon: 'appointment-new',
+                name: 'hourly'
             }
-        ], Lang.bind(this, this._toggle_timer));
-        this._timer.set_state((this._settings.timer_enabled) ? 'enable' : 'disable');
+        ], Lang.bind(this, this._toggle_rotation));
+        this._rotation.set_state(this._settings.rotation);
 
         if (this.addActor) {
             this._box = new St.BoxLayout({style: 'spacing: 20px;'});
             this.addActor(this._box, {align: St.Align.MIDDLE, span: -1});
             this._box.add_actor(this._prev, {expand: true});
             this._box.add_actor(this._random, {expand: true});
-            this._box.add_actor(this._timer, {expand: true});
+            this._box.add_actor(this._rotation, {expand: true});
             this._box.add_actor(this._next, {expand: true});
         } else {
             this.actor.add_actor(this._prev, {expand: true, x_fill: false});
             this.actor.add_actor(this._random, {expand: true, x_fill: false});
-            this.actor.add_actor(this._timer, {expand: true, x_fill: false});
+            this.actor.add_actor(this._rotation, {expand: true, x_fill: false});
             this.actor.add_actor(this._next, {expand: true, x_fill: false});
         }
     },
@@ -97,7 +101,7 @@ const DeskChangerControls = new Lang.Class({
         this._next.destroy();
         this._prev.destroy();
         this._random.destroy();
-        this._timer.destroy();
+        this._rotation.destroy();
         this.parent();
     },
 
@@ -158,9 +162,9 @@ const DeskChangerControls = new Lang.Class({
         this._settings.random = (state == 'random');
     },
 
-    _toggle_timer: function (state) {
-        debug(state + 'ing timer');
-        this._settings.timer_enabled = (state == 'enable');
+    _toggle_rotation: function (state) {
+        debug('setting rotation to ' + state);
+        this._settings.rotation = state;
     }
 });
 

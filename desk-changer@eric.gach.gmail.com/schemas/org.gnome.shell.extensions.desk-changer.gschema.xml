@@ -89,11 +89,11 @@
 			<choices>
 				<choice value="disabled"></choice>
 				<choice value="hourly"></choice>
-				<choice value="timer"></choice>
+				<choice value="interval"></choice>
 			</choices>
-			<default>"timer"</default>
+			<default>"interval"</default>
 			<description>
-				Choose how the rotation is handled by the daemon. The timer choice is the default. It enables a timer
+				Choose how the rotation is handled by the daemon. The interval choice is the default. It enables a timer
 				that uses the interval value to change the wallpaper ever [interval] seconds. For hourly, the wallpaper
 				will be changed at the beginning of every hour of the day. When disabled, rotation is not done by the
 				daemon, but only by user interaction with the extension.
