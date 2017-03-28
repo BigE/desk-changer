@@ -113,6 +113,14 @@ const DeskChangerSettings = new Lang.Class({
         this.schema.set_boolean('random', Boolean(value));
     },
 
+    get remember_profile_state() {
+        return this.schema.get_boolean('remember-profile-state');
+    },
+
+    set remember_profile_state(value) {
+        this.schema.set_boolean('remember-profile-state', Boolean(value));
+    },
+
     get rotation() {
         return this.schema.get_string('rotation');
     },

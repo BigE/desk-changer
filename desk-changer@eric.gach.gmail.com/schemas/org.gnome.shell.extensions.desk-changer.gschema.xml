@@ -85,6 +85,15 @@
 			</description>
 			<summary>Display wallpapers in a random order</summary>
 		</key>
+		<key name="remember-profile-state" type="b">
+			<default>false</default>
+			<description>
+				When enabled, the daemon will remember its current and next wallpaper for the current profile when the
+				profile is changed. This means returning back to the profile will restore the previous background plus
+				the next in queue.
+			</description>
+			<summary>Remember profile last wallpaper on load</summary>
+		</key>
 		<key name="rotation" type="s">
 			<choices>
 				<choice value="disabled"></choice>
