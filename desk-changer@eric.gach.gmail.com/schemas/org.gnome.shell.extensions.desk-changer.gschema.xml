@@ -78,6 +78,14 @@
 			</description>
 			<summary>All currently available profiles</summary>
 		</key>
+		<key name="profile-state" type="a{s(ss)}">
+			<default>[]</default>
+			<description>
+				This is the storage location of the profile's last state. By default, there are no states saved until
+				a new profile is loaded.
+			</description>
+			<summary>Profile's last saved state</summary>
+		</key>
 		<key name="random" type="b">
 			<default>true</default>
 			<description>
