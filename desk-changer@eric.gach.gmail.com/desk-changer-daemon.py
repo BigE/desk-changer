@@ -363,7 +363,7 @@ class DeskChangerDaemon(Gio.Application):
         if self._settings.get_boolean('random'):
             while wallpaper is None:
                 wallpaper = self._wallpapers[random.randint(0, (len(self._wallpapers) - 1))]
-                self._debug("got %s as a possible next wallpaper", wallpaper);
+                self._debug("got %s as a possible next wallpaper", wallpaper)
                 if len(self._wallpapers) > 100:
                     if self._history.count(wallpaper) > 0:
                         self._debug("%s has already been shown recently, choosing another wallpaper", wallpaper)
