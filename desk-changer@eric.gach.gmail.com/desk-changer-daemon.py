@@ -160,6 +160,8 @@ class DeskChangerDaemon(Gio.Application):
     def do_shutdown(self):
         """Shutdown method of application, cleanup here"""
         self._debug('::shutdown')
+        if self._settings.get_boolean('remember-profile-state'):
+            self.save_state()
         for signal_id in self._settings_signals:
             self._debug('disconnecting signal handler %d', signal_id)
             self._settings.disconnect(signal_id)
@@ -190,6 +192,8 @@ class DeskChangerDaemon(Gio.Application):
             if profile in states:
                 state = states[profile]
                 del states[profile]
+                self._settings.set_value('profile-state', GLib.Variant('a{s(ss)}', states))
+                self._debug('removed state for %s since it was loaded', profile)
 
         for monitor in self._monitors:
             monitor.cancel()
@@ -250,13 +254,21 @@ class DeskChangerDaemon(Gio.Application):
         raise ValueError('no history is available, cannot go back further')
 
     def save_state(self):
+        """
+        Save the state of the current profile for use later
+        
+        :rtype: bool
+        """
         self._debug('saving state of profile %s', self._current_profile)
         states = self._settings.get_value('profile-state').unpack()
         if self._current_profile in states:
             self._warning('overwriting old state for profile %s', self._current_profile)
-        # TODO - error checking
+        if len(self._queue) == 0:
+            self._critical('failed to save state of %s: there are no available wallpapers', self._current_profile)
+            return False
         states[self._current_profile] = (self._background.get_string('picture-uri'), self._queue[0])
         self._settings.set_value('profile-state', GLib.Variant('a{s(ss)}', states))
+        return True
 
     def _changed_current_profile(self, s, k):
         try:
