@@ -55,6 +55,7 @@ const DeskChangerIndicator = new Lang.Class({
         this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
         this.menu.addMenuItem(new Menu.DeskChangerSwitch('Change with Profile', 'auto_rotate', this.settings));
         this.menu.addMenuItem(new Menu.DeskChangerSwitch('Notifications', 'notifications', this.settings));
+        this.menu.addMenuItem(new Menu.DeskChangerSwitch('Remember Profile State', 'remember_profile_state', this.settings));
         this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
         this.menu.addMenuItem(new Menu.DeskChangerPreviewMenuItem(this.daemon));
         this.menu.addMenuItem(new Menu.DeskChangerOpenCurrent());

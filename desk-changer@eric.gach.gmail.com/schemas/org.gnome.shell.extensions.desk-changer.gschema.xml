@@ -78,12 +78,29 @@
 			</description>
 			<summary>All currently available profiles</summary>
 		</key>
+		<key name="profile-state" type="a{s(ss)}">
+			<default>[]</default>
+			<description>
+				This is the storage location of the profile's last state. By default, there are no states saved until
+				a new profile is loaded.
+			</description>
+			<summary>Profile's last saved state</summary>
+		</key>
 		<key name="random" type="b">
 			<default>true</default>
 			<description>
 				If set to true the daemon will randomize the order in which the wallpapers are displayed
 			</description>
 			<summary>Display wallpapers in a random order</summary>
+		</key>
+		<key name="remember-profile-state" type="b">
+			<default>false</default>
+			<description>
+				When enabled, the daemon will remember its current and next wallpaper for the current profile when the
+				profile is changed. This means returning back to the profile will restore the previous background plus
+				the next in queue.
+			</description>
+			<summary>Remember profile last wallpaper on load</summary>
 		</key>
 		<key name="rotation" type="s">
 			<choices>

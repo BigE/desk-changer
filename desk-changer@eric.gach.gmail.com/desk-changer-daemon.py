@@ -11,7 +11,7 @@ from gi._gi import variant_type_from_string
 require_version('Gio', '2.0')
 
 __daemon_path__ = os.path.abspath(os.curdir)
-__version__ = '2.1.0'
+__version__ = '2.2.0-dev'
 
 DeskChangerDaemonDBusInterface = Gio.DBusNodeInfo.new_for_xml('''<node>
     <interface name="org.gnome.Shell.Extensions.DeskChanger.Daemon">
@@ -68,6 +68,7 @@ class DeskChangerDaemon(Gio.Application):
         self._background = Gio.Settings.new('org.gnome.desktop.background')
         # internal stuffs
         self._accepted = ['application/xml', 'image/jpeg', 'image/png']
+        self._current_profile = None
         self._dbus_id = None
         self._did_hourly = False
         self._history = []
@@ -159,6 +160,8 @@ class DeskChangerDaemon(Gio.Application):
     def do_shutdown(self):
         """Shutdown method of application, cleanup here"""
         self._debug('::shutdown')
+        if self._settings.get_boolean('remember-profile-state'):
+            self.save_state()
         for signal_id in self._settings_signals:
             self._debug('disconnecting signal handler %d', signal_id)
             self._settings.disconnect(signal_id)
@@ -179,6 +182,16 @@ class DeskChangerDaemon(Gio.Application):
         if profile_items is None:
             self._critical('failed to load profile %s because it doesn\'t exist', profile)
             raise ValueError('failed to load profile %s' % (profile,))
+
+        state = None
+        states = None
+        if self._settings.get_boolean('remember-profile-state'):
+            if self._current_profile is not None and profile is not self._current_profile:
+                self.save_state()
+            # Easy way to load the previous state on any profile load
+            states = self._settings.get_value('profile-state').unpack()
+            if profile in states:
+                state = states[profile]
 
         for monitor in self._monitors:
             monitor.cancel()
@@ -204,12 +217,18 @@ class DeskChangerDaemon(Gio.Application):
             if len(self._wallpapers) < 100:
                 self._warning('available total wallpapers is under 100 (%d) - strict random checking is disabled',
                               len(self._wallpapers))
+            if state is not None:  # assumes states is valid
+                self._queue = list(state)
+                del states[profile]
+                self._settings.set_value('profile-state', GLib.Variant('a{s(ss)}', states))
+                self._debug('removed state for %s since it was loaded', profile)
             self._wallpapers.sort()
             self._load_next()
             self._emit_signal('preview', self._queue[0])
             self._info('profile %s has been loaded with %d wallpapers', profile, len(self._wallpapers))
             if self._settings.get_boolean('auto-rotate') and len(self._wallpapers) > 0:
                 self._next(False)
+        self._current_profile = profile
 
     def next(self):
         """Switch to the next wallpaper, if there aren't any available, a ValueError will be raised
@@ -234,6 +253,23 @@ class DeskChangerDaemon(Gio.Application):
             return wallpaper
 
         raise ValueError('no history is available, cannot go back further')
+
+    def save_state(self):
+        """
+        Save the state of the current profile for use later
+        
+        :rtype: bool
+        """
+        self._debug('saving state of profile %s', self._current_profile)
+        states = self._settings.get_value('profile-state').unpack()
+        if self._current_profile in states:
+            self._warning('overwriting old state for profile %s', self._current_profile)
+        if len(self._queue) == 0:
+            self._critical('failed to save state of %s: there are no available wallpapers', self._current_profile)
+            return False
+        states[self._current_profile] = (self._background.get_string('picture-uri'), self._queue[0])
+        self._settings.set_value('profile-state', GLib.Variant('a{s(ss)}', states))
+        return True
 
     def _changed_current_profile(self, s, k):
         try:
