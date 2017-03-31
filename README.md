@@ -17,6 +17,9 @@ on the fly without reloading the daemon.
 * gnome-shell 3.8 or higher
 * Python 2 or 3 with [PyGObject](https://wiki.gnome.org/action/show/Projects/PyGObject?action=show&redirect=PyGObject)
 
+##### Fedora/CentOS
+`dnf|yum install python python-gobject pygobject2`
+
 ### Install
 
 Just simply copy the desk-changer&commat;eric.gach.gmail.com folder to your `~/.local/share/gnome-shell/extensions/`
