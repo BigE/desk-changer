@@ -184,6 +184,7 @@ class DeskChangerDaemon(Gio.Application):
             raise ValueError('failed to load profile %s' % (profile,))
 
         state = None
+        states = None
         if self._settings.get_boolean('remember-profile-state'):
             if self._current_profile is not None and profile is not self._current_profile:
                 self.save_state()
@@ -191,9 +192,6 @@ class DeskChangerDaemon(Gio.Application):
             states = self._settings.get_value('profile-state').unpack()
             if profile in states:
                 state = states[profile]
-                del states[profile]
-                self._settings.set_value('profile-state', GLib.Variant('a{s(ss)}', states))
-                self._debug('removed state for %s since it was loaded', profile)
 
         for monitor in self._monitors:
             monitor.cancel()
@@ -219,8 +217,11 @@ class DeskChangerDaemon(Gio.Application):
             if len(self._wallpapers) < 100:
                 self._warning('available total wallpapers is under 100 (%d) - strict random checking is disabled',
                               len(self._wallpapers))
-            if state is not None:
+            if state is not None:  # assumes states is valid
                 self._queue = list(state)
+                del states[profile]
+                self._settings.set_value('profile-state', GLib.Variant('a{s(ss)}', states))
+                self._debug('removed state for %s since it was loaded', profile)
             self._wallpapers.sort()
             self._load_next()
             self._emit_signal('preview', self._queue[0])
