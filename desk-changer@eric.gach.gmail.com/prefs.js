@@ -161,7 +161,7 @@ const DeskChangerPrefs = new Lang.Class({
         this._switchNotifications = new Gtk.Switch();
         this._switchNotifications.set_active(this._settings.notifications);
         this._switchNotifications.connect('notify::active', Lang.bind(this, function() {
-            this._settings.notifications = this._switchIconPreview.get_state();
+            this._settings.notifications = this._switchNotifications.get_state();
         }));
         box.pack_end(this._switchNotifications, false, false, 5);
         frame_box.pack_start(box, false, false, 5);
