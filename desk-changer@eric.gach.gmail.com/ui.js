@@ -212,7 +212,7 @@ const DeskChangerStateButton = new Lang.Class({
 
     set_state: function (state) {
         if (state == this._states[this._state].name) {
-            // We are alread on that state... dafuq?!
+            // We are already on that state... dafuq?!
             return;
         }
 
