@@ -94,6 +94,7 @@ const DeskChangerDaemon = new Lang.Class({
         for (let item in result) {
             if (result[item] == "org.gnome.Shell.Extensions.DeskChanger.Daemon") {
                 this._on();
+                break;
             }
         }
     },
