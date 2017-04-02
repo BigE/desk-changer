@@ -224,10 +224,11 @@ class DeskChangerDaemon(Gio.Application):
                 self._debug('removed state for %s since it was loaded', profile)
             self._wallpapers.sort()
             self._load_next()
-            self._emit_signal('preview', self._queue[0])
             self._info('profile %s has been loaded with %d wallpapers', profile, len(self._wallpapers))
             if self._settings.get_boolean('auto-rotate') and len(self._wallpapers) > 0:
                 self._next(False)
+            else:
+                self._emit_signal('preview', self._queue[0])
         self._current_profile = profile
 
     def next(self):
