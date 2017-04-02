@@ -71,7 +71,9 @@ const DeskChangerIcon = new Lang.Class({
         this._settings.connect('changed::icon-preview', Lang.bind(this, this.update_child));
         this.daemon.connectSignal('preview', Lang.bind(this, function (proxy, e, properties) {
             let file = properties[0];
-            this.update_child(file);
+            if (this._icon) {
+                this.update_child(file);
+            }
         }));
         this.update_child();
     },
@@ -173,14 +175,16 @@ const DeskChangerPreview = new Lang.Class({
         debug('setting preview to ' + file);
         try{
             this._texture.set_from_file(file);
+            this.set_child(this._texture);
         } catch (Exception) {
             debug('ERROR: Failed to set preview of ' + file);
             this._texture.destroy();
             this._texture = null;
-            return;
+            if (file.substr(-4) !== '.xml') {
+                return;
+            }
         }
 
-        this.set_child(this._texture);
         if (c === true && typeof this._callback === 'function') {
             this._callback(file);
         }

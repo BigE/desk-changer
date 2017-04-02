@@ -103,7 +103,7 @@ const DeskChangerSystemIndicator = new Lang.Class({
         let position = (parseInt(Config.PACKAGE_VERSION.split(".")[1]) < 18)? this._menu.menu.numMenuItems - 2 : this._menu.menu.numMenuItems - 1;
         menu.addMenuItem(this._menu, position);
         this._indicator = null;
-        this.settings.connect('changed::icon-preview', Lang.bind(this, this._update_indicator))
+        this.settings.connect('changed::icon-preview', Lang.bind(this, this._update_indicator));
         this._update_indicator();
     },
 
