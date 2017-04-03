@@ -103,7 +103,7 @@ const DeskChangerSystemIndicator = new Lang.Class({
         let position = (parseInt(Config.PACKAGE_VERSION.split(".")[1]) < 18)? this._menu.menu.numMenuItems - 2 : this._menu.menu.numMenuItems - 1;
         menu.addMenuItem(this._menu, position);
         this._indicator = null;
-        this.settings.connect('changed::icon-preview', Lang.bind(this, this._update_indicator))
+        this.settings.connect('changed::icon-preview', Lang.bind(this, this._update_indicator));
         this._update_indicator();
     },
 
@@ -174,14 +174,6 @@ function disable() {
 function enable() {
     debug('enabling extension');
 
-    if (settings.integrate_system_menu) {
-        indicator = new DeskChangerSystemIndicator(Main.panel.statusArea.aggregateMenu.menu);
-        Main.panel.statusArea.aggregateMenu._indicators.insert_child_at_index(indicator.indicators, 0);
-    } else {
-        indicator = new DeskChangerIndicator();
-        Main.panel.addToStatusArea('deskchanger', indicator);
-    }
-
     current_profile_id = settings.connect('changed::current-profile', function () {
         if (settings.notifications)
             Main.notify('Desk Changer', 'Profile changed to ' + settings.current_profile);
@@ -203,6 +195,14 @@ function enable() {
     if (!daemon.is_running && settings.auto_start) {
         // run if auto start is enabled and its not already running
         daemon.toggle();
+    }
+
+    if (settings.integrate_system_menu) {
+        indicator = new DeskChangerSystemIndicator(Main.panel.statusArea.aggregateMenu.menu);
+        Main.panel.statusArea.aggregateMenu._indicators.insert_child_at_index(indicator.indicators, 0);
+    } else {
+        indicator = new DeskChangerIndicator();
+        Main.panel.addToStatusArea('deskchanger', indicator);
     }
 }
 
