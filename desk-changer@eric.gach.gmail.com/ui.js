@@ -67,7 +67,14 @@ const DeskChangerIcon = new Lang.Class({
         this._icon = null;
         // the preview can be shown as the icon instead
         this._preview = null;
+        // this will switch between the icon and preview when the setting is changed
         this._settings.connect('changed::icon-preview', Lang.bind(this, this.update_child));
+        this.daemon.connectSignal('preview', Lang.bind(this, function (proxy, e, properties) {
+            let file = properties[0];
+            if (this._icon) {
+                this.update_child(file);
+            }
+        }));
         this.update_child();
     },
 
@@ -83,8 +90,8 @@ const DeskChangerIcon = new Lang.Class({
         this.parent();
     },
 
-    update_child: function () {
-        if (this._settings.icon_preview && this._createPreview()) {
+    update_child: function (file) {
+        if (this._settings.icon_preview && this._createPreview(file)) {
             debug('updating icon to preview');
             this.set_child(this._preview);
 
@@ -103,13 +110,22 @@ const DeskChangerIcon = new Lang.Class({
         }
     },
 
-    _createPreview: function () {
+    _createPreview: function (file) {
+        if (this._preview) {
+            this._preview.destroy();
+            this._preview = null;
+        }
+
         this._preview = new DeskChangerPreview(34, this.daemon, Lang.bind(this, this.update_child));
 
         if (!(this._preview.file)) {
-            this._preview.destroy();
-            this._preview = null;
-            return false;
+            if (typeof file === "string") {
+                this._preview.set_wallpaper(file);
+            } else {
+                this._preview.destroy();
+                this._preview = null;
+                return false;
+            }
         }
 
         return true;
@@ -127,10 +143,11 @@ const DeskChangerPreview = new Lang.Class({
         this.daemon = daemon;
         this._texture = null;
         this._width = width;
-        this._next_file_id = this.daemon.connectSignal('preview', Lang.bind(this, function (emitter, signalName, parameters) {
+        this._next_file_id = this.daemon.connectSignal('preview', Lang.bind(this, function (proxy, signalName, parameters) {
             let file = parameters[0];
             this.set_wallpaper(file);
         }));
+
         if (this.daemon.bus.queue && this.daemon.bus.queue.length > 0) {
             this.set_wallpaper(this.daemon.bus.queue[0], false);
         }
@@ -158,18 +175,19 @@ const DeskChangerPreview = new Lang.Class({
         debug('setting preview to ' + file);
         try{
             this._texture.set_from_file(file);
+            this.set_child(this._texture);
         } catch (Exception) {
             debug('ERROR: Failed to set preview of ' + file);
             this._texture.destroy();
             this._texture = null;
-            return;
+            if (file.substr(-4) !== '.xml') {
+                return;
+            }
         }
 
-        if (c == true && this._callback && typeof this._callback == 'function') {
+        if (c === true && typeof this._callback === 'function') {
             this._callback(file);
         }
-
-        this.set_child(this._texture);
     },
 
     get file() {
@@ -194,7 +212,7 @@ const DeskChangerStateButton = new Lang.Class({
 
     set_state: function (state) {
         if (state == this._states[this._state].name) {
-            // We are alread on that state... dafuq?!
+            // We are already on that state... dafuq?!
             return;
         }
 

@@ -161,7 +161,7 @@ const DeskChangerPrefs = new Lang.Class({
         this._switchNotifications = new Gtk.Switch();
         this._switchNotifications.set_active(this._settings.notifications);
         this._switchNotifications.connect('notify::active', Lang.bind(this, function() {
-            this._settings.notifications = this._switchIconPreview.get_state();
+            this._settings.notifications = this._switchNotifications.get_state();
         }));
         box.pack_end(this._switchNotifications, false, false, 5);
         frame_box.pack_start(box, false, false, 5);
@@ -177,6 +177,19 @@ const DeskChangerPrefs = new Lang.Class({
             this._settings.integrate_system_menu = this._switchIntegrateSystemMenu.get_state();
         }));
         box.pack_end(this._switchIntegrateSystemMenu, false, false, 5);
+        frame_box.pack_start(box, false, false, 5);
+        // Remember profile state
+        box = new Gtk.Box();
+        label = new Gtk.Label({label: 'Remember the profiles current/next wallpaper'});
+        box.pack_start(label, false, false, 5);
+        label = new Gtk.Label({label: ' '});
+        box.pack_start(label, true, true, 5);
+        this._switchRememberProfileState = new Gtk.Switch();
+        this._switchRememberProfileState.set_active(this._settings.remember_profile_state);
+        this._switchRememberProfileState.connect('notify::active', Lang.bind(this, function () {
+            this._settings.remember_profile_state = this._switchRememberProfileState.get_state();
+        }));
+        box.pack_end(this._switchRememberProfileState, false, false, 5);
         frame_box.pack_start(box, false, false, 5);
         frame.add(frame_box);
         misc_box.pack_start(frame, true, true, 10);

@@ -55,6 +55,7 @@ const DeskChangerIndicator = new Lang.Class({
         this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
         this.menu.addMenuItem(new Menu.DeskChangerSwitch('Change with Profile', 'auto_rotate', this.settings));
         this.menu.addMenuItem(new Menu.DeskChangerSwitch('Notifications', 'notifications', this.settings));
+        this.menu.addMenuItem(new Menu.DeskChangerSwitch('Remember Profile State', 'remember_profile_state', this.settings));
         this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
         this.menu.addMenuItem(new Menu.DeskChangerPreviewMenuItem(this.daemon));
         this.menu.addMenuItem(new Menu.DeskChangerOpenCurrent());
@@ -101,17 +102,34 @@ const DeskChangerSystemIndicator = new Lang.Class({
         this._menu.menu.addMenuItem(settings);
         let position = (parseInt(Config.PACKAGE_VERSION.split(".")[1]) < 18)? this._menu.menu.numMenuItems - 2 : this._menu.menu.numMenuItems - 1;
         menu.addMenuItem(this._menu, position);
-        this._indicator = new Ui.DeskChangerIcon(this.daemon, this.settings);
-        this.indicators.add_actor(this._indicator);
-        this._indicator.connect('notify::visible', Lang.bind(this, this._syncIndicatorsVisible));
-        this._syncIndicatorsVisible();
+        this._indicator = null;
+        this.settings.connect('changed::icon-preview', Lang.bind(this, this._update_indicator));
+        this._update_indicator();
     },
 
     destroy: function () {
+        if (this._indicator) {
+            this._indicator.destroy();
+        }
+
         this._menu.destroy();
-        this._indicator.destroy();
         this.settings.destroy();
         this.daemon.destroy();
+    },
+
+    _update_indicator: function() {
+        if (this._indicator !== null) {
+            this.indicators.remove_actor(this._indicator);
+            this._indicator.destroy();
+            this._indicator = null;
+        }
+
+        if (this.settings.icon_preview) {
+            this._indicator = new Ui.DeskChangerIcon(this.daemon, this.settings);
+            this.indicators.add_actor(this._indicator);
+            this._indicator.connect('notify::visible', Lang.bind(this, this._syncIndicatorsVisible));
+            this._syncIndicatorsVisible();
+        }
     }
 });
 
@@ -121,7 +139,7 @@ let changed_id, current_profile_id, error_id, notifications_id;
 function disable() {
     debug('disabling extension');
 
-    if (typeof indicator.destroy == "function") {
+    if (typeof indicator.destroy === "function") {
         indicator.destroy();
     }
 
@@ -156,14 +174,6 @@ function disable() {
 function enable() {
     debug('enabling extension');
 
-    if (settings.integrate_system_menu) {
-        indicator = new DeskChangerSystemIndicator(Main.panel.statusArea.aggregateMenu.menu);
-        Main.panel.statusArea.aggregateMenu._indicators.insert_child_at_index(indicator.indicators, 0);
-    } else {
-        indicator = new DeskChangerIndicator();
-        Main.panel.addToStatusArea('deskchanger', indicator);
-    }
-
     current_profile_id = settings.connect('changed::current-profile', function () {
         if (settings.notifications)
             Main.notify('Desk Changer', 'Profile changed to ' + settings.current_profile);
@@ -185,6 +195,14 @@ function enable() {
     if (!daemon.is_running && settings.auto_start) {
         // run if auto start is enabled and its not already running
         daemon.toggle();
+    }
+
+    if (settings.integrate_system_menu) {
+        indicator = new DeskChangerSystemIndicator(Main.panel.statusArea.aggregateMenu.menu);
+        Main.panel.statusArea.aggregateMenu._indicators.insert_child_at_index(indicator.indicators, 0);
+    } else {
+        indicator = new DeskChangerIndicator();
+        Main.panel.addToStatusArea('deskchanger', indicator);
     }
 }
 

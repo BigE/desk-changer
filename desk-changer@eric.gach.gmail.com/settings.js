@@ -27,7 +27,6 @@ const Me = imports.misc.extensionUtils.getCurrentExtension();
 const DeskChangerSettings = new Lang.Class({
     Name: 'DeskChangerSettings',
 
-
     _init: function () {
         let source = Gio.SettingsSchemaSource.new_from_directory(
             Me.dir.get_child('schemas').get_path(),
@@ -40,7 +39,7 @@ const DeskChangerSettings = new Lang.Class({
     },
 
     get auto_rotate() {
-        return (this.schema.get_boolean('auto-rotate'));
+        return this.schema.get_boolean('auto-rotate');
     },
 
     set auto_rotate(value) {
@@ -111,6 +110,14 @@ const DeskChangerSettings = new Lang.Class({
 
     set random(value) {
         this.schema.set_boolean('random', Boolean(value));
+    },
+
+    get remember_profile_state() {
+        return this.schema.get_boolean('remember-profile-state');
+    },
+
+    set remember_profile_state(value) {
+        this.schema.set_boolean('remember-profile-state', Boolean(value));
     },
 
     get rotation() {
