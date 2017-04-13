@@ -50,8 +50,11 @@
 		</key>
 		<key name="lockscreen-profile" type="s">
 			<default>""</default>
-			<description></description>
-			<summary></summary>
+			<description>
+				This is the profile for the lock screen. Setting this to an empty string makes the lock screen simply
+				inherit the desktop profile. This is the default behavior.
+			</description>
+			<summary>Lock screen profile to set wallpapers from</summary>
 		</key>
 		<key name="next-wallpaper" type="as">
 			<default><![CDATA[['']]]></default>
@@ -124,8 +127,12 @@
 		</key>
 		<key name="update-lockscreen" type="b">
 			<default>false</default>
-			<description></description>
-			<summary></summary>
+			<description>
+				Make the daemon update the lock screen wallpaper as well as the desktop wallpaper. Enabling this will
+				cause the daemon to update the lock screen wallpaper based on the same settings as the desktop wallpaper
+				is updated at.
+			</description>
+			<summary>Enable the lock screen wallpaper to change</summary>
 		</key>
 	</schema>
 </schemalist>

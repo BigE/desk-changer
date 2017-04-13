@@ -496,7 +496,10 @@ const DeskChangerPrefs = new Lang.Class({
     },
 
     _load_profiles: function () {
-        let active = this.profiles_combo_box.get_active(), i = 0, text = this.profiles_combo_box.get_active_text();
+        let active = this.profiles_combo_box.get_active(),
+            lActive = -1,
+            i = 0,
+            text = this.profiles_combo_box.get_active_text();
         this.profiles_combo_box.remove_all();
         this._currentProfile.remove_all();
         this._lockscreenProfile.remove_all();
@@ -505,15 +508,21 @@ const DeskChangerPrefs = new Lang.Class({
             this.profiles_combo_box.insert_text(i, profile);
             this._currentProfile.insert_text(i, profile);
             this._lockscreenProfile.insert_text(i, profile);
-            if (text == profile || (active == -1 && profile == this._settings.current_profile)) {
+
+            if (text === profile || (active === -1 && profile === this._settings.current_profile)) {
                 active = i;
             }
+
+            if (profile === this._settings.lockscreen_profile) {
+                lActive = i;
+            }
+
             i++;
         }
 
         this.profiles_combo_box.set_active(active);
         this._currentProfile.set_active(active);
-        //this._lockscreenProfile.set_active(active);
+        this._lockscreenProfile.set_active(lActive);
     },
 
     _save_profile: function () {

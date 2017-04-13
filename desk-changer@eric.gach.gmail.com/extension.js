@@ -51,11 +51,15 @@ const DeskChangerIndicator = new Lang.Class({
         this.daemon = new DeskChangerDaemon(this.settings);
 
         this.actor.add_child(new Ui.DeskChangerIcon(this.daemon, this.settings));
-        this.menu.addMenuItem(new Menu.DeskChangerProfile(this.settings));
+        this.menu.addMenuItem(new Menu.DeskChangerProfileDesktop(this.settings));
+        if (this.settings.update_lockscreen) {
+            this.menu.addMenuItem(new Menu.DeskChangerProfileLockscreen(this.settings));
+        }
         this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
         this.menu.addMenuItem(new Menu.DeskChangerSwitch('Change with Profile', 'auto_rotate', this.settings));
         this.menu.addMenuItem(new Menu.DeskChangerSwitch('Notifications', 'notifications', this.settings));
         this.menu.addMenuItem(new Menu.DeskChangerSwitch('Remember Profile State', 'remember_profile_state', this.settings));
+        this.menu.addMenuItem(new Menu.DeskChangerSwitch('Update Lock Screen', 'update_lockscreen', this.settings));
         this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
         this.menu.addMenuItem(new Menu.DeskChangerPreviewMenuItem(this.daemon));
         this.menu.addMenuItem(new Menu.DeskChangerOpenCurrent());
@@ -69,6 +73,17 @@ const DeskChangerIndicator = new Lang.Class({
             Util.spawn(['gnome-shell-extension-prefs', Me.metadata.uuid]);
         });
         this.menu.addMenuItem(settings);
+        this.settings.connect('changed::update-lockscreen', Lang.bind(this, function () {
+            if (this.settings.update_lockscreen) {
+                this.menu.addMenuItem(new Menu.DeskChangerProfileLockscreen(this.settings), 1);
+            } else {
+                this.menu.box.get_children().map(function (actor) {
+                    return actor._delegate;
+                }).filter(function (item) {
+                    item instanceof Menu.DeskChangerProfileLockscreen && item.destroy();
+                });
+            }
+        }));
     },
 
     destroy: function () {
@@ -89,7 +104,7 @@ const DeskChangerSystemIndicator = new Lang.Class({
         this.settings = new DeskChangerSettings();
         this._menu = new PopupMenu.PopupSubMenuMenuItem('DeskChanger', true);
         this._menu.icon.set_gicon(Gio.icon_new_for_string(Me.path + '/icons/wallpaper-icon.png'));
-        this._menu.menu.addMenuItem(new Menu.DeskChangerProfile(this.settings, false));
+        this._menu.menu.addMenuItem(new Menu.DeskChangerProfileDesktop(this.settings, false));
         this._menu.menu.addMenuItem(new Menu.DeskChangerPreviewMenuItem(this.daemon));
         this._menu.menu.addMenuItem(new Menu.DeskChangerOpenCurrent());
         this._menu.menu.addMenuItem(new Menu.DeskChangerControls(this.daemon.bus, this.settings));
