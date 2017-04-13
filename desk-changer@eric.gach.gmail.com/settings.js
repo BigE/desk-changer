@@ -88,6 +88,18 @@ const DeskChangerSettings = new Lang.Class({
         this.schema.set_int('interval', parseInt(value));
     },
 
+    get lockscreen_profile() {
+        return this.schema.get_string('lockscreen-profile');
+    },
+
+    set lockscreen_profile(value) {
+        if (value === null) {
+            value="";
+        }
+
+        this.schema.set_string('lockscreen-profile', value);
+    },
+
     get notifications() {
         return this.schema.get_boolean('notifications');
     },
@@ -126,6 +138,16 @@ const DeskChangerSettings = new Lang.Class({
 
     set rotation(value) {
         this.schema.set_string('rotation', value);
+    },
+
+    get update_lockscreen()
+    {
+        return this.schema.get_boolean('update-lockscreen');
+    },
+
+    set update_lockscreen(value)
+    {
+        this.schema.set_boolean('update-lockscreen', Boolean(value));
     },
 
     connect: function (signal, callback) {

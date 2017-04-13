@@ -48,6 +48,11 @@
 			</description>
 			<summary>Number of seconds between wallpaper changes</summary>
 		</key>
+		<key name="lockscreen-profile" type="s">
+			<default>""</default>
+			<description></description>
+			<summary></summary>
+		</key>
 		<key name="next-wallpaper" type="as">
 			<default><![CDATA[['']]]></default>
 			<description>
@@ -116,6 +121,11 @@
 				daemon, but only by user interaction with the extension.
 			</description>
 			<summary>Different options to control when the wallpaper is changed</summary>
+		</key>
+		<key name="update-lockscreen" type="b">
+			<default>false</default>
+			<description></description>
+			<summary></summary>
 		</key>
 	</schema>
 </schemalist>
