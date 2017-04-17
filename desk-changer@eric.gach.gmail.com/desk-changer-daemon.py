@@ -456,17 +456,7 @@ class DeskChangerDaemon(Gio.Application):
 
     def _log(self, level, message, *args):
         message = str(message) % args
-        fields = GLib.Variant('a{sv}', {
-            "MESSAGE": GLib.Variant('s', message),
-        })
-
-        # Because this is fairly new to PyGObject... we have to check if it exists
-        # See: https://bugzilla.gnome.org/show_bug.cgi?id=770971
-        if hasattr(GLib, 'log_variant'):
-            GLib.log_variant(None, level, fields)
-        else:
-            # TODO - add something here to replace the above
-            pass
+        GLib.log_default_handler(None, level, message)
 
     def _next(self, append_history=True):
         if len(self._wallpapers) == 0:
