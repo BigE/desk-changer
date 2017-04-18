@@ -183,6 +183,8 @@ function disable() {
     if (shellSettings.get_strv('enabled-extensions').indexOf(Me.uuid) === -1 && daemon.is_running) {
         debug('Extension disabled, stopping daemon');
         daemon.toggle();
+    } else {
+        daemon.lockscreen = true;
     }
 }
 
@@ -210,6 +212,8 @@ function enable() {
     if (!daemon.is_running && settings.auto_start) {
         // run if auto start is enabled and its not already running
         daemon.toggle();
+    } else if (daemon.is_running) {
+        daemon.lockscreen = false;
     }
 
     if (settings.integrate_system_menu) {

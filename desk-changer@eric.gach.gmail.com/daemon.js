@@ -49,6 +49,7 @@ const DeskChangerDaemonInterface = '<node>\
             <arg direction="out" name="uri" type="s" />\
         </signal>\
         <property type="as" name="history" access="read" />\
+        <property type="b" name="lockscreen" access="write" />\
         <property type="as" name="queue" access="read" />\
     </interface>\
 </node>';
@@ -149,6 +150,10 @@ const DeskChangerDaemon = new Lang.Class({
 
     get is_running() {
         return this._is_running;
+    },
+
+    set lockscreen(value) {
+        this.bus.lockscreen = Boolean(value);
     }
 });
 
