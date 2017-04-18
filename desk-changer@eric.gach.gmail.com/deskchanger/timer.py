@@ -13,16 +13,16 @@ class Timer(object):
         self._source_id = GLib.timeout_add_seconds(interval, self.__callback__)
         logger.debug('added timer for %d seconds', self._interval)
 
-    def __del__(self):
-        if self._source_id:
-            logger.debug('removing old timer %d', self._source_id)
-            GLib.source_remove(self._source_id)
-
     def __callback__(self):
         if not callable(self._callback):
             logger.critical('callback for timer is not callable')
             return False
         return bool(self._callback())
+
+    def release(self):
+        if self._source_id:
+            logger.debug('removing timer %d', self._source_id)
+            GLib.source_remove(self._source_id)
 
 
 class HourlyTimer(Timer):

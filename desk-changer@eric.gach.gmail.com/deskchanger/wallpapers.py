@@ -12,6 +12,7 @@ class Profile(GObject.GObject):
     }
 
     def __init__(self, name, settings, auto_load=True):
+        logger.debug('created new profile %s', name)
         GObject.GObject.__init__(self)
         self._name = name
         self._settings = settings
@@ -22,15 +23,10 @@ class Profile(GObject.GObject):
         self._position = 0
         self._queue = []
         self._wallpapers = []
-        if auto_load and self.load() is False:
-            raise ValueError('unable to load %s' % (name,))
+        if auto_load:
+            self.load()
         self._handler_profiles = self._settings.connect('changed::profiles', lambda s, k: self.load())
         self._handler_random = self._settings.connect('changed::random', self._changed_random)
-
-    def __del__(self):
-        self._remove_monitors()
-        self._settings.disconnect(self._handler_profiles)
-        self._settings.disconnect(self._handler_random)
 
     def emit(self, signal, *args):
         logger.debug('%s::%s %s', str(self), signal, str(args))
@@ -46,6 +42,7 @@ class Profile(GObject.GObject):
         return self._history
 
     def load(self):
+        logger.debug('loading profile %s', self._name)
         # First clear everything out
         self._remove_monitors()
         self._history = []
@@ -77,6 +74,7 @@ class Profile(GObject.GObject):
             self.restore_state()
         self._load_next()
         logger.info('profile %s has been loaded with %d wallpapers', self._name, len(self._wallpapers))
+        self.emit('preview', self._queue[0])
 
     @GObject.Property(type=str)
     def name(self):
@@ -115,6 +113,12 @@ class Profile(GObject.GObject):
         :rtype: list
         """
         return self._queue
+
+    def release(self):
+        logger.debug('destroying profile %s', self._name)
+        self._remove_monitors()
+        self._settings.disconnect(self._handler_profiles)
+        self._settings.disconnect(self._handler_random)
 
     def restore_state(self):
         logger.info('restoring state of profile %s', self.name)
@@ -234,3 +238,14 @@ class Profile(GObject.GObject):
 
 
 GObject.type_register(Profile)
+
+
+class LockscreenProfile(Profile):
+    def restore_state(self):
+        logger.debug('restoring state of %s is disabled while its a lock screen profile', self.name)
+
+    def save_state(self, current):
+        logger.debug('saving state of %s is disabled while its a lock screen profile', self.name)
+
+
+GObject.type_register(LockscreenProfile)
