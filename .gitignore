@@ -4,3 +4,5 @@
 /.nbproject/private/
 /.settings
 /desk-changer@eric.gach.gmail.com.zip
+*.pyc
+*.pyo
