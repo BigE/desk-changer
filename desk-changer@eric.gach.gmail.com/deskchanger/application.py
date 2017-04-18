@@ -62,21 +62,23 @@ class Daemon(Gio.Application):
         # now finally, the timer
         self._timer = None
 
-    def change(self, reverse=False, history=True):
+    def change(self, reverse=False):
         func = 'prev' if reverse else 'next'
         update_lockscreen = self._settings.get_boolean('update-lockscreen')
-        if self._lockscreen and self._lockscreen_profile and update_lockscreen:
-            # Only change the lock screen profile here because
-            current = self._screensaver.get_string('picture-uri') if history else None
-            wallpaper = getattr(self._lockscreen_profile, func)(current)
+        current = self._background.get_string('picture-uri')
+        wallpaper = getattr(self._desktop_profile, func)(current)
+        # only update the lock screen if the lock screen profile is not a thing
+        if update_lockscreen and self._lockscreen_profile is None:
             self._screensaver.set_string('picture-uri', wallpaper)
-        else:
-            current = self._background.get_string('picture-uri') if history else None
-            wallpaper = getattr(self._desktop_profile, func)(current)
-            if update_lockscreen and self._settings.get_string('lockscreen-profile') == "":
-                # We only update the screen saver outside of the lock screen is when it is set to mirror the desktop
-                self._screensaver.set_string('picture-uri', wallpaper)
-            self._background.set_string('picture-uri', wallpaper)
+        self._background.set_string('picture-uri', wallpaper)
+        # now check if the lock screen profile is a thing and we should update
+        if self._lockscreen_profile is not None and update_lockscreen:
+            current = self._screensaver.get_string('picture-uri')
+            _wallpaper = getattr(self._lockscreen_profile, func)(current)
+            self._screensaver.set_string('picture-uri', _wallpaper)
+            # only change the wallpaper returned if we're in lock screen mode
+            if self._lockscreen:
+                wallpaper = _wallpaper
         self._emit_changed(wallpaper)
         return wallpaper
 
@@ -88,8 +90,9 @@ class Daemon(Gio.Application):
             self._lockscreen_profile.load()
         # now check auto-rotate, since this didn't get done on load
         if self._settings.get_boolean('auto-rotate'):
-            # Disable history on first load, we don't want garbage in our history
-            self.change(False, False)
+            self._desktop_profile.next()
+            if self._lockscreen_profile:
+                self._lockscreen_profile.next()
         # heart and soul of the daemon, rotate them images!
         self._toggle_timer(self._settings.get_string('rotation'))
         # Since we're a service, we have to increase the hold count to stay running
@@ -167,8 +170,7 @@ class Daemon(Gio.Application):
                                       lambda s, k: self._toggle_timer(self._settings.get_string('rotation'))))
         self._settings_handlers.append(self._settings.connect('changed::interval',
                                       lambda s, k: self._toggle_timer(self._settings.get_string('rotation'))))
-        self._settings_handlers.append(self._settings.connect('changed::current-profile',
-                                                              lambda s, k: self.load_profile(s.get_string(k))))
+        self._settings_handlers.append(self._settings.connect('changed::current-profile', self._callback_desktop))
         self._settings_handlers.append(self._settings.connect('changed::lockscreen-profile', self._callback_lockscreen))
         self._settings_handlers.append(self._settings.connect('changed::update-lockscreen', self._callback_lockscreen))
         # just because we're a service... activate is not called. can someone actually help me understand this?
@@ -219,13 +221,6 @@ class Daemon(Gio.Application):
         except ValueError as e:
             logger.critical('failed to load profile %s', name)
             raise e
-        # because we can only rotate if we're loaded
-        if auto_load and self._settings.get_boolean('auto-rotate') and (
-            (self._lockscreen and prop == '_lockscreen_profile') or
-            (not self._lockscreen and prop == '_desktop_profile')
-        ):
-            # Specifically disable the history here. It's the first load, we don't care what's set.
-            self.change(False, False)
 
     @GObject.Property(type=GObject.TYPE_STRV)
     def queue(self):
@@ -234,21 +229,37 @@ class Daemon(Gio.Application):
         else:
             return self._desktop_profile.queue
 
+    def _callback_desktop(self, obj, key):
+        name = self._settings.get_string('current-profile')
+        self.load_profile(name)
+        if self._settings.get_boolean('auto-rotate'):
+            wallpaper = self._desktop_profile.next()
+            self._background.set_string('picture-uri', wallpaper)
+            if self._settings.get_boolean('update-lockscreen') and self._lockscreen_profile is None:
+                self._screensaver.set_string('picture-uri', wallpaper)
+            if not self._lockscreen or (self._lockscreen and self._lockscreen_profile is None):
+                self._emit_changed(wallpaper)
+
     def _callback_lockscreen(self, obj, key):
-        if not self._settings.get_boolean('update-lockscreen') and self._lockscreen_profile:
-            # updating of the lock screen is disabled, release the Kraken!
+        name = self._settings.get_string('lockscreen-profile')
+        if (len(name) == 0 or not self._settings.get_boolean('update-lockscreen')) and self._lockscreen_profile:
+            # updating of the lock screen is disabled or inherited, release the Kraken!
             self._lockscreen_profile.disconnect(self._lockscreen_profile_handler)
             self._lockscreen_profile_handler = None
             self._lockscreen_profile.release()
             self._lockscreen_profile = None
-            return
         if self._settings.get_boolean('update-lockscreen'):
-            name = self._settings.get_string('lockscreen-profile')
             if len(name) == 0 or name == self._desktop_profile.name:
                 # We only load a lock screen profile if its not inherited from the desktop profile
                 logger.info('not loading lock screen profile since its inheriting from the desktop')
-                return
-            self.load_profile(name, True)
+                wallpaper = self._background.get_string('picture-uri')
+            else:
+                self.load_profile(name, True)
+                wallpaper = self._lockscreen_profile.next()
+            if wallpaper and self._settings.get_boolean('auto-rotate'):
+                self._screensaver.set_string('picture-uri', wallpaper)
+                if self._lockscreen:
+                    self._emit_changed(wallpaper)
 
     def _emit(self, signal, value):
         logger.debug('[DBUS]::%s %s', signal, value)
@@ -320,6 +331,8 @@ class Daemon(Gio.Application):
             profile, = parameters.unpack()
             try:
                 self.load_profile(profile)
+                # TODO implement auto-rotate from DBUS
+                logger.warning('[DBUS] %s for method %s: auto-rotate is not observed', interface_name, method_name)
                 invocation.return_value(None)
             except ValueError as e:
                 invocation.return_dbus_error(self.get_application_id() + '.LoadProfile', str(e.args))
@@ -341,7 +354,10 @@ class Daemon(Gio.Application):
 
     def _handle_preview(self, obj, uri):
         if isinstance(obj, LockscreenProfile) and not self._lockscreen:
-            self._debug('ignoring preview %s::preview in desktop mode', str(obj))
+            logger.debug('ignoring preview %s::preview in desktop mode', str(obj))
+            return
+        elif isinstance(obj, Profile) and self._lockscreen:
+            logger.debug('ignoring preview %s::preview in lock screen mode', str(obj))
             return
         self._emit_preview(uri)
 
