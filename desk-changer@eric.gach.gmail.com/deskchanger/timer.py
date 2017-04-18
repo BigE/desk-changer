@@ -13,6 +13,9 @@ class Timer(object):
         self._source_id = GLib.timeout_add_seconds(interval, self.__callback__)
         logger.debug('added timer for %d seconds', self._interval)
 
+    def __repr__(self):
+        return '%s(interval=%s, callback=%s)' % (self.__class__.__name__, self._interval, self._callback)
+
     def __callback__(self):
         if not callable(self._callback):
             logger.critical('callback for timer is not callable')
@@ -29,6 +32,9 @@ class HourlyTimer(Timer):
     def __init__(self, callback):
         self._did_hourly = False
         super(HourlyTimer, self).__init__(5, callback)
+
+    def __repr__(self):
+        return 'HourlyTimer(callback=%s)' % (self._callback, )
 
     def __callback__(self):
         d = datetime.utcnow()

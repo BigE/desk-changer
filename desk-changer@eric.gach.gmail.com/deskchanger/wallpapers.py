@@ -28,6 +28,9 @@ class Profile(GObject.GObject):
         self._handler_profiles = self._settings.connect('changed::profiles', lambda s, k: self.load())
         self._handler_random = self._settings.connect('changed::random', self._changed_random)
 
+    def __repr__(self):
+        return '%s(name=%s)' % (self.__class__.__name__, self.name)
+
     def emit(self, signal, *args):
         logger.debug('%s::%s %s', str(self), signal, str(args))
         GObject.GObject.emit(self, signal, *args)

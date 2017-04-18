@@ -62,6 +62,9 @@ class Daemon(Gio.Application):
         # now finally, the timer
         self._timer = None
 
+    def __repr__(self):
+        return 'Daemon(lockscreen=%s)' % (self._lockscreen,)
+
     def change(self, reverse=False):
         func = 'prev' if reverse else 'next'
         update_lockscreen = self._settings.get_boolean('update-lockscreen')
@@ -166,10 +169,14 @@ class Daemon(Gio.Application):
             # If we failed to load the profile, its bad
             logger.error('failed to load profiles on startup: %s', e.message)
         # Connect the settings signals
-        self._settings_handlers.append(self._settings.connect('changed::rotation',
-                                      lambda s, k: self._toggle_timer(self._settings.get_string('rotation'))))
-        self._settings_handlers.append(self._settings.connect('changed::interval',
-                                      lambda s, k: self._toggle_timer(self._settings.get_string('rotation'))))
+        self._settings_handlers.append(self._settings.connect(
+            'changed::rotation',
+            lambda s, k: self._toggle_timer(self._settings.get_string('rotation'))
+        ))
+        self._settings_handlers.append(self._settings.connect(
+            'changed::interval',
+            lambda s, k: self._toggle_timer(self._settings.get_string('rotation'))
+        ))
         self._settings_handlers.append(self._settings.connect('changed::current-profile', self._callback_desktop))
         self._settings_handlers.append(self._settings.connect('changed::lockscreen-profile', self._callback_lockscreen))
         self._settings_handlers.append(self._settings.connect('changed::update-lockscreen', self._callback_lockscreen))
