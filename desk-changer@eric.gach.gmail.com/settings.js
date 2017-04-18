@@ -93,7 +93,7 @@ const DeskChangerSettings = new Lang.Class({
     },
 
     set lockscreen_profile(value) {
-        if (value === null) {
+        if (value === null || value === this.current_profile) {
             value="";
         }
 

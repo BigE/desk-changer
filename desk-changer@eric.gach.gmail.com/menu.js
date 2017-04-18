@@ -281,7 +281,7 @@ const DeskChangerProfileBase = new Lang.Class({
         this.menu.removeAll();
         for (let index in this._settings.profiles) {
             debug('adding menu: ' + index);
-            let item = new DeskChangerProfileItem(index, this._settings, this._key);
+            let item = new DeskChangerProfileItem(index, index, this._settings, this._key);
             this.menu.addMenuItem(item);
         }
     }
@@ -307,8 +307,7 @@ const DeskChangerProfileLockscreen = new Lang.Class({
     setLabel: function () {
         let value = this._settings[this._key];
 
-        debug(value);
-        if (value === "") {
+        if (value === "" || value === this._settings.current_profile) {
             value = "(inherited)";
         }
 
@@ -317,13 +316,8 @@ const DeskChangerProfileLockscreen = new Lang.Class({
 
     _populate_profiles: function () {
         this.parent();
-        let clear = new PopupMenu.PopupMenuItem('(inherit from desktop)');
-        clear.connect('activate', Lang.bind(clear, function () {
-            let settings = new DeskChangerSettings();
-            settings.lockscreen_profile = "";
-            settings.destroy();
-        }));
-        this.menu.addMenuItem(clear);
+        let inherit = new DeskChangerProfileItem('(inherit from desktop)', '', this._settings, this._key);
+        this.menu.addMenuItem(inherit);
     }
 });
 
@@ -331,13 +325,33 @@ const DeskChangerProfileItem = new Lang.Class({
     Name: 'DeskChangerProfileItem',
     Extends: PopupMenu.PopupMenuItem,
 
-    _init: function (label, settings, key) {
+    _init: function (label, value, settings, key) {
         this.parent(label);
+        this._value = value;
         this._settings = settings;
         this._key = key;
-        this.connect('activate', Lang.bind(this, function () {
-            this._settings[this._key] = this.label.text;
+        this._settingKey = key.replace('_', '-');
+
+        if (this._settings[this._key] === this._value) {
+            this.setOrnament(PopupMenu.Ornament.DOT);
+        }
+
+        this._handler_key_changed = this._settings.connect('changed::'+this._settingKey, Lang.bind(this, function () {
+            if (this._settings[this._key] === this._value) {
+                this.setOrnament(PopupMenu.Ornament.DOT);
+            } else {
+                this.setOrnament(PopupMenu.Ornament.NONE);
+            }
         }));
+        this._handler_id = this.connect('activate', Lang.bind(this, function () {
+            this._settings[this._key] = this._value;
+        }));
+    },
+
+    destroy: function () {
+        this._settings.disconnect(this._handler_key_changed);
+        this.disconnect(this._handler_id);
+        this.parent();
     }
 });
 
@@ -350,7 +364,7 @@ const DeskChangerSwitch = new Lang.Class({
         this._settings = settings;
         this.parent(label);
         this.setToggleState(this._settings[setting]);
-        this._handler_changed = this._settings.connect('changed::' + this._setting, Lang.bind(this, this._changed));
+        this._handler_changed = this._settings.connect('changed::' + this._setting.replace('_', '-'), Lang.bind(this, this._changed));
         this._handler_toggled = this.connect('toggled', Lang.bind(this, this._toggled));
     },
 
@@ -365,7 +379,7 @@ const DeskChangerSwitch = new Lang.Class({
     },
 
     _changed: function (settings, key) {
-        this.setToggleState(this._settings[key]);
+        this.setToggleState(this._settings[this._setting]);
     },
 
     _toggled: function () {
