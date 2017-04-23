@@ -54,7 +54,7 @@ class Profile(GObject.GObject):
         self._wallpapers = []
         # Now grab the
         items = self._settings.get_value('profiles').unpack().get(self._name)
-        self._hash = sha256(str(items))
+        self._hash = sha256(str(items).encode('utf-8'))
         if items is None:
             logger.critical('failed to load profile %s because it does not exist', self._name)
             return False
@@ -144,7 +144,7 @@ class Profile(GObject.GObject):
         self._settings.set_value('profile-state', GLib.Variant('a{s(ss)}', states))
 
     def _changed_profiles(self):
-        if self._hash == sha256(str(self._settings.get_value('profiles').unpack().get(self.name))):
+        if self._hash == sha256(str(self._settings.get_value('profiles').unpack().get(self.name)).encode('utf-8')):
             logger.debug('profile is identical, not forcing a reload')
             return
         self.load()
