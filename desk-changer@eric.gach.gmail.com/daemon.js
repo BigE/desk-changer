@@ -80,11 +80,11 @@ const DeskChangerDaemon = new Lang.Class({
         this.bus = new DeskChangerDaemonProxy(Gio.DBus.session, 'org.gnome.Shell.Extensions.DeskChanger.Daemon', '/org/gnome/Shell/Extensions/DeskChanger/Daemon');
         this._bus = new DBusProxy(Gio.DBus.session, 'org.freedesktop.DBus', '/org/freedesktop/DBus');
         this._owner_changed_id = this._bus.connectSignal('NameOwnerChanged', Lang.bind(this, function (emitter, signalName, params) {
-            if (params[0] == "org.gnome.Shell.Extensions.DeskChanger.Daemon") {
-                if (params[1] != "" && params[2] == "") {
+            if (params[0] === "org.gnome.Shell.Extensions.DeskChanger.Daemon") {
+                if (params[1] !== "" && params[2] === "") {
                     this._off();
                 }
-                if (params[1] == "" && params[2] != "") {
+                if (params[1] === "" && params[2] !== "") {
                     this._on();
                 }
             }
@@ -93,7 +93,7 @@ const DeskChangerDaemon = new Lang.Class({
         let result = this._bus.ListNamesSync();
         result = String(result).split(',');
         for (let item in result) {
-            if (result[item] == "org.gnome.Shell.Extensions.DeskChanger.Daemon") {
+            if (result[item] === "org.gnome.Shell.Extensions.DeskChanger.Daemon") {
                 this._on();
                 break;
             }

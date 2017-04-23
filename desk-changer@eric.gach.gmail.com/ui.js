@@ -187,11 +187,9 @@ const DeskChangerPreview = new Lang.Class({
                 height,
                 pixbuf.get_rowstride()
             );
-            //pixbuf.unref();
             this._texture = new Clutter.Actor({height: height, width: this._width});
             this._texture.set_content(image);
             this.add_actor(this._texture);
-            //image.unref();
         } catch (e) {
             debug('ERROR: Failed to set preview of ' + file + ': ' + e);
             if (this._texture) {
@@ -229,13 +227,13 @@ const DeskChangerStateButton = new Lang.Class({
     },
 
     set_state: function (state) {
-        if (state == this._states[this._state].name) {
+        if (state === this._states[this._state].name) {
             // We are already on that state... dafuq?!
             return;
         }
 
         for (let i = 0; i < this._states.length; i++) {
-            if (this._states[i].name == state) {
+            if (this._states[i].name === state) {
                 this.set_icon(this._states[i].icon);
                 this._state = i;
                 break;

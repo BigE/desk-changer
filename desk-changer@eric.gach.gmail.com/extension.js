@@ -232,7 +232,7 @@ function init() {
     daemon = new DeskChangerDaemon(settings);
 
     settings.connect('changed::integrate-system-menu', function () {
-        if (indicator != null) {
+        if (indicator !== null) {
             disable();
             enable();
         }
