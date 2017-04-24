@@ -227,6 +227,7 @@ class Daemon(Gio.Application):
             setattr(self, handler, getattr(self, prop).connect('preview', self._handle_preview))
         except ValueError as e:
             logger.critical('failed to load profile %s', name)
+            self._emit_error(str(e))
             raise e
 
     @GObject.Property(type=GObject.TYPE_STRV)
