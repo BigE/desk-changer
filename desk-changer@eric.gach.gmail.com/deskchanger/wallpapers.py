@@ -25,7 +25,7 @@ class Profile(GObject.GObject):
         self._wallpapers = []
         if auto_load:
             self.load()
-        self._handler_profiles = self._settings.connect('changed::profiles', lambda s, k: self.load())
+        self._handler_profiles = self._settings.connect('changed::profiles', self._changed_profiles)
         self._handler_random = self._settings.connect('changed::random', self._changed_random)
 
     def __repr__(self):
@@ -130,6 +130,8 @@ class Profile(GObject.GObject):
             logger.debug('no previous state for %s', self.name)
             return
         self._queue = list(states[self.name])
+        if not self._settings.get_boolean('random'):
+            self._position = self._wallpapers.index(self._queue[0])
         del states[self.name]
         self._settings.set_value('profile-state', GLib.Variant('a{s(ss)}', states))
 
@@ -143,14 +145,14 @@ class Profile(GObject.GObject):
         states[self.name] = (current, self._queue[0])
         self._settings.set_value('profile-state', GLib.Variant('a{s(ss)}', states))
 
-    def _changed_profiles(self):
+    def _changed_profiles(self, obj, key):
         if self._hash == sha256(str(self._settings.get_value('profiles').unpack().get(self.name)).encode('utf-8')):
             logger.debug('profile is identical, not forcing a reload')
             return
         self.load()
         self.emit('preview', self._queue[0])
 
-    def _changed_random(self):
+    def _changed_random(self, obj, key):
         self._load_next(True)
         self.emit('preview', self._queue[0])
 
