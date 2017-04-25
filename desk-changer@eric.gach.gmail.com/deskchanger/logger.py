@@ -19,7 +19,7 @@ def info(message, *args):
 
 def log(level, message, *args):
     message = str(message) % args
-    GLib.log_default_handler(None, level, message, None)
+    GLib.log_default_handler("", level, message, 0)
 
 
 def warning(message, *args):
