@@ -21,8 +21,10 @@
  */
 
 const Clutter = imports.gi.Clutter;
+const Cogl = imports.gi.Cogl;
 const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
+const GdkPixbuf = imports.gi.GdkPixbuf;
 const Lang = imports.lang;
 const Me = imports.misc.extensionUtils.getCurrentExtension();
 const St = imports.gi.St;
@@ -137,7 +139,9 @@ const DeskChangerPreview = new Lang.Class({
     Extends: St.Bin,
 
     _init: function (width, daemon, callback) {
-        this.parent({});
+        this.parent({
+            x_align: St.Align.MIDDLE
+        });
         this._file = null;
         this._callback = callback;
         this.daemon = daemon;
@@ -151,35 +155,47 @@ const DeskChangerPreview = new Lang.Class({
         if (this.daemon.bus.queue && this.daemon.bus.queue.length > 0) {
             this.set_wallpaper(this.daemon.bus.queue[0], false);
         }
+
+        this.set_child(this._texture);
     },
 
     destroy: function () {
         this.daemon.disconnectSignal(this._next_file_id);
         if (this._texture) {
             this._texture.destroy();
+            this._texture = null;
         }
     },
 
     set_wallpaper: function (file, c) {
         if (this._texture) {
             this._texture.destroy();
+            this._texture = null;
         }
 
-        this._texture = new Clutter.Texture({
-            filter_quality: Clutter.TextureQuality.HIGH,
-            keep_aspect_ratio: true,
-            width: this._width
-        });
         this._file = file = GLib.uri_unescape_string(file, null);
         file = file.replace('file://', '');
         debug('setting preview to ' + file);
         try{
-            this._texture.set_from_file(file);
-            this.set_child(this._texture);
-        } catch (Exception) {
-            debug('ERROR: Failed to set preview of ' + file);
-            this._texture.destroy();
-            this._texture = null;
+            let pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale(file, this._width, -1, true);
+            let height = Math.round(pixbuf.get_height() / (pixbuf.get_width() / this._width));
+            let image = new Clutter.Image();
+            image.set_data(
+                pixbuf.get_pixels(),
+                (pixbuf.get_has_alpha()? Cogl.PixelFormat.RGBA_8888 : Cogl.PixelFormat.RGB_888),
+                this._width,
+                height,
+                pixbuf.get_rowstride()
+            );
+            this._texture = new Clutter.Actor({height: height, width: this._width});
+            this._texture.set_content(image);
+            this.add_actor(this._texture);
+        } catch (e) {
+            debug('ERROR: Failed to set preview of ' + file + ': ' + e);
+            if (this._texture) {
+                this._texture.destroy();
+                this._texture = null;
+            }
             if (file.substr(-4) !== '.xml') {
                 return;
             }
@@ -211,13 +227,13 @@ const DeskChangerStateButton = new Lang.Class({
     },
 
     set_state: function (state) {
-        if (state == this._states[this._state].name) {
+        if (state === this._states[this._state].name) {
             // We are already on that state... dafuq?!
             return;
         }
 
         for (let i = 0; i < this._states.length; i++) {
-            if (this._states[i].name == state) {
+            if (this._states[i].name === state) {
                 this.set_icon(this._states[i].icon);
                 this._state = i;
                 break;
