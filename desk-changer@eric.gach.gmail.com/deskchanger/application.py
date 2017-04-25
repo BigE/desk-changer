@@ -113,6 +113,7 @@ class Daemon(Gio.Application):
         """
         logger.debug('::dbus_register')
         Gio.Application.do_dbus_register(self, connection, object_path)
+        failure = False
         try:
             self._dbus_id = connection.register_object(
                 object_path,
@@ -121,11 +122,16 @@ class Daemon(Gio.Application):
                 None,
                 None
             )
+        except TypeError:
+            # TODO - Handle this failure correctly.
+            failure = True
         except GLib.Error as e:
             logger.debug(e.args)
         finally:
             if self._dbus_id is None or self._dbus_id == 0:
                 logger.critical('failed to register DBus name %s', object_path)
+                if failure:
+                    logger.error('possibly unsupported version of glib')
                 return False
 
         logger.info('successfully registered DBus name %s', object_path)
