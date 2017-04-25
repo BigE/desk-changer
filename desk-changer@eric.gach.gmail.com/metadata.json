@@ -2,7 +2,6 @@
   "description": "Simple wallpaper changer with multiple profile support. Supports integration into the system menu or its own panel icon. The daemon is written in Python and runs independently of the extension.",
   "name": "Desk Changer",
   "shell-version": [
-    "3.8",
     "3.10",
     "3.11.90",
     "3.11.92",
