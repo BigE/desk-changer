@@ -70,6 +70,8 @@ class Daemon(Gio.Application):
         update_lockscreen = self._settings.get_boolean('update-lockscreen')
         current = self._background.get_string('picture-uri')
         wallpaper = getattr(self._desktop_profile, func)(current)
+        if wallpaper is False:
+            return False
         # only update the lock screen if the lock screen profile is not a thing
         if update_lockscreen and self._lockscreen_profile is None:
             self._screensaver.set_string('picture-uri', wallpaper)
@@ -170,7 +172,7 @@ class Daemon(Gio.Application):
         try:
             self.load_profile(self._settings.get_string('current-profile'), False, False)
             if self._settings.get_string('lockscreen-profile') != "":
-                self.load_profile(self._settings.get_string('lockstring-profile'), True, False)
+                self.load_profile(self._settings.get_string('lockscreen-profile'), True, False)
         except ValueError as e:
             # If we failed to load the profile, its bad
             logger.error('failed to load profiles on startup: %s', e.message)
@@ -325,7 +327,15 @@ class Daemon(Gio.Application):
                 invocation.return_dbus_error(self.get_application_id() + '.Next', str(e.args))
         elif method_name == 'Prev':
             try:
-                invocation.return_value(GLib.Variant('(s)', (self.change(True),)))
+                wallpaper = self.change(True)
+                if wallpaper is False:
+                    logger.critical('no more wallpapers available in history')
+                    invocation.return_dbus_error(
+                        self.get_application_id() + '.Prev',
+                        'No more wallpapers available in history'
+                    )
+                else:
+                    invocation.return_value(GLib.Variant('(s)', (wallpaper,)))
             except ValueError as e:
                 invocation.return_dbus_error(self.get_application_id() + '.Prev', str(e.args))
         else:
