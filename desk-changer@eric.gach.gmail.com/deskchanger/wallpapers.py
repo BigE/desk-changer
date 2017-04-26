@@ -91,6 +91,8 @@ class Profile(GObject.GObject):
         wallpaper = self._queue.pop(0)
         if current:
             self._history.append(current)
+        if not self._settings.get_boolean('random'):
+            self._position += 1
         self._load_next()
         self.emit('preview', self._queue[0])
         return wallpaper
@@ -131,7 +133,7 @@ class Profile(GObject.GObject):
             return
         self._queue = list(states[self.name])
         if not self._settings.get_boolean('random'):
-            self._position = self._wallpapers.index(self._queue[0])
+            self._position = self._wallpapers.index(self._queue[len(self._queue) - 1])
         del states[self.name]
         self._settings.set_value('profile-state', GLib.Variant('a{s(ss)}', states))
 

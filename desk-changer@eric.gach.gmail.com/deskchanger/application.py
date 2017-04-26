@@ -35,7 +35,7 @@ DeskChangerDaemonDBusInterface = Gio.DBusNodeInfo.new_for_xml('''<node>
 
 
 class Daemon(Gio.Application):
-    __version__ = '2.3.0'
+    __version__ = '2.3.1'
 
     def __init__(self, **kwargs):
         Gio.Application.__init__(self, **kwargs)
@@ -70,6 +70,8 @@ class Daemon(Gio.Application):
         update_lockscreen = self._settings.get_boolean('update-lockscreen')
         current = self._background.get_string('picture-uri')
         wallpaper = getattr(self._desktop_profile, func)(current)
+        if wallpaper is False:
+            return False
         # only update the lock screen if the lock screen profile is not a thing
         if update_lockscreen and self._lockscreen_profile is None:
             self._screensaver.set_string('picture-uri', wallpaper)
@@ -113,19 +115,25 @@ class Daemon(Gio.Application):
         """
         logger.debug('::dbus_register')
         Gio.Application.do_dbus_register(self, connection, object_path)
+        failure = False
         try:
             self._dbus_id = connection.register_object(
                 object_path,
                 DeskChangerDaemonDBusInterface.interfaces[0],
                 self._handle_dbus_call,
-                None,
-                None
+                self._handle_dbus_get,
+                self._handle_dbus_set
             )
+        except TypeError:
+            # TODO - Handle this failure correctly.
+            failure = True
         except GLib.Error as e:
             logger.debug(e.args)
         finally:
             if self._dbus_id is None or self._dbus_id == 0:
                 logger.critical('failed to register DBus name %s', object_path)
+                if failure:
+                    logger.error('possibly unsupported version of glib')
                 return False
 
         logger.info('successfully registered DBus name %s', object_path)
@@ -164,7 +172,7 @@ class Daemon(Gio.Application):
         try:
             self.load_profile(self._settings.get_string('current-profile'), False, False)
             if self._settings.get_string('lockscreen-profile') != "":
-                self.load_profile(self._settings.get_string('lockstring-profile'), True, False)
+                self.load_profile(self._settings.get_string('lockscreen-profile'), True, False)
         except ValueError as e:
             # If we failed to load the profile, its bad
             logger.error('failed to load profiles on startup: %s', e.message)
@@ -296,39 +304,7 @@ class Daemon(Gio.Application):
 
     def _handle_dbus_call(self, connection, sender, object_path, interface_name, method_name, parameters, invocation):
         logger.debug('[DBUS] %s:%s', interface_name, method_name)
-        if interface_name == 'org.freedesktop.DBus.Properties':
-            if method_name == 'GetAll':
-                values = {
-                    'history': GLib.Variant('as', self.history),
-                    'queue': GLib.Variant('as', self.queue),
-                }
-                invocation.return_value(GLib.Variant('(a{sv})', (values,)))
-            elif method_name == 'Get':
-                interface_name, property_name = parameters.unpack()
-                if property_name == 'history':
-                    invocation.return_value(GLib.Variant('(v)', (GLib.Variant('as', self.history),)))
-                elif property_name == 'queue':
-                    invocation.return_value(GLib.Variant('(v)', (GLib.Variant('as', self.queue),)))
-                else:
-                    invocation.return_dbus_error('org.freedesktop.DBus.Error.InvalidArgs',
-                                                 'Unknown property %s for interface %s' % (
-                                                     property_name, interface_name))
-                    logger.warning('[DBUS] Unkown propety %s for interface %s', property_name, interface_name)
-            elif method_name == 'Set':
-                interface_name, property_name, value = parameters.unpack()
-                if property_name == 'lockscreen':
-                    self._lockscreen = bool(value)
-                    invocation.return_value(GLib.Variant('()', tuple()))
-                    logger.info('extension is in %s mode', 'lockscreen' if self._lockscreen else 'desktop')
-                else:
-                    invocation.return_dbus_error('org.freedesktop.DBus.Error.InvalidArgs',
-                                                 'Unknown property %s for interface %s' % (
-                                                     property_name, interface_name))
-                    logger.warning('[DBUS] Unknown property for interface %s', property_name, interface_name)
-            else:
-                logger.warning('Missed call from %s for method %s', interface_name, method_name)
-            return
-        elif interface_name != self.get_application_id():
+        if interface_name != self.get_application_id():
             logger.warning('received invalid dbus request for interface %s', interface_name)
             return
 
@@ -351,7 +327,15 @@ class Daemon(Gio.Application):
                 invocation.return_dbus_error(self.get_application_id() + '.Next', str(e.args))
         elif method_name == 'Prev':
             try:
-                invocation.return_value(GLib.Variant('(s)', (self.change(True),)))
+                wallpaper = self.change(True)
+                if wallpaper is False:
+                    logger.critical('no more wallpapers available in history')
+                    invocation.return_dbus_error(
+                        self.get_application_id() + '.Prev',
+                        'No more wallpapers available in history'
+                    )
+                else:
+                    invocation.return_value(GLib.Variant('(s)', (wallpaper,)))
             except ValueError as e:
                 invocation.return_dbus_error(self.get_application_id() + '.Prev', str(e.args))
         else:
@@ -359,6 +343,28 @@ class Daemon(Gio.Application):
             invocation.return_dbus_error('org.freedesktop.DBus.Error.UnknownMethod',
                                          'Method %s in %s does not exist' % (method_name, interface_name))
         return
+
+    def _handle_dbus_get(self, connection, sender, object_path, interface_name, property_name):
+        try:
+            value = {
+                "history": GLib.Variant('as', getattr(self, 'history')),
+                "queue": GLib.Variant('as', getattr(self, 'queue')),
+            }[property_name]
+            logger.debug('[DBUS]::Get(%s)', property_name)
+        except Exception:
+            logger.warning('[DBUS] Unknown property for interface %s', property_name, interface_name)
+            raise Exception("failed to get %s::%s" % (interface_name, property_name))
+        return value
+
+    def _handle_dbus_set(self, connection, sender, object_path, interface_name, property_name, value):
+        if property_name == "lockscreen":
+            logger.debug('[DBUS]::Set(%s, %s)', property_name, value)
+            self._lockscreen = bool(value)
+            logger.info('extension is in %s mode', 'lockscreen' if self._lockscreen else 'desktop')
+        else:
+            logger.warning('[DBUS] Unknown property for interface %s', property_name, interface_name)
+            raise Exception("failed to set %s::%s" % (interface_name, property_name))
+        return True
 
     def _handle_preview(self, obj, uri):
         if isinstance(obj, LockscreenProfile) and not self._lockscreen:
