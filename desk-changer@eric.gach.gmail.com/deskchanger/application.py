@@ -35,7 +35,7 @@ DeskChangerDaemonDBusInterface = Gio.DBusNodeInfo.new_for_xml('''<node>
 
 
 class Daemon(Gio.Application):
-    __version__ = '2.3.0'
+    __version__ = '2.3.1'
 
     def __init__(self, **kwargs):
         Gio.Application.__init__(self, **kwargs)
