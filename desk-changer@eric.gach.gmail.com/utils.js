@@ -1,5 +1,16 @@
 const Me = imports.misc.extensionUtils.getCurrentExtension();
 
+function error(exception, message=null) {
+    let output = null;
+
+    if (message) {
+        let caller = getCaller();
+        output = '[%s/%s] %s'.format(Me.metadata.uuid, caller.split('/').pop(), message);
+    }
+
+    logError(exception, output);
+}
+
 function debug(message) {
     let caller = getCaller();
     let output = '[' + Me.metadata.uuid + '/' + caller.split('/').pop() + '] ' + message

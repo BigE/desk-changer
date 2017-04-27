@@ -30,6 +30,7 @@ const Me = imports.misc.extensionUtils.getCurrentExtension();
 const St = imports.gi.St;
 
 const debug = Me.imports.utils.debug;
+const error = Me.imports.utils.error;
 
 const DeskChangerButton = new Lang.Class({
     Name: 'DeskChangerButton',
@@ -151,6 +152,13 @@ const DeskChangerPreview = new Lang.Class({
             let file = parameters[0];
             this.set_wallpaper(file);
         }));
+        this._toggled_id = this.daemon.connect('toggled', Lang.bind(this, function () {
+            if (!this.daemon.is_running && this._texture) {
+                debug('clearing preview, daemon stopped');
+                this._texture.destroy();
+                this._texture = null;
+            }
+        }));
 
         if (this.daemon.bus.queue && this.daemon.bus.queue.length > 0) {
             this.set_wallpaper(this.daemon.bus.queue[0], false);
@@ -191,7 +199,7 @@ const DeskChangerPreview = new Lang.Class({
             this._texture.set_content(image);
             this.add_actor(this._texture);
         } catch (e) {
-            debug('ERROR: Failed to set preview of ' + file + ': ' + e);
+            error(e, 'Failed to set preview of %s'.format(file));
             if (this._texture) {
                 this._texture.destroy();
                 this._texture = null;

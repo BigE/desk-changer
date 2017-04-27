@@ -32,6 +32,7 @@ const Util = imports.misc.util;
 
 const DeskChangerSettings = Me.imports.settings.DeskChangerSettings;
 const debug = Me.imports.utils.debug;
+const error = Me.imports.utils.error;
 const Ui = Me.imports.ui;
 
 const DeskChangerControls = new Lang.Class({
@@ -230,6 +231,7 @@ const DeskChangerPreviewMenuItem = new Lang.Class({
         try {
             this.addActor(this._box, {align: St.Align.MIDDLE, span: -1});
         } catch (e) {
+            error(e, 'addActor call failed, falling back to actor.add_actor');
             this.actor.add_actor(this._box, {align: St.Align.MIDDLE, span: -1});
         }
         this._label = new St.Label({text: "Open Next Wallpaper"});
