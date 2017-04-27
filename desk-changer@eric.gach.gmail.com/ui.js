@@ -20,14 +20,16 @@
  * THE SOFTWARE.
  */
 
+const Me = imports.misc.extensionUtils.getCurrentExtension();
 const Clutter = imports.gi.Clutter;
 const Cogl = imports.gi.Cogl;
+const Gettext = imports.gettext.domain(Me.metadata.uuid);
 const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
 const GdkPixbuf = imports.gi.GdkPixbuf;
 const Lang = imports.lang;
-const Me = imports.misc.extensionUtils.getCurrentExtension();
 const St = imports.gi.St;
+const _ = Gettext.gettext;
 
 const debug = Me.imports.utils.debug;
 const error = Me.imports.utils.error;
@@ -46,7 +48,7 @@ const DeskChangerButton = new Lang.Class({
     },
 
     destroy: function () {
-        debug('removing button clicked handler ' + this._handler);
+        debug('removing button clicked handler %s'.format(this._handler));
         this.disconnect(this._handler);
         this.icon.destroy();
         this.parent();
@@ -183,7 +185,7 @@ const DeskChangerPreview = new Lang.Class({
 
         this._file = file = GLib.uri_unescape_string(file, null);
         file = file.replace('file://', '');
-        debug('setting preview to ' + file);
+        debug('setting preview to %s'.format(file));
         try{
             let pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale(file, this._width, -1, true);
             let height = Math.round(pixbuf.get_height() / (pixbuf.get_width() / this._width));
