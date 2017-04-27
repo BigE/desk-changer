@@ -35,8 +35,6 @@ DeskChangerDaemonDBusInterface = Gio.DBusNodeInfo.new_for_xml('''<node>
 
 
 class Daemon(Gio.Application):
-    __version__ = '2.3.1'
-
     def __init__(self, **kwargs):
         Gio.Application.__init__(self, **kwargs)
         self.add_main_option('version', ord('v'), GLib.OptionFlags.NONE, GLib.OptionArg.NONE,
@@ -157,7 +155,8 @@ class Daemon(Gio.Application):
     def do_handle_local_options(self, options):
         o = options.end().unpack()
         if 'version' in o and o['version']:
-            print('%s: %s' % (__file__, Daemon.__version__))
+            from . import __version__
+            print('%s: %s' % (__file__, __version__))
             return 0
         return Gio.Application.do_handle_local_options(self, options)
 
