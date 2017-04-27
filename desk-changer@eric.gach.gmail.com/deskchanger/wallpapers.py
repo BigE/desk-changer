@@ -93,7 +93,7 @@ class Profile(GObject.GObject):
             self._history.append(current)
         if not self._settings.get_boolean('random'):
             self._position += 1
-        self._load_next()
+        self._load_next(wallpaper)
         self.emit('preview', self._queue[0])
         return wallpaper
 
@@ -155,7 +155,7 @@ class Profile(GObject.GObject):
         self.emit('preview', self._queue[0])
 
     def _changed_random(self, obj, key):
-        self._load_next(True)
+        self._load_next(None, True)
         self.emit('preview', self._queue[0])
 
     def _files_changed(self, monitor, _file, other_file, event_type):
@@ -176,7 +176,8 @@ class Profile(GObject.GObject):
             except ValueError:
                 pass
 
-    def _load_next(self, clear=False):
+    def _load_next(self, current=None, clear=False):
+        logger.debug('%s._load_next(%s, %s)', self, current, clear)
         if clear:
             self._queue = []
             logger.info('queue forcibly cleared')
@@ -196,7 +197,7 @@ class Profile(GObject.GObject):
                         logger.debug("%s is already in the queue, choosing another wallpaper", wallpaper)
                         wallpaper = None
                 elif (len(self._history) > 0 and wallpaper == self._history[0]) or (
-                                len(self._queue) > 0 and wallpaper == self._queue[0]):
+                                len(self._queue) > 0 and wallpaper == self._queue[0]) or (wallpaper == current):
                     logger.info("%s is too similar, grabbing a different one", wallpaper)
                     wallpaper = None
         else:
