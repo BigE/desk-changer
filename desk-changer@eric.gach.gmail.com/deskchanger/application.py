@@ -1,9 +1,9 @@
 from gi import require_version
 from gi.repository import GLib, Gio, GObject
 from gi._gi import variant_type_from_string
-from . import logger
+from . import logger, _
 from .timer import HourlyTimer, IntervalTimer
-from .wallpapers import LockscreenProfile, Profile
+from .wallpapers import LockscreenProfile, Profile, NoWallpapersError
 
 require_version('Gio', '2.0')
 DeskChangerDaemonDBusInterface = Gio.DBusNodeInfo.new_for_xml('''<node>
@@ -38,7 +38,7 @@ class Daemon(Gio.Application):
     def __init__(self, **kwargs):
         Gio.Application.__init__(self, **kwargs)
         self.add_main_option('version', ord('v'), GLib.OptionFlags.NONE, GLib.OptionArg.NONE,
-                             'Show the current daemon version and exit', None)
+                             _('Show the current daemon version and exit'), None)
         # We use this as our DBus interface name also
         self.set_application_id('org.gnome.Shell.Extensions.DeskChanger.Daemon')
         self.set_flags(Gio.ApplicationFlags.IS_SERVICE | Gio.ApplicationFlags.HANDLES_COMMAND_LINE)
@@ -172,7 +172,7 @@ class Daemon(Gio.Application):
             self.load_profile(self._settings.get_string('current-profile'), False, False)
             if self._settings.get_string('lockscreen-profile') != "":
                 self.load_profile(self._settings.get_string('lockscreen-profile'), True, False)
-        except ValueError as e:
+        except NoWallpaperError as e:
             # If we failed to load the profile, its bad
             logger.error('failed to load profiles on startup: %s', e.message)
         # Connect the settings signals
@@ -232,7 +232,7 @@ class Daemon(Gio.Application):
             else:
                 setattr(self, prop, LockscreenProfile(name, self._settings, auto_load))
             setattr(self, handler, getattr(self, prop).connect('preview', self._handle_preview))
-        except ValueError as e:
+        except NoWallpapersError as e:
             logger.critical('failed to load profile %s', name)
             self._emit_error(str(e))
             raise e
@@ -317,7 +317,7 @@ class Daemon(Gio.Application):
                 # TODO implement auto-rotate from DBUS
                 logger.warning('[DBUS] %s for method %s: auto-rotate is not observed', interface_name, method_name)
                 invocation.return_value(None)
-            except ValueError as e:
+            except NoWallpapersError as e:
                 invocation.return_dbus_error(self.get_application_id() + '.LoadProfile', str(e.args))
         elif method_name == 'Next':
             try:
@@ -335,7 +335,7 @@ class Daemon(Gio.Application):
                     )
                 else:
                     invocation.return_value(GLib.Variant('(s)', (wallpaper,)))
-            except ValueError as e:
+            except NoWallpapersError as e:
                 invocation.return_dbus_error(self.get_application_id() + '.Prev', str(e.args))
         else:
             logger.info('[DBUS] Method %s in %s does not exist', method_name, interface_name)

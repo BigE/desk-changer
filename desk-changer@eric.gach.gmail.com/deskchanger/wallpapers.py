@@ -1,7 +1,7 @@
 from gi.repository import GLib, Gio, GObject
 from hashlib import sha256
 import random
-from . import logger
+from . import logger, _
 
 ACCEPTED = ['application/xml', 'image/jpeg', 'image/png']
 
@@ -67,8 +67,7 @@ class Profile(GObject.GObject):
                 logger.warning('failed to load %s for profile %s: %s', uri, self._name, str(e.args))
         if len(self._wallpapers) == 0:
             logger.critical('no wallpapers were loaded for profile %s - wallpaper will not change', self._name)
-            # TODO - customize exception
-            raise ValueError('no wallpapers were loaded for profile %s' % (self._name,))
+            raise NoWallpapersError(self)
         if len(self._wallpapers) < 100:
             logger.warning('available total wallpapers is under 100 (%d) - strict random checking is disabled',
                            len(self._wallpapers))
@@ -86,8 +85,7 @@ class Profile(GObject.GObject):
     def next(self, current=None):
         if len(self._wallpapers) == 0:
             logger.critical('no wallpapers are currently available for %s', self.name)
-            # TODO - customize exception
-            raise ValueError('no wallpapers are currently available for %s' % (self.name,))
+            raise NoWallpapersError(self)
         wallpaper = self._queue.pop(0)
         if current:
             self._history.append(current)
@@ -100,8 +98,7 @@ class Profile(GObject.GObject):
     def prev(self, current=None):
         if len(self._wallpapers) == 0:
             logger.critical('no wallpapers are currently available for %s', self.name)
-            # TODO - customize exception
-            raise ValueError('no wallpapers are currently available for %s' % (self.name,))
+            raise NoWallpapersError(self)
         if len(self._history) == 0:
             return False
         wallpaper = self._history.pop(0)
@@ -257,3 +254,12 @@ class LockscreenProfile(Profile):
 
 
 GObject.type_register(LockscreenProfile)
+
+
+class WallpapersError(Exception):
+    pass
+
+
+class NoWallpapersError(WallpapersError):
+    def __init__(self, profile):
+        super(NoWallpapersError, self).__init__(_('no wallpapers were loaded for profile %s') % (profile.name,))
