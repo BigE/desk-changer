@@ -331,7 +331,7 @@ class Daemon(Gio.Application):
                     logger.critical('no more wallpapers available in history')
                     invocation.return_dbus_error(
                         self.get_application_id() + '.Prev',
-                        'No more wallpapers available in history'
+                        _('No more wallpapers available in history')
                     )
                 else:
                     invocation.return_value(GLib.Variant('(s)', (wallpaper,)))

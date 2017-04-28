@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-04-27 17:01-0500\n"
+"POT-Creation-Date: 2017-04-27 20:23-0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -59,10 +59,6 @@ msgstr ""
 #: desk-changer@eric.gach.gmail.com/extension.js:212
 #, python-format
 msgid "Daemon Error: %s"
-msgstr ""
-
-#: desk-changer@eric.gach.gmail.com/menu.js:124
-msgid "Unable to go back any further, no history available"
 msgstr ""
 
 #: desk-changer@eric.gach.gmail.com/menu.js:184

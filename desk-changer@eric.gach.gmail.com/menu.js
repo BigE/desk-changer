@@ -110,18 +110,18 @@ const DeskChangerControls = new Lang.Class({
 
     next: function () {
         debug('next');
-        this._dbus.NextRemote(function (result, error) {
-            if (error) {
-                Main.notifyError('Desk Changer', error);
+        this._dbus.NextRemote(function (result, _error) {
+            if (_error) {
+                Main.notifyError('Desk Changer', _error);
             }
         });
     },
 
     prev: function() {
         debug('prev');
-        this._dbus.PrevRemote(function (result, error) {
-            if (error) {
-                Main.notifyError('Desk Changer', _('Unable to go back any further, no history available'));
+        this._dbus.PrevRemote(function (result, _error) {
+            if (_error) {
+                Main.notifyError('Desk Changer', _error);
             }
         });
     },
