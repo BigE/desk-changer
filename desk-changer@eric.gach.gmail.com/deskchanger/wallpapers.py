@@ -62,7 +62,7 @@ class Profile(GObject.GObject):
             logger.debug('loading %s for profile %s%s', uri, self._name, ' recursively' if recursive else '')
             try:
                 location = Gio.File.new_for_uri(uri)
-                self._load_profile_location(location, recursive, True)
+                self._load_profile_location(location, recursive, False, True)
             except GLib.Error as e:
                 logger.warning('failed to load %s for profile %s: %s', uri, self._name, str(e.args))
         if len(self._wallpapers) == 0:
@@ -205,7 +205,7 @@ class Profile(GObject.GObject):
         self._queue.append(wallpaper)
         logger.info('adding %s to the queue', wallpaper)
 
-    def _load_profile_children(self, location, recursive):
+    def _load_profile_children(self, location, recursive, hidden):
         try:
             enumerator = location.enumerate_children('standard::*', Gio.FileQueryInfoFlags.NONE, None)
         except GLib.Error as e:
@@ -216,13 +216,16 @@ class Profile(GObject.GObject):
             if child is None:
                 logger.critical('failed to load %s', info.get_name())
                 continue
-            self._load_profile_location(child, recursive)
+            self._load_profile_location(child, recursive, hidden)
 
-    def _load_profile_location(self, location, recursive, toplevel=False):
+    def _load_profile_location(self, location, recursive, hidden, toplevel=False):
         try:
             info = location.query_info('standard::*', Gio.FileQueryInfoFlags.NONE, None)
         except GLib.Error as e:
             logger.warning('failed to load location %s: %s', location.get_uri(), str(e.args))
+            return
+        if hidden is False and location.get_parse_name()[0] == '.':
+            logger.debug('skipping %s because hidden files are disabled', location.get_uri())
             return
         if info.get_file_type() == Gio.FileType.DIRECTORY:
             if recursive or toplevel:
@@ -231,7 +234,7 @@ class Profile(GObject.GObject):
                 monitor.connect('changed', self._files_changed)
                 self._monitors.append(monitor)
                 logger.debug('descending into %s to find wallpapers', location.get_uri())
-                self._load_profile_children(location, recursive)
+                self._load_profile_children(location, recursive, hidden)
         elif info.get_file_type() == Gio.FileType.REGULAR and info.get_content_type() in ACCEPTED:
             logger.debug('adding wallpaper %s', location.get_uri())
             self._wallpapers.append(location.get_uri())
