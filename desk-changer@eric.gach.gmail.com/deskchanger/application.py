@@ -172,7 +172,7 @@ class Daemon(Gio.Application):
             self.load_profile(self._settings.get_string('current-profile'), False, False)
             if self._settings.get_string('lockscreen-profile') != "":
                 self.load_profile(self._settings.get_string('lockscreen-profile'), True, False)
-        except NoWallpaperError as e:
+        except NoWallpapersError as e:
             # If we failed to load the profile, its bad
             logger.error('failed to load profiles on startup: %s', e.message)
         # Connect the settings signals
