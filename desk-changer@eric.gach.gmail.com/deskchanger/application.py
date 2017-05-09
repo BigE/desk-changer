@@ -92,10 +92,7 @@ class Daemon(Gio.Application):
         if self._lockscreen_profile:
             self._lockscreen_profile.load()
         # now check auto-rotate, since this didn't get done on load
-        if self._settings.get_boolean('auto-rotate'):
-            self._desktop_profile.next()
-            if self._lockscreen_profile:
-                self._lockscreen_profile.next()
+        self._auto_rotate()
         # heart and soul of the daemon, rotate them images!
         self._toggle_timer(self._settings.get_string('rotation'))
         # Since we're a service, we have to increase the hold count to stay running
@@ -244,6 +241,12 @@ class Daemon(Gio.Application):
         else:
             return self._desktop_profile.queue
 
+    def _auto_rotate(self):
+        if self._settings.get_boolean('auto-rotate'):
+            self._background.set_string('picture-uri', self._desktop_profile.next())
+            if self._lockscreen_profile:
+                self._screensaver.set_string('picture-uri', self._lockscreen_profile.next())
+
     def _callback_desktop(self, obj, key):
         name = self._settings.get_string('current-profile')
         self.load_profile(name)
@@ -314,8 +317,7 @@ class Daemon(Gio.Application):
             profile, = parameters.unpack()
             try:
                 self.load_profile(profile)
-                # TODO implement auto-rotate from DBUS
-                logger.warning('[DBUS] %s for method %s: auto-rotate is not observed', interface_name, method_name)
+                self._auto_rotate()
                 invocation.return_value(None)
             except NoWallpapersError as e:
                 invocation.return_dbus_error(self.get_application_id() + '.LoadProfile', str(e.args))
