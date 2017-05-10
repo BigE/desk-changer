@@ -112,7 +112,7 @@ const DeskChangerControls = new Lang.Class({
         debug('next');
         this._dbus.NextRemote(function (result, _error) {
             if (_error) {
-                Main.notifyError('Desk Changer', _error);
+                Main.notifyError('Desk Changer', String(_error));
             }
         });
     },
@@ -121,7 +121,7 @@ const DeskChangerControls = new Lang.Class({
         debug('prev');
         this._dbus.PrevRemote(function (result, _error) {
             if (_error) {
-                Main.notifyError('Desk Changer', _error);
+                Main.notifyError('Desk Changer', String(_error));
             }
         });
     },
