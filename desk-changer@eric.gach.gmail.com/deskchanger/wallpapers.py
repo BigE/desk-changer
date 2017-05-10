@@ -101,7 +101,7 @@ class Profile(GObject.GObject):
             raise NoWallpapersError(self)
         if len(self._history) == 0:
             return False
-        wallpaper = self._history.pop(0)
+        wallpaper = self._history.pop()
         if current:
             self._queue.insert(0, current)
         self.emit('preview', self._queue[0])
