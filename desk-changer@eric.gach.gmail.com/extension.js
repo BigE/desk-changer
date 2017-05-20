@@ -135,7 +135,7 @@ const DeskChangerSystemIndicator = new Lang.Class({
         this.daemon.destroy();
     },
 
-    _update_indicator: function() {
+    _update_indicator: function () {
         if (this._indicator !== null) {
             this.indicators.remove_actor(this._indicator);
             this._indicator.destroy();
@@ -186,8 +186,6 @@ function disable() {
     if (shellSettings.get_strv('enabled-extensions').indexOf(Me.uuid) === -1 && daemon.is_running) {
         debug('Extension disabled, stopping daemon');
         daemon.toggle();
-    } else {
-        daemon.lockscreen = true;
     }
 }
 
@@ -216,6 +214,7 @@ function enable() {
         // run if auto start is enabled and its not already running
         daemon.toggle();
     } else if (daemon.is_running) {
+        // must set this here if the previews are to be set correctly, even though signal hits later
         daemon.lockscreen = false;
     }
 
@@ -234,6 +233,11 @@ function init() {
     settings = new DeskChangerSettings();
     shellSettings = new Gio.Settings({'schema': 'org.gnome.shell'});
     daemon = new DeskChangerDaemon(settings);
+    daemon.lockscreen = Main.screenShield.locked;
+    Main.screenShield.connect('locked-changed', function () {
+        // lockscreen mode toggle through signals
+        daemon.lockscreen = Main.screenShield.locked;
+    });
 
     settings.connect('changed::integrate-system-menu', function () {
         if (indicator !== null) {
