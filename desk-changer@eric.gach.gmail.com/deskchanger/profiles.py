@@ -133,13 +133,9 @@ class BaseProfile(GObject.GObject):
 
     def _files_changed(self, monitor, _file, other_file, event_type):
         logger.debug('file monitor %s changed with event type %s', _file.get_uri(), event_type)
-        if event_type == Gio.FileMonitorEvent.CREATED and _file.get_file_type() in ACCEPTED:
-            try:
-                self._wallpapers.index(_file.get_uri())
-            except ValueError:
-                logger.debug('adding new wallpaper %s', _file.get_uri())
-                self._wallpapers.append(_file.get_uri())
-                self._wallpapers.sort()
+        if event_type == Gio.FileMonitorEvent.CREATED:
+            # TODO make recursive flag dynamic
+            self._load_uri(_file.get_uri(), False)
         elif event_type == Gio.FileMonitorEvent.DELETED:
             try:
                 i = self._wallpapers.index(_file.get_uri())
@@ -212,6 +208,9 @@ class BaseProfile(GObject.GObject):
             self._load_children(location, recursive)
         elif info.get_file_type() == Gio.FileType.REGULAR and info.get_content_type() in ACCEPTED:
             logger.debug('adding wallpaper %s', location.get_uri())
+            if location.get_uri() in self._wallpapers:
+                logger.warning('%s already loaded, skipping duplicate', location.get_uri())
+                return
             self._wallpapers.append(location.get_uri())
 
     def _next(self, current=None):
@@ -238,6 +237,7 @@ class BaseProfile(GObject.GObject):
 
     def _remove_monitors(self):
         for monitor in self._monitors:
+            logger.debug('removing monitor %s', monitor)
             monitor.cancel()
             del monitor
         self._monitors = []
