@@ -87,8 +87,6 @@ class Daemon(Gio.Application):
             self._lockscreen_profile.load()
         # heart and soul of the daemon, rotate them images!
         self._toggle_timer(self._settings.get_string('rotation'))
-        # Since we're a service, we have to increase the hold count to stay running
-        self.hold()
 
     def do_dbus_register(self, connection, object_path):
         """Register the application on the DBus, if this fails, the application cannot run
@@ -149,6 +147,14 @@ class Daemon(Gio.Application):
             return 0
         return Gio.Application.do_handle_local_options(self, options)
 
+    def do_local_command_line(self, arguments):
+        retval = Gio.Application.do_local_command_line(self, arguments)
+        if retval[0] is True and retval.exit_status is 0:
+            # because we're a service, we must activate ourselves and place a hold to stay running
+            self.activate()
+            self.hold()
+        return retval
+
     def do_startup(self):
         """Startup method of application, get everything setup and ready to run here"""
         logger.debug('::startup')
@@ -176,9 +182,6 @@ class Daemon(Gio.Application):
         self._settings_handlers.append(self._settings.connect('changed::current-profile', self._callback_desktop))
         self._settings_handlers.append(self._settings.connect('changed::lockscreen-profile', self._callback_lockscreen))
         self._settings_handlers.append(self._settings.connect('changed::update-lockscreen', self._callback_lockscreen))
-        # just because we're a service... activate is not called. can someone actually help me understand this?
-        # https://git.gnome.org/browse/glib/tree/gio/gapplication.c?h=2.50.0#n1023
-        self.activate()
 
     def do_shutdown(self):
         logger.debug('::shutdown')
