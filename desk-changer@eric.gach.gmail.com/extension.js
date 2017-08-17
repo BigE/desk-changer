@@ -234,6 +234,13 @@ function init() {
     shellSettings = new Gio.Settings({'schema': 'org.gnome.shell'});
     daemon = new DeskChangerDaemon(settings);
     daemon.lockscreen = Main.screenShield.locked;
+
+    Gio.DBus.session.connect('closed', function () {
+        if (daemon.is_running) {
+            daemon.toggle();
+        }
+    });
+
     Main.screenShield.connect('locked-changed', function () {
         // lockscreen mode toggle through signals
         daemon.lockscreen = Main.screenShield.locked;

@@ -1,6 +1,7 @@
 from gi import require_version
 from gi.repository import GLib, Gio, GObject
 from gi._gi import variant_type_from_string
+import signal
 from . import logger, _
 from .profiles import DesktopProfile, LockscreenProfile, NotFoundError, WallpaperNotFoundError
 from .timer import HourlyTimer, IntervalTimer
@@ -61,6 +62,8 @@ class Daemon(Gio.Application):
         self._lockscreen_profile_handler_preview = None
         # now finally, the timer
         self._timer = None
+        signal.signal(signal.SIGINT, self.sig_handler)
+        signal.signal(signal.SIGTERM, self.sig_handler)
 
     def __repr__(self):
         return 'Daemon(lockscreen=%s)' % (self._lockscreen,)
@@ -87,6 +90,9 @@ class Daemon(Gio.Application):
             self._lockscreen_profile.load()
         # heart and soul of the daemon, rotate them images!
         self._toggle_timer(self._settings.get_string('rotation'))
+        # hold the application open, we manage the timers automagically so it
+        # should stay running until its told to stop
+        self.hold()
 
     def do_dbus_register(self, connection, object_path):
         """Register the application on the DBus, if this fails, the application cannot run
@@ -102,6 +108,7 @@ class Daemon(Gio.Application):
         Gio.Application.do_dbus_register(self, connection, object_path)
         failure = False
         try:
+            connection.connect('closed', lambda i: self.quit())
             self._dbus_id = connection.register_object(
                 object_path,
                 DeskChangerDaemonDBusInterface.interfaces[0],
@@ -152,7 +159,6 @@ class Daemon(Gio.Application):
         if retval[0] is True and retval.exit_status is 0:
             # because we're a service, we must activate ourselves and place a hold to stay running
             self.activate()
-            self.hold()
         return retval
 
     def do_startup(self):
@@ -202,7 +208,6 @@ class Daemon(Gio.Application):
         del self._lockscreen_profile
         if self._timer:
             del self._timer
-        self.release()
         Gio.Application.do_shutdown(self)
 
     @GObject.Property(type=GObject.TYPE_STRV)
@@ -249,6 +254,9 @@ class Daemon(Gio.Application):
             return self._lockscreen_profile.queue
         else:
             return self._desktop_profile.queue
+
+    def sig_handler(self, signum, frame):
+        self.quit()
 
     def _auto_rotate(self):
         if self._settings.get_boolean('auto-rotate'):
