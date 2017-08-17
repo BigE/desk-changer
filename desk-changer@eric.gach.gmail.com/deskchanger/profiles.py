@@ -5,6 +5,8 @@ import random
 from . import logger
 from .wallpapers import ACCEPTED
 
+MAX_QUEUE_LENGTH = 100
+
 
 class BaseProfile(GObject.GObject):
     """
@@ -80,9 +82,9 @@ class BaseProfile(GObject.GObject):
         if len(self._wallpapers) == 0:
             logger.critical('no wallpapers were loaded from %d locations for profile %s', len(items), self.name)
             raise WallpaperNotFoundError(self.name)
-        if len(self._wallpapers) < 100:
-            logger.warning('available wallpapers for %s is under 100 (%d) - strict random checking is disabled',
-                           self.name, len(self._wallpapers))
+        if len(self._wallpapers) < MAX_QUEUE_LENGTH:
+            logger.warning('available wallpapers for %s is under %d (%d) - strict random checking is disabled',
+                           self.name, MAX_QUEUE_LENGTH, len(self._wallpapers))
         # put them in order in case we go by position
         self._wallpapers.sort()
         if self._settings.get_boolean('remember-profile-state'):
@@ -163,6 +165,9 @@ class BaseProfile(GObject.GObject):
             logger.info('there are already %d wallpapers in the queue, skipping', len(self._queue))
             self.emit('preview', self._queue[0])
             return
+        elif len(self._wallpapers) == 1:
+            logger.critical('there is only one wallpaper loaded, wallpaper will not change')
+            return self._wallpapers[0]
         if self._settings.get_boolean('random'):
             wallpaper = self._load_queue_random(current)
         else:
@@ -180,10 +185,10 @@ class BaseProfile(GObject.GObject):
         while wallpaper is None:
             wallpaper = self._wallpapers[random.randint(0, (len(self._wallpapers) - 1))]
             logger.debug("got %s as a possible next wallpaper", wallpaper)
-            if len(self._wallpapers) >= 100 and self._history.count(wallpaper) > 0:
+            if len(self._wallpapers) >= MAX_QUEUE_LENGTH and self._history.count(wallpaper) > 0:
                 logger.debug("%s has already been shown recently, choosing another wallpaper", wallpaper)
                 wallpaper = None
-            elif len(self._wallpapers) >= 100 and self._queue.count(wallpaper) > 0:
+            elif len(self._wallpapers) >= MAX_QUEUE_LENGTH and self._queue.count(wallpaper) > 0:
                 logger.debug("%s is already in the queue, choosing another wallpaper", wallpaper)
                 wallpaper = None
             elif (len(self._history) > 0 and wallpaper == self._history[0]) or \
@@ -220,6 +225,8 @@ class BaseProfile(GObject.GObject):
         wallpaper = self._queue.pop(0)
         if current:
             self._history.append(current)
+            while len(self._history) > 100:
+                logger.debug('[GC] Removing %s from the history queue', self._history.pop(0))
         self._load_queue(current)
         return wallpaper
 
