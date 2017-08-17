@@ -225,7 +225,7 @@ class BaseProfile(GObject.GObject):
         wallpaper = self._queue.pop(0)
         if current:
             self._history.append(current)
-            while len(self._history) > 100:
+            while len(self._history) > MAX_QUEUE_LENGTH:
                 logger.debug('[GC] Removing %s from the history queue', self._history.pop(0))
         self._load_queue(current)
         return wallpaper
