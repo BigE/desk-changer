@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-04-27 20:23-0500\n"
+"POT-Creation-Date: 2017-08-27 02:43-0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,207 +17,199 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: desk-changer@eric.gach.gmail.com/extension.js:62
+#: extension.js:62
 msgid "Change with Profile"
 msgstr ""
 
-#: desk-changer@eric.gach.gmail.com/extension.js:63
+#: extension.js:63
 msgid "Notifications"
 msgstr ""
 
-#: desk-changer@eric.gach.gmail.com/extension.js:64
+#: extension.js:64
 msgid "Remember Profile State"
 msgstr ""
 
-#: desk-changer@eric.gach.gmail.com/extension.js:65
+#: extension.js:65
 msgid "Update Lock Screen"
 msgstr ""
 
-#: desk-changer@eric.gach.gmail.com/extension.js:74
-#: desk-changer@eric.gach.gmail.com/extension.js:116
+#: extension.js:74 extension.js:116
 msgid "DeskChanger Settings"
 msgstr ""
 
-#: desk-changer@eric.gach.gmail.com/extension.js:199
-#, python-format
+#: extension.js:197
+#, javascript-format
 msgid "Profile changed to %s"
 msgstr ""
 
-#: desk-changer@eric.gach.gmail.com/extension.js:203
+#: extension.js:201
 msgid "Notifications are now enabled"
 msgstr ""
 
-#: desk-changer@eric.gach.gmail.com/extension.js:203
+#: extension.js:201
 msgid "Notifications are now disabled"
 msgstr ""
 
-#: desk-changer@eric.gach.gmail.com/extension.js:208
-#, python-format
+#: extension.js:206
+#, javascript-format
 msgid "Wallpaper Changed: %s"
 msgstr ""
 
-#: desk-changer@eric.gach.gmail.com/extension.js:212
-#, python-format
+#: extension.js:210
+#, javascript-format
 msgid "Daemon Error: %s"
 msgstr ""
 
-#: desk-changer@eric.gach.gmail.com/menu.js:184
+#: menu.js:184
 msgid "DeskChanger Daemon"
 msgstr ""
 
-#: desk-changer@eric.gach.gmail.com/menu.js:212
+#: menu.js:212
 msgid "Open Current Wallpaper"
 msgstr ""
 
-#: desk-changer@eric.gach.gmail.com/menu.js:241
+#: menu.js:240
 msgid "Open Next Wallpaper"
 msgstr ""
 
-#: desk-changer@eric.gach.gmail.com/menu.js:305
-#: desk-changer@eric.gach.gmail.com/prefs.js:150
+#: menu.js:304 prefs.js:150
 msgid "Desktop Profile"
 msgstr ""
 
-#: desk-changer@eric.gach.gmail.com/menu.js:314
-#: desk-changer@eric.gach.gmail.com/menu.js:324
+#: menu.js:313 menu.js:323
 msgid "Lock Screen Profile"
 msgstr ""
 
-#: desk-changer@eric.gach.gmail.com/menu.js:321
+#: menu.js:320
 msgid "(inherited)"
 msgstr ""
 
-#: desk-changer@eric.gach.gmail.com/menu.js:329
+#: menu.js:328
 msgid "(inherit from desktop)"
 msgstr ""
 
-#: desk-changer@eric.gach.gmail.com/prefs.js:75
+#: prefs.js:75
 msgid "DeskChanger Daemon Status"
 msgstr ""
 
-#: desk-changer@eric.gach.gmail.com/prefs.js:94
+#: prefs.js:94
 msgid "DeskChanger Autostart Daemon"
 msgstr ""
 
-#: desk-changer@eric.gach.gmail.com/prefs.js:107
+#: prefs.js:107
 msgid "Remember the profiles current/next wallpaper"
 msgstr ""
 
-#: desk-changer@eric.gach.gmail.com/prefs.js:120
+#: prefs.js:120
 msgid "Wallpaper Timer Interval (seconds)"
 msgstr ""
 
-#: desk-changer@eric.gach.gmail.com/prefs.js:142
+#: prefs.js:142
 msgid "Daemon"
 msgstr ""
 
-#: desk-changer@eric.gach.gmail.com/prefs.js:147
-#: desk-changer@eric.gach.gmail.com/prefs.js:323
+#: prefs.js:147 prefs.js:323
 msgid "Profile"
 msgstr ""
 
-#: desk-changer@eric.gach.gmail.com/prefs.js:163
+#: prefs.js:163
 msgid "Update LockScreen Background"
 msgstr ""
 
-#: desk-changer@eric.gach.gmail.com/prefs.js:175
+#: prefs.js:175
 msgid "Lockscreen Profile"
 msgstr ""
 
-#: desk-changer@eric.gach.gmail.com/prefs.js:196
+#: prefs.js:196
 msgid "Show Preview as Icon"
 msgstr ""
 
-#: desk-changer@eric.gach.gmail.com/prefs.js:208
+#: prefs.js:208
 msgid "Show Notifications"
 msgstr ""
 
-#: desk-changer@eric.gach.gmail.com/prefs.js:221
+#: prefs.js:221
 msgid "Integrate extension in system menu"
 msgstr ""
 
-#: desk-changer@eric.gach.gmail.com/prefs.js:249
+#: prefs.js:249
 msgid "Next Wallpaper"
 msgstr ""
 
-#: desk-changer@eric.gach.gmail.com/prefs.js:252
+#: prefs.js:252
 msgid "Previous Wallpaper"
 msgstr ""
 
-#: desk-changer@eric.gach.gmail.com/prefs.js:263
+#: prefs.js:263
 msgid "Action"
 msgstr ""
 
-#: desk-changer@eric.gach.gmail.com/prefs.js:277
-#, python-format
+#: prefs.js:277
+#, javascript-format
 msgid "The keybinding %s is already in use"
 msgstr ""
 
-#: desk-changer@eric.gach.gmail.com/prefs.js:287
-#: desk-changer@eric.gach.gmail.com/prefs.js:299
+#: prefs.js:287 prefs.js:299
 msgid "Failed to update keybinding"
 msgstr ""
 
-#: desk-changer@eric.gach.gmail.com/prefs.js:307
+#: prefs.js:307
 msgid "Modify"
 msgstr ""
 
-#: desk-changer@eric.gach.gmail.com/prefs.js:315
+#: prefs.js:315
 msgid "Keyboard Shortcuts"
 msgstr ""
 
-#: desk-changer@eric.gach.gmail.com/prefs.js:340
+#: prefs.js:340
 msgid "Add"
 msgstr ""
 
-#: desk-changer@eric.gach.gmail.com/prefs.js:347
+#: prefs.js:347
 msgid "Profile Name"
 msgstr ""
 
-#: desk-changer@eric.gach.gmail.com/prefs.js:353
+#: prefs.js:353
 msgid "OK"
 msgstr ""
 
-#: desk-changer@eric.gach.gmail.com/prefs.js:354
+#: prefs.js:354
 msgid "Cancel"
 msgstr ""
 
-#: desk-changer@eric.gach.gmail.com/prefs.js:365
-#: desk-changer@eric.gach.gmail.com/prefs.js:411
+#: prefs.js:365 prefs.js:411
 msgid "Remove"
 msgstr ""
 
-#: desk-changer@eric.gach.gmail.com/prefs.js:371
-#, python-format
+#: prefs.js:371
+#, javascript-format
 msgid "Are you sure you want to delete the profile \"%s\"?"
 msgstr ""
 
-#: desk-changer@eric.gach.gmail.com/prefs.js:374
+#: prefs.js:374
 msgid "Yes"
 msgstr ""
 
-#: desk-changer@eric.gach.gmail.com/prefs.js:375
+#: prefs.js:375
 msgid "No"
 msgstr ""
 
-#: desk-changer@eric.gach.gmail.com/prefs.js:398
+#: prefs.js:398
 msgid "Path"
 msgstr ""
 
-#: desk-changer@eric.gach.gmail.com/prefs.js:405
+#: prefs.js:405
 msgid "Sub Folders"
 msgstr ""
 
-#: desk-changer@eric.gach.gmail.com/prefs.js:428
-#: desk-changer@eric.gach.gmail.com/prefs.js:430
+#: prefs.js:428 prefs.js:430
 msgid "Add Image"
 msgstr ""
 
-#: desk-changer@eric.gach.gmail.com/prefs.js:433
-#: desk-changer@eric.gach.gmail.com/prefs.js:435
+#: prefs.js:433 prefs.js:435
 msgid "Add Folder"
 msgstr ""
 
-#: desk-changer@eric.gach.gmail.com/prefs.js:441
+#: prefs.js:441
 msgid "Profiles"
 msgstr ""

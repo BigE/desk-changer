@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-04-27 20:22-0500\n"
+"POT-Creation-Date: 2017-08-27 02:44-0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,15 +17,15 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: desk-changer@eric.gach.gmail.com/deskchanger/application.py:41
+#: deskchanger/application.py:42
 msgid "Show the current daemon version and exit"
 msgstr ""
 
-#: desk-changer@eric.gach.gmail.com/deskchanger/application.py:334
+#: deskchanger/application.py:345
 msgid "No more wallpapers available in history"
 msgstr ""
 
-#: desk-changer@eric.gach.gmail.com/deskchanger/wallpapers.py:265
+#: deskchanger/wallpapers.py:268
 #, python-format
 msgid "no wallpapers were loaded for profile %s"
 msgstr ""
