@@ -3,8 +3,8 @@ from gi.repository import GLib, Gio, GObject
 from hashlib import sha256
 import random
 from . import logger
-from .wallpapers import ACCEPTED
 
+ACCEPTED = ['application/xml', 'image/jpeg', 'image/png']
 MAX_QUEUE_LENGTH = 100
 
 
