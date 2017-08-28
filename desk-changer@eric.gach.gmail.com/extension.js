@@ -67,6 +67,7 @@ const DeskChangerIndicator = new Lang.Class({
         this.menu.addMenuItem(new Menu.DeskChangerPreviewMenuItem(this.daemon));
         this.menu.addMenuItem(new Menu.DeskChangerOpenCurrent());
         this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
+        this.menu.addMenuItem(new Menu.DeskChangerRotation(this.settings));
         this.menu.addMenuItem(new Menu.DeskChangerControls(this.daemon.bus, this.settings));
         this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
         this.menu.addMenuItem(new Menu.DeskChangerDaemonControls(this.daemon));
