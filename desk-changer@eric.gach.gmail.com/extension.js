@@ -153,7 +153,7 @@ const DeskChangerSystemIndicator = new Lang.Class({
 });
 
 let daemon, indicator, settings, shellSettings;
-let changed_id, current_profile_id, error_id, notifications_id;
+let changed_id, current_profile_id, error_id, notifications_id, random_id, rotation_id;
 
 function disable() {
     debug('disabling extension');
@@ -178,10 +178,20 @@ function disable() {
         daemon.disconnectSignal(error_id);
     }
 
+    if (random_id) {
+        settings.disconnect(random_id);
+    }
+
+    if (rotation_id) {
+        settings.disconnect(rotation_id);
+    }
+
     changed_id = null;
     current_profile_id = null;
     error_id = null;
     notifications_id = null;
+    random_id = null;
+    rotation_id = null;
     indicator = null;
 
     if (shellSettings.get_strv('enabled-extensions').indexOf(Me.uuid) === -1 && daemon.is_running) {
@@ -209,6 +219,39 @@ function enable() {
 
     error_id = daemon.connectSignal('error', function (emitter, signalName, parameters) {
         Main.notifyError('Desk Changer', _('Daemon Error: %s'.format(parameters[0])));
+    });
+
+    random_id = settings.connect('changed::random', function () {
+        if (settings.notifications) {
+            let message;
+
+            if (settings.random) {
+                message = _('Wallpapers will be shown in a random order');
+            } else {
+                message = _('Wallpapers will be shown in the order the were loaded');
+            }
+
+            Main.notify('Desk Changer', message);
+        }
+    });
+
+    rotation_id = settings.connect('changed::rotation', function () {
+        if (settings.notifications) {
+            let message;
+            switch (settings.rotation) {
+                case 'interval':
+                    message = _('Rotation will occur every %d seconds'.format(settings.interval));
+                    break;
+                case 'hourly':
+                    message = _('Rotation will occur at the beginning of every hour');
+                    break;
+                default:
+                    message = _('Rotation has been disabled');
+                    break;
+            }
+
+            Main.notify('Desk Changer', message);
+        }
     });
 
     if (!daemon.is_running && settings.auto_start) {
