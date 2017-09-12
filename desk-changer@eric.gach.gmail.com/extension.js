@@ -67,7 +67,7 @@ const DeskChangerIndicator = new Lang.Class({
         this.menu.addMenuItem(new Menu.DeskChangerPreviewMenuItem(this.daemon));
         this.menu.addMenuItem(new Menu.DeskChangerOpenCurrent());
         this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
-        this.menu.addMenuItem(new Menu.DeskChangerRotation(this.settings));
+        this.menu.addMenuItem(new Menu.DeskChangerRotation(this.settings, true));
         this.menu.addMenuItem(new Menu.DeskChangerControls(this.daemon.bus, this.settings));
         this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
         this.menu.addMenuItem(new Menu.DeskChangerDaemonControls(this.daemon));
@@ -111,6 +111,7 @@ const DeskChangerSystemIndicator = new Lang.Class({
         this._menu.menu.addMenuItem(new Menu.DeskChangerProfileDesktop(this.settings, false));
         this._menu.menu.addMenuItem(new Menu.DeskChangerPreviewMenuItem(this.daemon));
         this._menu.menu.addMenuItem(new Menu.DeskChangerOpenCurrent());
+        this._menu.menu.addMenuItem(new Menu.DeskChangerRotation(this.settings, false));
         this._menu.menu.addMenuItem(new Menu.DeskChangerControls(this.daemon.bus, this.settings));
         this._menu.menu.addMenuItem(new Menu.DeskChangerDaemonControls(this.daemon));
         // Simple settings for the extension

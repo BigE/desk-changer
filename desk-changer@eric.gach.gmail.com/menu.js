@@ -355,8 +355,8 @@ const DeskChangerRotation = new Lang.Class({
     Name: 'DeskChangerRotation',
     Extends: DeskChangerPopupSubMenuMenuItem,
 
-    _init: function (settings) {
-        this.parent(_('Rotation Mode'), 'rotation', settings);
+    _init: function (settings, sensitive) {
+        this.parent(_('Rotation Mode'), 'rotation', settings, sensitive);
         this.menu.addMenuItem(new DeskChangerPopupMenuItem('Interval Timer', 'interval', settings, 'rotation'));
         this.menu.addMenuItem(new DeskChangerPopupMenuItem('Beginning of Hour', 'hourly', settings, 'rotation'));
         this.menu.addMenuItem(new DeskChangerPopupMenuItem('Disabled', 'disabled', settings, 'rotation'));
