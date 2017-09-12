@@ -19,12 +19,15 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+
+const Me = imports.misc.extensionUtils.getCurrentExtension();
 const Gdk = imports.gi.Gdk;
+const Gettext = imports.gettext.domain(Me.metadata.uuid);
 const Gio = imports.gi.Gio;
 const GObject = imports.gi.GObject;
 const Gtk = imports.gi.Gtk;
 const Lang = imports.lang;
-const Me = imports.misc.extensionUtils.getCurrentExtension();
+const _ = Gettext.gettext;
 
 const DeskChangerSettings = Me.imports.settings.DeskChangerSettings;
 const DeskChangerDaemon = Me.imports.daemon.DeskChangerDaemon;
@@ -52,6 +55,7 @@ const DeskChangerPrefs = new Lang.Class({
         this._initExtension();
         this._initDaemon();
         this._load_profiles();
+        this._update_rotation();
         this.box.pack_start(this.notebook, true, true, 0);
         this.box.show_all();
         this._is_init = false;
@@ -68,8 +72,27 @@ const DeskChangerPrefs = new Lang.Class({
 
     _initDaemon: function () {
         let daemon_box = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL});
+        // Rotation Mode
         let box = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL});
-        let label = new Gtk.Label({label: 'DeskChanger Daemon Status'});
+        let label = new Gtk.Label({label: 'DeskChanger Rotation Mode'});
+        box.pack_start(label, false, false, 5);
+        label = new Gtk.Label({label: ' '});
+        box.pack_start(label, true, true, 5);
+        this._rotation_combo_box = new Gtk.ComboBoxText();
+        box.pack_start(this._rotation_combo_box, false, false, 5);
+        this._rotation_combo_box.insert_text(0, 'interval');
+        this._rotation_combo_box.insert_text(1, 'hourly');
+        this._rotation_combo_box.insert_text(2, 'disabled');
+        this._rotation_combo_box.connect('changed', Lang.bind(this, function (object) {
+            this._settings.rotation = object.get_active_text();
+        }));
+        this._settings.connect('changed::rotation', Lang.bind(this, function () {
+            this._update_rotation();
+        }));
+        daemon_box.pack_start(box, false, false, 10);
+        // Daemon Status
+        box = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL});
+        label = new Gtk.Label({label: _('DeskChanger Daemon Status')});
         box.pack_start(label, false, false, 5);
         label = new Gtk.Label({label: ' '});
         box.pack_start(label, true, true, 5);
@@ -88,7 +111,7 @@ const DeskChangerPrefs = new Lang.Class({
         box.pack_start(this._switchDaemon, false, false, 5);
         daemon_box.pack_start(box, false, false, 10);
         box = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL});
-        label = new Gtk.Label({label: 'DeskChanger Autostart Daemon:'});
+        label = new Gtk.Label({label: _('DeskChanger Autostart Daemon')});
         box.pack_start(label, false, false, 5);
         label = new Gtk.Label({label: ' '});
         box.pack_start(label, true, true, 5);
@@ -101,7 +124,7 @@ const DeskChangerPrefs = new Lang.Class({
         daemon_box.pack_start(box, false, false, 10);
         // Remember profile state
         box = new Gtk.Box();
-        label = new Gtk.Label({label: 'Remember the profiles current/next wallpaper'});
+        label = new Gtk.Label({label: _('Remember the profiles current/next wallpaper')});
         box.pack_start(label, false, false, 5);
         label = new Gtk.Label({label: ' '});
         box.pack_start(label, true, true, 5);
@@ -114,7 +137,7 @@ const DeskChangerPrefs = new Lang.Class({
         daemon_box.pack_start(box, false, false, 5);
         // Interval timer
         box = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL});
-        label = new Gtk.Label({label: 'Wallpaper Timer Interval (seconds)'});
+        label = new Gtk.Label({label: _('Wallpaper Timer Interval (seconds)')});
         box.pack_start(label, false, true, 5);
         label = new Gtk.Label({label: ' '});
         box.pack_start(label, true, true, 5);
@@ -136,15 +159,15 @@ const DeskChangerPrefs = new Lang.Class({
         }));
         box.pack_end(button, false, false, 5);
         daemon_box.pack_start(box, false, false, 5);
-        this.notebook.append_page(daemon_box, new Gtk.Label({label: 'Daemon'}));
+        this.notebook.append_page(daemon_box, new Gtk.Label({label: _('Daemon')}));
     },
 
     _initExtension: function () {
         let extension_box = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL});
-        let frame = new Gtk.Frame({label: 'Profile'});
+        let frame = new Gtk.Frame({label: _('Profile')});
         let frame_box = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL});
         let box = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL});
-        let label = new Gtk.Label({label: 'Desktop Profile'});
+        let label = new Gtk.Label({label: _('Desktop Profile')});
         box.pack_start(label, false, false, 5);
         label = new Gtk.Label({label: ' '});
         box.pack_start(label, true, true, 5);
@@ -157,7 +180,7 @@ const DeskChangerPrefs = new Lang.Class({
         box.pack_start(this._currentProfile, false, false, 5);
         frame_box.pack_start(box, false, false, 10);
         box = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL});
-        label = new Gtk.Label({label: 'Update LockScreen Background'});
+        label = new Gtk.Label({label: _('Update LockScreen Background')});
         box.pack_start(label, false, false, 5);
         label = new Gtk.Label({label: ' '});
         box.pack_start(label, true, true, 5);
@@ -169,14 +192,14 @@ const DeskChangerPrefs = new Lang.Class({
         box.pack_end(this._updateLockscreen, false, false, 5);
         frame_box.pack_start(box, false, false, 10);
         box = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL});
-        label = new Gtk.Label({label: 'Lockscreen Profile'});
+        label = new Gtk.Label({label: _('Lockscreen Profile')});
         box.pack_start(label, false, false, 5);
         label = new Gtk.Label({label: ' '});
         box.pack_start(label, true, true, 5);
         this._lockscreenProfile = new Gtk.ComboBoxText();
         this._lockscreenProfile.connect('key-press-event', Lang.bind(this, function (widget, event) {
             let keyval = event.get_keyval();
-            if (keyval[0] && keyval[1] == Gdk.KEY_BackSpace) {
+            if (keyval[0] && keyval[1] === Gdk.KEY_BackSpace) {
                 this._lockscreenProfile.set_active(-1);
             }
         }));
@@ -190,7 +213,7 @@ const DeskChangerPrefs = new Lang.Class({
         frame.add(frame_box);
         extension_box.pack_start(frame, false, false, 10);
         box = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL});
-        label = new Gtk.Label({label: 'Show Preview as Icon'});
+        label = new Gtk.Label({label: _('Show Preview as Icon')});
         box.pack_start(label, false, false, 5);
         label = new Gtk.Label({label: ' '});
         box.pack_start(label, true, true, 5);
@@ -202,7 +225,7 @@ const DeskChangerPrefs = new Lang.Class({
         box.pack_end(this._switchIconPreview, false, false, 5);
         extension_box.pack_start(box, false, false, 5);
         box = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL});
-        label = new Gtk.Label({label: 'Show Notifications'})
+        label = new Gtk.Label({label: _('Show Notifications')})
         box.pack_start(label, false, false, 5);
         label = new Gtk.Label({label: ' '});
         box.pack_start(label, true, true, 5);
@@ -215,7 +238,7 @@ const DeskChangerPrefs = new Lang.Class({
         extension_box.pack_start(box, false, false, 5);
         // Integrate extension into the system menu
         box = new Gtk.Box();
-        label = new Gtk.Label({label: 'Integrate extension in system menu'})
+        label = new Gtk.Label({label: _('Integrate extension in system menu')})
         box.pack_start(label, false, false, 5);
         label = new Gtk.Label({label: ' '});
         box.pack_start(label, true, true, 5);
@@ -243,10 +266,10 @@ const DeskChangerPrefs = new Lang.Class({
 
         let row = model.insert(-1);
         let [key, mods] = Gtk.accelerator_parse(this._settings.getKeybinding('next-wallpaper')[0]);
-        model.set(row, [0, 1, 2, 3], ['Next Wallpaper', mods, key, 'next-wallpaper']);
+        model.set(row, [0, 1, 2, 3], [_('Next Wallpaper'), mods, key, 'next-wallpaper']);
         row = model.insert(-1);
         [key, mods] = Gtk.accelerator_parse(this._settings.getKeybinding('prev-wallpaper')[0]);
-        model.set(row, [0, 1, 2, 3], ['Previous Wallpaper', mods, key, 'prev-wallpaper']);
+        model.set(row, [0, 1, 2, 3], [_('Previous Wallpaper'), mods, key, 'prev-wallpaper']);
 
         // create the treeview to display keybindings
         let treeview = new Gtk.TreeView({
@@ -257,7 +280,7 @@ const DeskChangerPrefs = new Lang.Class({
 
         // Action text column
         let cellrend = new Gtk.CellRendererText();
-        let col = new Gtk.TreeViewColumn({title: 'Action', expand: true});
+        let col = new Gtk.TreeViewColumn({title: _('Action'), expand: true});
         col.pack_start(cellrend, true);
         col.add_attribute(cellrend, 'text', 0);
         treeview.append_column(col);
@@ -271,7 +294,7 @@ const DeskChangerPrefs = new Lang.Class({
                 let dialog = new Gtk.MessageDialog({
                     buttons: Gtk.ButtonsType.OK,
                     message_type: Gtk.MessageType.ERROR,
-                    text: 'The keybinding ' + value + ' is already in use'
+                    text: _('The keybinding %s is already in use'.format(value))
                 });
                 dialog.run();
                 dialog.destroy();
@@ -281,7 +304,7 @@ const DeskChangerPrefs = new Lang.Class({
             let [success, iterator] = model.get_iter_from_string(iter);
 
             if (!success) {
-                throw new Error('Failed to update keybinding');
+                throw new Error(_('Failed to update keybinding'));
             }
 
             let name = model.get_value(iterator, 3);
@@ -293,7 +316,7 @@ const DeskChangerPrefs = new Lang.Class({
             let [success, iterator] = model.get_iter_from_string(iter);
 
             if (!success) {
-                throw new Error('Failed to update keybinding');
+                throw new Error(_('Failed to update keybinding'));
             }
 
             let name = model.get_value(iterator, 3);
@@ -301,7 +324,7 @@ const DeskChangerPrefs = new Lang.Class({
             model.set(iterator, [1,2], [0,0]);
             this._settings.setKeybinding(name, ['']);
         }));
-        col = new Gtk.TreeViewColumn({title: 'Modify'});
+        col = new Gtk.TreeViewColumn({title: _('Modify')});
         col.pack_end(cellrend, false);
         col.add_attribute(cellrend, 'accel-mods', 1);
         col.add_attribute(cellrend, 'accel-key', 2);
@@ -309,7 +332,7 @@ const DeskChangerPrefs = new Lang.Class({
 
         box.pack_start(treeview, true, true, 5);
         keyboard_box.pack_start(box, false, true, 10);
-        this.notebook.append_page(keyboard_box, new Gtk.Label({label: 'Keyboard Shortcuts'}));
+        this.notebook.append_page(keyboard_box, new Gtk.Label({label: _('Keyboard Shortcuts')}));
     },
 
     _initProfiles: function () {
@@ -317,7 +340,7 @@ const DeskChangerPrefs = new Lang.Class({
         this._folders.set_column_types([GObject.TYPE_STRING, GObject.TYPE_BOOLEAN]);
         let profiles_box = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL});
         let hbox = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL});
-        let label = new Gtk.Label({label: 'Profile'});
+        let label = new Gtk.Label({label: _('Profile')});
         hbox.pack_start(label, false, false, 10);
         this.profiles_combo_box = new Gtk.ComboBoxText();
         this.profiles_combo_box.connect('changed', Lang.bind(this, function (object) {
@@ -334,21 +357,21 @@ const DeskChangerPrefs = new Lang.Class({
         }));
 
         hbox.pack_start(this.profiles_combo_box, true, true, 10);
-        this.add_profile = new Gtk.Button({label: 'Add'});
+        this.add_profile = new Gtk.Button({label: _('Add')});
         this.add_profile.set_sensitive(true);
         this.add_profile.connect('clicked', Lang.bind(this, function () {
             let dialog, mbox, box, label, input;
             dialog = new Gtk.Dialog();
             mbox = dialog.get_content_area();
             box = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL});
-            label = new Gtk.Label({label: 'Profile Name'});
+            label = new Gtk.Label({label: _('Profile Name')});
             box.pack_start(label, false, true, 10);
             input = new Gtk.Entry();
             box.pack_end(input, true, true, 10);
             box.show_all();
             mbox.pack_start(box, true, true, 10);
-            dialog.add_button('OK', Gtk.ResponseType.OK);
-            dialog.add_button('Cancel', Gtk.ResponseType.CANCEL);
+            dialog.add_button(_('OK'), Gtk.ResponseType.OK);
+            dialog.add_button(_('Cancel'), Gtk.ResponseType.CANCEL);
             let result = dialog.run();
             if (result == Gtk.ResponseType.OK) {
                 let profiles = this._settings.profiles;
@@ -359,17 +382,17 @@ const DeskChangerPrefs = new Lang.Class({
             dialog.destroy();
         }));
         hbox.pack_start(this.add_profile, false, true, 0);
-        this.remove_profile = new Gtk.Button({label: 'Remove'});
+        this.remove_profile = new Gtk.Button({label: _('Remove')});
         this.remove_profile.connect('clicked', Lang.bind(this, function () {
             let profile, dialog, box, label;
             profile = this.profiles_combo_box.get_active_text();
             dialog = new Gtk.Dialog();
             box = dialog.get_content_area();
-            label = new Gtk.Label({label: 'Are you sure you want to delete the profile "' + profile + '"?'});
+            label = new Gtk.Label({label: _('Are you sure you want to delete the profile "%s"?'.format(profile))});
             box.pack_start(label, true, true, 10);
             box.show_all();
-            dialog.add_button('Yes', Gtk.ResponseType.YES);
-            dialog.add_button('No', Gtk.ResponseType.NO);
+            dialog.add_button(_('Yes'), Gtk.ResponseType.YES);
+            dialog.add_button(_('No'), Gtk.ResponseType.NO);
             let response = dialog.run();
             if (response == Gtk.ResponseType.YES) {
                 let profiles = this._settings.profiles;
@@ -392,20 +415,20 @@ const DeskChangerPrefs = new Lang.Class({
             this._folders.set_value(iter, 0, new_text);
             this._save_profile();
         }));
-        let column = new Gtk.TreeViewColumn({title: 'Path', expand: true});
+        let column = new Gtk.TreeViewColumn({title: _('Path'), expand: true});
         column.pack_start(renderer, true);
         column.add_attribute(renderer, 'text', 0);
         this.profiles.append_column(column);
 
         renderer = new Gtk.CellRendererToggle();
         renderer.connect('toggled', Lang.bind(this, this.toggle_subfolders));
-        column = new Gtk.TreeViewColumn({title: 'Sub Folders', expand: false});
+        column = new Gtk.TreeViewColumn({title: _('Sub Folders'), expand: false});
         column.pack_start(renderer, false);
         column.add_attribute(renderer, 'active', 1);
         this.profiles.append_column(column);
 
         hbox = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL});
-        this.remove = new Gtk.Button({label: 'Remove'});
+        this.remove = new Gtk.Button({label: _('Remove')});
         this.remove.connect('clicked', Lang.bind(this, function () {
             let [bool, list, iter] = this.profiles.get_selection().get_selected();
             let path = list.get_path(iter);
@@ -422,20 +445,20 @@ const DeskChangerPrefs = new Lang.Class({
         hbox.pack_start(this.remove, false, true, 10);
         label = new Gtk.Label({label: ' '});
         hbox.pack_start(label, true, true, 0);
-        this.add = new Gtk.Button({label: 'Add Image'});
+        this.add = new Gtk.Button({label: _('Add Image')});
         this.add.connect('clicked', Lang.bind(this, function () {
-            this._add_item('Add Image', Gtk.FileChooserAction.OPEN);
+            this._add_item(_('Add Image'), Gtk.FileChooserAction.OPEN);
         }));
         hbox.pack_start(this.add, false, true, 10);
-        this.add = new Gtk.Button({label: 'Add Folder'});
+        this.add = new Gtk.Button({label: _('Add Folder')});
         this.add.connect('clicked', Lang.bind(this, function () {
-            this._add_item('Add Folder', Gtk.FileChooserAction.SELECT_FOLDER);
+            this._add_item(_('Add Folder'), Gtk.FileChooserAction.SELECT_FOLDER);
         }));
         hbox.pack_start(this.add, false, true, 10);
         profiles_box.pack_end(hbox, false, true, 10);
 
         profiles_box.pack_start(this.profiles, true, true, 10);
-        this.notebook.append_page(profiles_box, new Gtk.Label({label: 'Profiles'}));
+        this.notebook.append_page(profiles_box, new Gtk.Label({label: _('Profiles')}));
     },
 
     _add_item: function (title, action) {
@@ -536,6 +559,20 @@ const DeskChangerPrefs = new Lang.Class({
         profiles[this.profiles_combo_box.get_active_text()] = profile;
         this._settings.profiles = profiles;
         this.profiles_combo_box.do_changed();
+    },
+
+    _update_rotation: function () {
+        switch (this._settings.rotation) {
+            case 'interval':
+                this._rotation_combo_box.set_active(0);
+                break;
+            case 'hourly':
+                this._rotation_combo_box.set_active(1);
+                break;
+            default:
+                this._rotation_combo_box.set_active(2);
+                break;
+        }
     }
 });
 

@@ -20,15 +20,18 @@
  * THE SOFTWARE.
  */
 
+const Me = imports.misc.extensionUtils.getCurrentExtension();
 const Config = imports.misc.config;
+const Gettext = imports.gettext.domain(Me.metadata.uuid);
 const Gio = imports.gi.Gio;
 const Lang = imports.lang;
 const Main = imports.ui.main;
-const Me = imports.misc.extensionUtils.getCurrentExtension();
 const PanelMenu = imports.ui.panelMenu;
 const PopupMenu = imports.ui.popupMenu;
 const Util = imports.misc.util;
+const _ = Gettext.gettext;
 
+const Convenience = Me.imports.convenience;
 const DeskChangerDaemon = Me.imports.daemon.DeskChangerDaemon;
 const DeskChangerSettings = Me.imports.settings.DeskChangerSettings;
 const DeskChangerVersion = Me.metadata.version;
@@ -56,19 +59,20 @@ const DeskChangerIndicator = new Lang.Class({
             this.menu.addMenuItem(new Menu.DeskChangerProfileLockscreen(this.settings));
         }
         this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
-        this.menu.addMenuItem(new Menu.DeskChangerSwitch('Change with Profile', 'auto_rotate', this.settings));
-        this.menu.addMenuItem(new Menu.DeskChangerSwitch('Notifications', 'notifications', this.settings));
-        this.menu.addMenuItem(new Menu.DeskChangerSwitch('Remember Profile State', 'remember_profile_state', this.settings));
-        this.menu.addMenuItem(new Menu.DeskChangerSwitch('Update Lock Screen', 'update_lockscreen', this.settings));
+        this.menu.addMenuItem(new Menu.DeskChangerSwitch(_('Change with Profile'), 'auto_rotate', this.settings));
+        this.menu.addMenuItem(new Menu.DeskChangerSwitch(_('Notifications'), 'notifications', this.settings));
+        this.menu.addMenuItem(new Menu.DeskChangerSwitch(_('Remember Profile State'), 'remember_profile_state', this.settings));
+        this.menu.addMenuItem(new Menu.DeskChangerSwitch(_('Update Lock Screen'), 'update_lockscreen', this.settings));
         this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
         this.menu.addMenuItem(new Menu.DeskChangerPreviewMenuItem(this.daemon));
         this.menu.addMenuItem(new Menu.DeskChangerOpenCurrent());
         this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
+        this.menu.addMenuItem(new Menu.DeskChangerRotation(this.settings, true));
         this.menu.addMenuItem(new Menu.DeskChangerControls(this.daemon.bus, this.settings));
         this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
         this.menu.addMenuItem(new Menu.DeskChangerDaemonControls(this.daemon));
         // Simple settings for the extension
-        let settings = new PopupMenu.PopupMenuItem('DeskChanger Settings');
+        let settings = new PopupMenu.PopupMenuItem(_('DeskChanger Settings'));
         settings.connect('activate', function () {
             Util.spawn(['gnome-shell-extension-prefs', Me.metadata.uuid]);
         });
@@ -107,15 +111,16 @@ const DeskChangerSystemIndicator = new Lang.Class({
         this._menu.menu.addMenuItem(new Menu.DeskChangerProfileDesktop(this.settings, false));
         this._menu.menu.addMenuItem(new Menu.DeskChangerPreviewMenuItem(this.daemon));
         this._menu.menu.addMenuItem(new Menu.DeskChangerOpenCurrent());
+        this._menu.menu.addMenuItem(new Menu.DeskChangerRotation(this.settings, false));
         this._menu.menu.addMenuItem(new Menu.DeskChangerControls(this.daemon.bus, this.settings));
         this._menu.menu.addMenuItem(new Menu.DeskChangerDaemonControls(this.daemon));
         // Simple settings for the extension
-        let settings = new PopupMenu.PopupMenuItem('DeskChanger Settings');
+        let settings = new PopupMenu.PopupMenuItem(_('DeskChanger Settings'));
         settings.connect('activate', function () {
             Util.spawn(['gnome-shell-extension-prefs', Me.metadata.uuid]);
         });
         this._menu.menu.addMenuItem(settings);
-        let position = (parseInt(Config.PACKAGE_VERSION.split(".")[1]) < 18)? this._menu.menu.numMenuItems - 2 : this._menu.menu.numMenuItems - 1;
+        let position = (parseInt(Config.PACKAGE_VERSION.split(".")[1]) < 18) ? this._menu.menu.numMenuItems - 2 : this._menu.menu.numMenuItems - 1;
         menu.addMenuItem(this._menu, position);
         this._indicator = null;
         this.settings.connect('changed::icon-preview', Lang.bind(this, this._update_indicator));
@@ -132,7 +137,7 @@ const DeskChangerSystemIndicator = new Lang.Class({
         this.daemon.destroy();
     },
 
-    _update_indicator: function() {
+    _update_indicator: function () {
         if (this._indicator !== null) {
             this.indicators.remove_actor(this._indicator);
             this._indicator.destroy();
@@ -149,7 +154,7 @@ const DeskChangerSystemIndicator = new Lang.Class({
 });
 
 let daemon, indicator, settings, shellSettings;
-let changed_id, current_profile_id, error_id, notifications_id;
+let changed_id, current_profile_id, error_id, notifications_id, random_id, rotation_id;
 
 function disable() {
     debug('disabling extension');
@@ -174,17 +179,25 @@ function disable() {
         daemon.disconnectSignal(error_id);
     }
 
+    if (random_id) {
+        settings.disconnect(random_id);
+    }
+
+    if (rotation_id) {
+        settings.disconnect(rotation_id);
+    }
+
     changed_id = null;
     current_profile_id = null;
     error_id = null;
     notifications_id = null;
+    random_id = null;
+    rotation_id = null;
     indicator = null;
 
     if (shellSettings.get_strv('enabled-extensions').indexOf(Me.uuid) === -1 && daemon.is_running) {
         debug('Extension disabled, stopping daemon');
         daemon.toggle();
-    } else {
-        daemon.lockscreen = true;
     }
 }
 
@@ -193,26 +206,60 @@ function enable() {
 
     current_profile_id = settings.connect('changed::current-profile', function () {
         if (settings.notifications)
-            Main.notify('Desk Changer', 'Profile changed to ' + settings.current_profile);
+            Main.notify('Desk Changer', _('Profile changed to %s'.format(settings.current_profile)));
     });
 
     notifications_id = settings.connect('changed::notifications', function () {
-        Main.notify('Desk Changer', 'Notifications are now ' + ((settings.notifications) ? 'enabled' : 'disabled'));
+        Main.notify('Desk Changer', ((settings.notifications) ? _('Notifications are now enabled') : _('Notifications are now disabled')));
     });
 
     changed_id = daemon.connectSignal('changed', function (emitter, signalName, parameters) {
         if (settings.notifications)
-            Main.notify('Desk Changer', 'Wallpaper Changed: ' + parameters[0]);
+            Main.notify('Desk Changer', _('Wallpaper Changed: %s'.format(parameters[0])));
     });
 
     error_id = daemon.connectSignal('error', function (emitter, signalName, parameters) {
-        Main.notifyError('Desk Changer', 'Daemon Error: ' + parameters[0]);
+        Main.notifyError('Desk Changer', _('Daemon Error: %s'.format(parameters[0])));
+    });
+
+    random_id = settings.connect('changed::random', function () {
+        if (settings.notifications) {
+            let message;
+
+            if (settings.random) {
+                message = _('Wallpapers will be shown in a random order');
+            } else {
+                message = _('Wallpapers will be shown in the order the were loaded');
+            }
+
+            Main.notify('Desk Changer', message);
+        }
+    });
+
+    rotation_id = settings.connect('changed::rotation', function () {
+        if (settings.notifications) {
+            let message;
+            switch (settings.rotation) {
+                case 'interval':
+                    message = _('Rotation will occur every %d seconds'.format(settings.interval));
+                    break;
+                case 'hourly':
+                    message = _('Rotation will occur at the beginning of every hour');
+                    break;
+                default:
+                    message = _('Rotation has been disabled');
+                    break;
+            }
+
+            Main.notify('Desk Changer', message);
+        }
     });
 
     if (!daemon.is_running && settings.auto_start) {
         // run if auto start is enabled and its not already running
         daemon.toggle();
     } else if (daemon.is_running) {
+        // must set this here if the previews are to be set correctly, even though signal hits later
         daemon.lockscreen = false;
     }
 
@@ -226,10 +273,23 @@ function enable() {
 }
 
 function init() {
-    debug('initalizing extension version: ' + DeskChangerVersion);
+    Convenience.initTranslations();
+    debug('initalizing extension version: %s'.format(DeskChangerVersion));
     settings = new DeskChangerSettings();
     shellSettings = new Gio.Settings({'schema': 'org.gnome.shell'});
     daemon = new DeskChangerDaemon(settings);
+    daemon.lockscreen = Main.screenShield.locked;
+
+    Gio.DBus.session.connect('closed', function () {
+        if (daemon.is_running) {
+            daemon.toggle();
+        }
+    });
+
+    Main.screenShield.connect('locked-changed', function () {
+        // lockscreen mode toggle through signals
+        daemon.lockscreen = Main.screenShield.locked;
+    });
 
     settings.connect('changed::integrate-system-menu', function () {
         if (indicator !== null) {

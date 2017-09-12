@@ -20,18 +20,21 @@
  * THE SOFTWARE.
  */
 
+const Me = imports.misc.extensionUtils.getCurrentExtension();
+const Gettext = imports.gettext.domain(Me.metadata.uuid);
 const Gio = imports.gi.Gio;
 const Lang = imports.lang;
 const Main = imports.ui.main;
-const Me = imports.misc.extensionUtils.getCurrentExtension();
 const Meta = imports.gi.Meta;
 const PopupMenu = imports.ui.popupMenu;
 const Shell = imports.gi.Shell;
 const St = imports.gi.St;
 const Util = imports.misc.util;
+const _ = Gettext.gettext;
 
 const DeskChangerSettings = Me.imports.settings.DeskChangerSettings;
 const debug = Me.imports.utils.debug;
+const error = Me.imports.utils.error;
 const Ui = Me.imports.ui;
 
 const DeskChangerControls = new Lang.Class({
@@ -60,34 +63,17 @@ const DeskChangerControls = new Lang.Class({
             }
         ], Lang.bind(this, this._toggle_random));
         this._random.set_state((this._settings.random) ? 'random' : 'ordered');
-        this._rotation = new Ui.DeskChangerStateButton([
-            {
-                icon: 'media-playback-stop',
-                name: 'interval'
-            },
-            {
-                icon: 'media-playback-start',
-                name: 'disabled'
-            },
-            {
-                icon: 'appointment-new',
-                name: 'hourly'
-            }
-        ], Lang.bind(this, this._toggle_rotation));
-        this._rotation.set_state(this._settings.rotation);
 
         if (this.addActor) {
             this._box = new St.BoxLayout({style: 'spacing: 20px;'});
             this.addActor(this._box, {align: St.Align.MIDDLE, span: -1});
             this._box.add_actor(this._prev, {expand: true});
             this._box.add_actor(this._random, {expand: true});
-            this._box.add_actor(this._rotation, {expand: true});
             this._box.add_actor(this._next, {expand: true});
         } else {
-            this.actor.add_actor(this._prev, {expand: true, x_fill: false});
-            this.actor.add_actor(this._random, {expand: true, x_fill: false});
-            this.actor.add_actor(this._rotation, {expand: true, x_fill: false});
-            this.actor.add_actor(this._next, {expand: true, x_fill: false});
+            this.actor.add(this._prev, {expand: true, x_fill: false});
+            this.actor.add(this._random, {expand: true, x_fill: false});
+            this.actor.add(this._next, {expand: true, x_fill: false});
         }
     },
 
@@ -101,24 +87,23 @@ const DeskChangerControls = new Lang.Class({
         this._next.destroy();
         this._prev.destroy();
         this._random.destroy();
-        this._rotation.destroy();
         this.parent();
     },
 
     next: function () {
         debug('next');
-        this._dbus.NextRemote(function (result, error) {
-            if (error) {
-                Main.notifyError('Desk Changer', error);
+        this._dbus.NextRemote(function (result, _error) {
+            if (_error) {
+                Main.notifyError('Desk Changer', String(_error));
             }
         });
     },
 
     prev: function() {
         debug('prev');
-        this._dbus.PrevRemote(function (result, error) {
-            if (error) {
-                Main.notifyError('Desk Changer', 'Unable to go back any further, no history available');
+        this._dbus.PrevRemote(function (result, _error) {
+            if (_error) {
+                Main.notifyError('Desk Changer', String(_error));
             }
         });
     },
@@ -163,13 +148,8 @@ const DeskChangerControls = new Lang.Class({
 
     _toggle_random: function (state) {
         debug('setting order to ' + state);
-        this._settings.random = (state == 'random');
+        this._settings.random = (state === 'random');
     },
-
-    _toggle_rotation: function (state) {
-        debug('setting rotation to ' + state);
-        this._settings.rotation = state;
-    }
 });
 
 const DeskChangerDaemonControls = new Lang.Class({
@@ -177,7 +157,8 @@ const DeskChangerDaemonControls = new Lang.Class({
     Extends: PopupMenu.PopupSwitchMenuItem,
 
     _init: function (daemon) {
-        this.parent('DeskChanger Daemon');
+        // Switch label
+        this.parent(_('DeskChanger Daemon'));
         this.daemon = daemon;
         this.setToggleState(this.daemon.is_running);
         this._handler = this.connect('toggled', Lang.bind(this, function () {
@@ -204,7 +185,8 @@ const DeskChangerOpenCurrent = new Lang.Class({
 
     _init: function () {
         this._background = new Gio.Settings({'schema': 'org.gnome.desktop.background'});
-        this.parent('Open Current Wallpaper');
+        // Menu item label
+        this.parent(_('Open Current Wallpaper'));
         this._activate_id = this.connect('activate', Lang.bind(this, this._activate));
     },
 
@@ -232,8 +214,8 @@ const DeskChangerPreviewMenuItem = new Lang.Class({
         } catch (e) {
             this.actor.add_actor(this._box, {align: St.Align.MIDDLE, span: -1});
         }
-        this._label = new St.Label({text: "Open Next Wallpaper"});
-        this._box.add(this._label);
+        this._prefix = new St.Label({text: _('Open Next Wallpaper')});
+        this._box.add(this._prefix);
         this._preview = new Ui.DeskChangerPreview(220, daemon);
         this._box.add(this._preview);
         this._activate_id = this.connect('activate', Lang.bind(this, this._clicked));
@@ -244,7 +226,7 @@ const DeskChangerPreviewMenuItem = new Lang.Class({
         this.disconnect(this._activate_id);
 
         this._preview.destroy();
-        this._label.destroy();
+        this._prefix.destroy();
         this._box.destroy();
         this.parent();
     },
@@ -259,74 +241,29 @@ const DeskChangerPreviewMenuItem = new Lang.Class({
     }
 });
 
-const DeskChangerProfileBase = new Lang.Class({
+const DeskChangerPopupSubMenuMenuItem = new Lang.Class({
     Abstract: true,
-    Name: 'DeskChangerProfileBase',
+    Name: 'DeskChangerPopupSubMenuItem',
     Extends: PopupMenu.PopupSubMenuMenuItem,
 
-    _init: function (label, key, settings, sensitive = true) {
+    _init: function (prefix, key, settings, sensitive = true) {
         this._key = key;
-        this._keyNormalized = key.replace('_', '-');
-        this._label = label;
+        this._key_normalized = key.replace('_', '-');
+        this._prefix = prefix;
         this._settings = settings;
-        this.parent("");
+        this.parent('');
+        this._settings.connect('changed::'+this._key_normalized, Lang.bind(this, this.setLabel));
         this.setLabel();
-        this._populate_profiles();
-        this._settings.connect('changed::'+this._keyNormalized, Lang.bind(this, this.setLabel));
-        this._settings.connect('changed::profiles', Lang.bind(this, this._populate_profiles))
         this.setSensitive(sensitive);
     },
 
     setLabel: function () {
-        this.label.text = this._label + ' Profile: ' + this._settings[this._key];
-    },
-
-    _populate_profiles: function () {
-        this.menu.removeAll();
-        for (let index in this._settings.profiles) {
-            debug('adding menu: ' + index);
-            let item = new DeskChangerProfileItem(index, index, this._settings, this._key);
-            this.menu.addMenuItem(item);
-        }
+        this.label.text = this._prefix + ': ' + this._settings[this._key];
     }
 });
 
-const DeskChangerProfileDesktop = new Lang.Class({
-    Name: 'DeskChangerProfileDesktop',
-    Extends: DeskChangerProfileBase,
-
-    _init: function(settings, sensitive=true) {
-        this.parent('Desktop', 'current_profile', settings, sensitive);
-    },
-});
-
-const DeskChangerProfileLockscreen = new Lang.Class({
-    Name: 'DeskChangerProfileLockscreen',
-    Extends: DeskChangerProfileBase,
-
-    _init: function(settings, sensitive=true) {
-        this.parent('Lockscreen', 'lockscreen_profile', settings, sensitive);
-    },
-
-    setLabel: function () {
-        let value = this._settings[this._key];
-
-        if (value === "" || value === this._settings.current_profile) {
-            value = "(inherited)";
-        }
-
-        this.label.text = this._label + ' Profile: ' + value;
-    },
-
-    _populate_profiles: function () {
-        this.parent();
-        let inherit = new DeskChangerProfileItem('(inherit from desktop)', '', this._settings, this._key);
-        this.menu.addMenuItem(inherit);
-    }
-});
-
-const DeskChangerProfileItem = new Lang.Class({
-    Name: 'DeskChangerProfileItem',
+const DeskChangerPopupMenuItem = new Lang.Class({
+    Name: 'DeskChangerPopupMenuItem',
     Extends: PopupMenu.PopupMenuItem,
 
     _init: function (label, value, settings, key) {
@@ -356,6 +293,73 @@ const DeskChangerProfileItem = new Lang.Class({
         this._settings.disconnect(this._handler_key_changed);
         this.disconnect(this._handler_id);
         this.parent();
+    }
+});
+
+const DeskChangerProfileBase = new Lang.Class({
+    Abstract: true,
+    Name: 'DeskChangerProfileBase',
+    Extends: DeskChangerPopupSubMenuMenuItem,
+
+    _init: function (label, key, settings, sensitive = true) {
+        this.parent(label, key, settings, sensitive);
+        this._populate_profiles();
+        this._settings.connect('changed::profiles', Lang.bind(this, this._populate_profiles));
+    },
+
+    _populate_profiles: function () {
+        this.menu.removeAll();
+        for (let index in this._settings.profiles) {
+            debug('adding menu: ' + index);
+            let item = new DeskChangerPopupMenuItem(index, index, this._settings, this._key);
+            this.menu.addMenuItem(item);
+        }
+    }
+});
+
+const DeskChangerProfileDesktop = new Lang.Class({
+    Name: 'DeskChangerProfileDesktop',
+    Extends: DeskChangerProfileBase,
+
+    _init: function(settings, sensitive=true) {
+        this.parent(_('Desktop Profile'), 'current_profile', settings, sensitive);
+    },
+});
+
+const DeskChangerProfileLockscreen = new Lang.Class({
+    Name: 'DeskChangerProfileLockscreen',
+    Extends: DeskChangerProfileBase,
+
+    _init: function(settings, sensitive=true) {
+        this.parent(_('Lock Screen Profile'), 'lockscreen_profile', settings, sensitive);
+    },
+
+    setLabel: function () {
+        let value = this._settings[this._key];
+
+        if (value === '' || value === this._settings.current_profile) {
+            value = _('(inherited)');
+        }
+
+        this.label.text = _('Lock Screen Profile') + value;
+    },
+
+    _populate_profiles: function () {
+        this.parent();
+        let inherit = new DeskChangerPopupMenuItem(_('(inherit from desktop)'), '', this._settings, this._key);
+        this.menu.addMenuItem(inherit);
+    }
+});
+
+const DeskChangerRotation = new Lang.Class({
+    Name: 'DeskChangerRotation',
+    Extends: DeskChangerPopupSubMenuMenuItem,
+
+    _init: function (settings, sensitive) {
+        this.parent(_('Rotation Mode'), 'rotation', settings, sensitive);
+        this.menu.addMenuItem(new DeskChangerPopupMenuItem('Interval Timer', 'interval', settings, 'rotation'));
+        this.menu.addMenuItem(new DeskChangerPopupMenuItem('Beginning of Hour', 'hourly', settings, 'rotation'));
+        this.menu.addMenuItem(new DeskChangerPopupMenuItem('Disabled', 'disabled', settings, 'rotation'));
     }
 });
 

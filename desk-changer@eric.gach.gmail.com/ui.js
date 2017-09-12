@@ -20,16 +20,19 @@
  * THE SOFTWARE.
  */
 
+const Me = imports.misc.extensionUtils.getCurrentExtension();
 const Clutter = imports.gi.Clutter;
 const Cogl = imports.gi.Cogl;
+const Gettext = imports.gettext.domain(Me.metadata.uuid);
 const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
 const GdkPixbuf = imports.gi.GdkPixbuf;
 const Lang = imports.lang;
-const Me = imports.misc.extensionUtils.getCurrentExtension();
 const St = imports.gi.St;
+const _ = Gettext.gettext;
 
 const debug = Me.imports.utils.debug;
+const error = Me.imports.utils.error;
 
 const DeskChangerButton = new Lang.Class({
     Name: 'DeskChangerButton',
@@ -45,7 +48,7 @@ const DeskChangerButton = new Lang.Class({
     },
 
     destroy: function () {
-        debug('removing button clicked handler ' + this._handler);
+        debug('removing button clicked handler %s'.format(this._handler));
         this.disconnect(this._handler);
         this.icon.destroy();
         this.parent();
@@ -151,6 +154,13 @@ const DeskChangerPreview = new Lang.Class({
             let file = parameters[0];
             this.set_wallpaper(file);
         }));
+        this._toggled_id = this.daemon.connect('toggled', Lang.bind(this, function () {
+            if (!this.daemon.is_running && this._texture) {
+                debug('clearing preview, daemon stopped');
+                this._texture.destroy();
+                this._texture = null;
+            }
+        }));
 
         if (this.daemon.bus.queue && this.daemon.bus.queue.length > 0) {
             this.set_wallpaper(this.daemon.bus.queue[0], false);
@@ -175,7 +185,7 @@ const DeskChangerPreview = new Lang.Class({
 
         this._file = file = GLib.uri_unescape_string(file, null);
         file = file.replace('file://', '');
-        debug('setting preview to ' + file);
+        debug('setting preview to %s'.format(file));
         try{
             let pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale(file, this._width, -1, true);
             let height = Math.round(pixbuf.get_height() / (pixbuf.get_width() / this._width));
@@ -191,7 +201,7 @@ const DeskChangerPreview = new Lang.Class({
             this._texture.set_content(image);
             this.add_actor(this._texture);
         } catch (e) {
-            debug('ERROR: Failed to set preview of ' + file + ': ' + e);
+            error(e, 'Failed to set preview of %s'.format(file));
             if (this._texture) {
                 this._texture.destroy();
                 this._texture = null;
