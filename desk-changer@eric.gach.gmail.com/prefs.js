@@ -55,6 +55,7 @@ const DeskChangerPrefs = new Lang.Class({
         this._initExtension();
         this._initDaemon();
         this._load_profiles();
+        this._update_rotation();
         this.box.pack_start(this.notebook, true, true, 0);
         this.box.show_all();
         this._is_init = false;
@@ -71,8 +72,27 @@ const DeskChangerPrefs = new Lang.Class({
 
     _initDaemon: function () {
         let daemon_box = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL});
+        // Rotation Mode
         let box = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL});
-        let label = new Gtk.Label({label: _('DeskChanger Daemon Status')});
+        let label = new Gtk.Label({label: 'DeskChanger Rotation Mode'});
+        box.pack_start(label, false, false, 5);
+        label = new Gtk.Label({label: ' '});
+        box.pack_start(label, true, true, 5);
+        this._rotation_combo_box = new Gtk.ComboBoxText();
+        box.pack_start(this._rotation_combo_box, false, false, 5);
+        this._rotation_combo_box.insert_text(0, 'interval');
+        this._rotation_combo_box.insert_text(1, 'hourly');
+        this._rotation_combo_box.insert_text(2, 'disabled');
+        this._rotation_combo_box.connect('changed', Lang.bind(this, function (object) {
+            this._settings.rotation = object.get_active_text();
+        }));
+        this._settings.connect('changed::rotation', Lang.bind(this, function () {
+            this._update_rotation();
+        }));
+        daemon_box.pack_start(box, false, false, 10);
+        // Daemon Status
+        box = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL});
+        label = new Gtk.Label({label: _('DeskChanger Daemon Status')});
         box.pack_start(label, false, false, 5);
         label = new Gtk.Label({label: ' '});
         box.pack_start(label, true, true, 5);
@@ -539,6 +559,20 @@ const DeskChangerPrefs = new Lang.Class({
         profiles[this.profiles_combo_box.get_active_text()] = profile;
         this._settings.profiles = profiles;
         this.profiles_combo_box.do_changed();
+    },
+
+    _update_rotation: function () {
+        switch (this._settings.rotation) {
+            case 'interval':
+                this._rotation_combo_box.set_active(0);
+                break;
+            case 'hourly':
+                this._rotation_combo_box.set_active(1);
+                break;
+            default:
+                this._rotation_combo_box.set_active(2);
+                break;
+        }
     }
 });
 
