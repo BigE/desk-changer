@@ -257,7 +257,7 @@ class DesktopProfile(BaseProfile):
         super(DesktopProfile, self).__init__(name)
         if self._settings.get_boolean('update-lockscreen') and \
                         len(self._settings.get_string('lockscreen-profile')) == 0:
-            self._lockscreen = Gio.Settings.new('org.gnome.desktop.screensaver.background')
+            self._lockscreen = Gio.Settings.new('org.gnome.desktop.screensaver')
         self._settings.connect('changed::update-lockscreen', self._update_lockscreen)
         self._settings.connect('changed::lockscreen-profile', self._update_lockscreen)
 
@@ -309,21 +309,20 @@ class DesktopProfile(BaseProfile):
             self._lockscreen.set_string('picture-uri', wallpaper)
         self.emit('changed', wallpaper)
 
-    def _update_lockscreen(self):
+    def _update_lockscreen(self, obj, key):
         update = self._settings.get_boolean('update-lockscreen')
         profile = self._settings.get_string('lockscreen-profile')
         if not update or (update and profile is not '') and self._lockscreen is not None:
             logger.debug('destroying lockscreen settings from %s', self)
-            self._lockscreen.destroy()
             self._lockscreen = None
         elif update and profile is '' and self._lockscreen is None:
             logger.debug('creating lockscreen settings for %s', self)
-            self._lockscreen = Gio.Settings.new('org.gnome.desktop.screensaver.background')
+            self._lockscreen = Gio.Settings.new('org.gnome.desktop.screensaver')
 
 
 class LockscreenProfile(BaseProfile):
     def __init__(self, name):
-        self._background = Gio.Settings.new('org.gnome.desktop.screensaver.background')
+        self._background = Gio.Settings.new('org.gnome.desktop.screensaver')
         super(LockscreenProfile, self).__init__(name)
 
     def destroy(self):
