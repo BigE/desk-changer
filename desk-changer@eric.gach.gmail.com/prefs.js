@@ -22,7 +22,7 @@
 
 const Me = imports.misc.extensionUtils.getCurrentExtension();
 const Gdk = imports.gi.Gdk;
-const Gettext = imports.gettext.domain(Me.metadata.uuid);
+const Gettext = imports.gettext.domain('desk-changer');
 const Gio = imports.gi.Gio;
 const GObject = imports.gi.GObject;
 const Gtk = imports.gi.Gtk;
