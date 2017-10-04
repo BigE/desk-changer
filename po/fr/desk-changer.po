@@ -1,0 +1,216 @@
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+#
+# Jean-Baptiste Holcroft <jean-baptiste@holcroft.fr>, 2017.
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2017-08-27 02:43-0500\n"
+"PO-Revision-Date: 2017-09-18 15:28+0100\n"
+"Last-Translator: Jean-Baptiste Holcroft <jean-baptiste@holcroft.fr>\n"
+"Language-Team: French <traduc@traduc.org>\n"
+"Language: fr_FR\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"X-Generator: Lokalize 2.0\n"
+
+#: extension.js:62
+msgid "Change with Profile"
+msgstr "Changer avec le profil"
+
+#: extension.js:63
+msgid "Notifications"
+msgstr "Notifications"
+
+#: extension.js:64
+msgid "Remember Profile State"
+msgstr "Retirer l’état du profil"
+
+#: extension.js:65
+msgid "Update Lock Screen"
+msgstr "Actualiser l’écran de verrouillage"
+
+#: extension.js:74 extension.js:116
+msgid "DeskChanger Settings"
+msgstr "Paramètres de DeskChanger"
+
+#: extension.js:197
+#, javascript-format
+msgid "Profile changed to %s"
+msgstr "Profil changé pour %s"
+
+#: extension.js:201
+msgid "Notifications are now enabled"
+msgstr "Les notifications sont maintenant activées"
+
+#: extension.js:201
+msgid "Notifications are now disabled"
+msgstr "Les notifications sont maintenant désactivées"
+
+#: extension.js:206
+#, javascript-format
+msgid "Wallpaper Changed: %s"
+msgstr "Fond d’écran changé : %s"
+
+#: extension.js:210
+#, javascript-format
+msgid "Daemon Error: %s"
+msgstr "Erreur du démon : %s"
+
+#: menu.js:184
+msgid "DeskChanger Daemon"
+msgstr "Démon DeskChanger"
+
+#: menu.js:212
+msgid "Open Current Wallpaper"
+msgstr "Ouvrir le fond d’écran courant"
+
+#: menu.js:240
+msgid "Open Next Wallpaper"
+msgstr "Ouvrir le fond d’écran suivant"
+
+#: menu.js:304 prefs.js:150
+msgid "Desktop Profile"
+msgstr "Profil de bureau"
+
+#: menu.js:313 menu.js:323
+msgid "Lock Screen Profile"
+msgstr "Profil de verrouillage d’écran"
+
+#: menu.js:320
+msgid "(inherited)"
+msgstr "(hérité)"
+
+#: menu.js:328
+msgid "(inherit from desktop)"
+msgstr "(hérité du bureau)"
+
+#: prefs.js:75
+msgid "DeskChanger Daemon Status"
+msgstr "Statut du démon DeskChanger"
+
+#: prefs.js:94
+msgid "DeskChanger Autostart Daemon"
+msgstr "Démarrage automatique du démon DeskChanger"
+
+#: prefs.js:107
+msgid "Remember the profiles current/next wallpaper"
+msgstr "Retenir les profils actuel/prochain fond d’écran"
+
+#: prefs.js:120
+msgid "Wallpaper Timer Interval (seconds)"
+msgstr "Interval du timer du fond d’écran (secondes)"
+
+#: prefs.js:142
+msgid "Daemon"
+msgstr "Démon"
+
+#: prefs.js:147 prefs.js:323
+msgid "Profile"
+msgstr "Profil"
+
+#: prefs.js:163
+msgid "Update LockScreen Background"
+msgstr "Mettre à jour le fond de LockScreen"
+
+#: prefs.js:175
+msgid "Lockscreen Profile"
+msgstr "Profil du LockScreen"
+
+#: prefs.js:196
+msgid "Show Preview as Icon"
+msgstr "Montrer la prévisualisation en icône"
+
+#: prefs.js:208
+msgid "Show Notifications"
+msgstr "Montrer les notifications"
+
+#: prefs.js:221
+msgid "Integrate extension in system menu"
+msgstr "Intégrer l’extension dans le menu système"
+
+#: prefs.js:249
+msgid "Next Wallpaper"
+msgstr "Prochain fond d’écran"
+
+#: prefs.js:252
+msgid "Previous Wallpaper"
+msgstr "Précédent fond d’écran"
+
+#: prefs.js:263
+msgid "Action"
+msgstr "Action"
+
+#: prefs.js:277
+#, javascript-format
+msgid "The keybinding %s is already in use"
+msgstr "Le raccourci %s est déjà utilisé"
+
+#: prefs.js:287 prefs.js:299
+msgid "Failed to update keybinding"
+msgstr "Échec de la mise à jour du raccourci"
+
+#: prefs.js:307
+msgid "Modify"
+msgstr "Modifier"
+
+#: prefs.js:315
+msgid "Keyboard Shortcuts"
+msgstr "Raccourcis clavier"
+
+#: prefs.js:340
+msgid "Add"
+msgstr "Ajouter"
+
+#: prefs.js:347
+msgid "Profile Name"
+msgstr "Nom du profil"
+
+#: prefs.js:353
+msgid "OK"
+msgstr "OK"
+
+#: prefs.js:354
+msgid "Cancel"
+msgstr "Annuler"
+
+#: prefs.js:365 prefs.js:411
+msgid "Remove"
+msgstr "Retirer"
+
+#: prefs.js:371
+#, javascript-format
+msgid "Are you sure you want to delete the profile \"%s\"?"
+msgstr "Voulez-vous vraiment supprimer le profil « %s » ?"
+
+#: prefs.js:374
+msgid "Yes"
+msgstr "Oui"
+
+#: prefs.js:375
+msgid "No"
+msgstr "Non"
+
+#: prefs.js:398
+msgid "Path"
+msgstr "Chemin"
+
+#: prefs.js:405
+msgid "Sub Folders"
+msgstr "Sous-dossiers"
+
+#: prefs.js:428 prefs.js:430
+msgid "Add Image"
+msgstr "Ajouter une image"
+
+#: prefs.js:433 prefs.js:435
+msgid "Add Folder"
+msgstr "Ajouter un dossier"
+
+#: prefs.js:441
+msgid "Profiles"
+msgstr "Profiles"
+
