@@ -22,7 +22,7 @@
 
 const Me = imports.misc.extensionUtils.getCurrentExtension();
 const Config = imports.misc.config;
-const Gettext = imports.gettext.domain(Me.metadata.uuid);
+const Gettext = imports.gettext.domain('desk-changer');
 const Gio = imports.gi.Gio;
 const Lang = imports.lang;
 const Main = imports.ui.main;
