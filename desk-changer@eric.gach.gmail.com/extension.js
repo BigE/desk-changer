@@ -62,7 +62,11 @@ const DeskChangerIndicator = new Lang.Class({
         this.menu.addMenuItem(new Menu.DeskChangerSwitch(_('Change with Profile'), 'auto_rotate', this.settings));
         this.menu.addMenuItem(new Menu.DeskChangerSwitch(_('Notifications'), 'notifications', this.settings));
         this.menu.addMenuItem(new Menu.DeskChangerSwitch(_('Remember Profile State'), 'remember_profile_state', this.settings));
-        this.menu.addMenuItem(new Menu.DeskChangerSwitch(_('Update Lock Screen'), 'update_lockscreen', this.settings));
+
+        if (Main.screenShield !== null) {
+            this.menu.addMenuItem(new Menu.DeskChangerSwitch(_('Update Lock Screen'), 'update_lockscreen', this.settings));
+        }
+
         this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
         this.menu.addMenuItem(new Menu.DeskChangerPreviewMenuItem(this.daemon));
         this.menu.addMenuItem(new Menu.DeskChangerOpenCurrent());
@@ -278,17 +282,18 @@ function init() {
     settings = new DeskChangerSettings();
     shellSettings = new Gio.Settings({'schema': 'org.gnome.shell'});
     daemon = new DeskChangerDaemon(settings);
-    daemon.lockscreen = Main.screenShield.locked;
+    if (Main.screenShield !== null) {
+        daemon.lockscreen = Main.screenShield.locked;
+        Main.screenShield.connect('locked-changed', function () {
+            // lockscreen mode toggle through signals
+            daemon.lockscreen = Main.screenShield.locked;
+        });
+    }
 
     Gio.DBus.session.connect('closed', function () {
         if (daemon.is_running) {
             daemon.toggle();
         }
-    });
-
-    Main.screenShield.connect('locked-changed', function () {
-        // lockscreen mode toggle through signals
-        daemon.lockscreen = Main.screenShield.locked;
     });
 
     settings.connect('changed::integrate-system-menu', function () {
