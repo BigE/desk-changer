@@ -179,37 +179,40 @@ const DeskChangerPrefs = new Lang.Class({
         }));
         box.pack_start(this._currentProfile, false, false, 5);
         frame_box.pack_start(box, false, false, 10);
-        box = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL});
-        label = new Gtk.Label({label: _('Update LockScreen Background')});
-        box.pack_start(label, false, false, 5);
-        label = new Gtk.Label({label: ' '});
-        box.pack_start(label, true, true, 5);
-        this._updateLockscreen = new Gtk.Switch();
-        this._updateLockscreen.set_active(this._settings.update_lockscreen);
-        this._updateLockscreen.connect('notify::active', Lang.bind(this, function () {
-            this._settings.update_lockscreen = this._updateLockscreen.get_state();
-        }));
-        box.pack_end(this._updateLockscreen, false, false, 5);
-        frame_box.pack_start(box, false, false, 10);
-        box = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL});
-        label = new Gtk.Label({label: _('Lockscreen Profile')});
-        box.pack_start(label, false, false, 5);
-        label = new Gtk.Label({label: ' '});
-        box.pack_start(label, true, true, 5);
-        this._lockscreenProfile = new Gtk.ComboBoxText();
-        this._lockscreenProfile.connect('key-press-event', Lang.bind(this, function (widget, event) {
-            let keyval = event.get_keyval();
-            if (keyval[0] && keyval[1] === Gdk.KEY_BackSpace) {
-                this._lockscreenProfile.set_active(-1);
-            }
-        }));
-        this._lockscreenProfile.connect('changed', Lang.bind(this, function (object) {
-            if (!this._is_init) {
-                this._settings.lockscreen_profile = object.get_active_text();
-            }
-        }));
-        box.pack_start(this._lockscreenProfile, false, false, 5);
-        frame_box.pack_start(box, false, false, 10);
+        // TODO: can't use Main... leaving this for now
+        // if (Main.screenShield) {
+            box = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL});
+            label = new Gtk.Label({label: _('Update LockScreen Background')});
+            box.pack_start(label, false, false, 5);
+            label = new Gtk.Label({label: ' '});
+            box.pack_start(label, true, true, 5);
+            this._updateLockscreen = new Gtk.Switch();
+            this._updateLockscreen.set_active(this._settings.update_lockscreen);
+            this._updateLockscreen.connect('notify::active', Lang.bind(this, function () {
+                this._settings.update_lockscreen = this._updateLockscreen.get_state();
+            }));
+            box.pack_end(this._updateLockscreen, false, false, 5);
+            frame_box.pack_start(box, false, false, 10);
+            box = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL});
+            label = new Gtk.Label({label: _('Lockscreen Profile')});
+            box.pack_start(label, false, false, 5);
+            label = new Gtk.Label({label: ' '});
+            box.pack_start(label, true, true, 5);
+            this._lockscreenProfile = new Gtk.ComboBoxText();
+            this._lockscreenProfile.connect('key-press-event', Lang.bind(this, function (widget, event) {
+                let keyval = event.get_keyval();
+                if (keyval[0] && keyval[1] === Gdk.KEY_BackSpace) {
+                    this._lockscreenProfile.set_active(-1);
+                }
+            }));
+            this._lockscreenProfile.connect('changed', Lang.bind(this, function (object) {
+                if (!this._is_init) {
+                    this._settings.lockscreen_profile = object.get_active_text();
+                }
+            }));
+            box.pack_start(this._lockscreenProfile, false, false, 5);
+            frame_box.pack_start(box, false, false, 10);
+        // }
         frame.add(frame_box);
         extension_box.pack_start(frame, false, false, 10);
         box = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL});
