@@ -141,7 +141,7 @@ const DeskChangerPreview = new Lang.Class({
     Name: 'DeskChangerPreview',
     Extends: St.Bin,
 
-    _init: function (width, daemon, callback) {
+    _init: function (height, daemon, callback) {
         this.parent({
             x_align: St.Align.MIDDLE
         });
@@ -149,7 +149,7 @@ const DeskChangerPreview = new Lang.Class({
         this._callback = callback;
         this.daemon = daemon;
         this._texture = null;
-        this._width = width;
+        this._height = height;
         this._next_file_id = this.daemon.connectSignal('preview', Lang.bind(this, function (proxy, signalName, parameters) {
             let file = parameters[0];
             this.set_wallpaper(file);
@@ -187,17 +187,17 @@ const DeskChangerPreview = new Lang.Class({
         file = file.replace('file://', '');
         debug('setting preview to %s'.format(file));
         try{
-            let pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale(file, this._width, -1, true);
-            let height = Math.round(pixbuf.get_height() / (pixbuf.get_width() / this._width));
+            let pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale(file, -1, this._height, true);
+			let width = Math.round(pixbuf.get_width() / (pixbuf.get_height() / this._height));
             let image = new Clutter.Image();
             image.set_data(
                 pixbuf.get_pixels(),
                 (pixbuf.get_has_alpha()? Cogl.PixelFormat.RGBA_8888 : Cogl.PixelFormat.RGB_888),
-                this._width,
-                height,
+                width,
+                this._height,
                 pixbuf.get_rowstride()
             );
-            this._texture = new Clutter.Actor({height: height, width: this._width});
+            this._texture = new Clutter.Actor({height: this._height, width: width});
             this._texture.set_content(image);
             this.add_actor(this._texture);
         } catch (e) {
