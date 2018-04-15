@@ -159,6 +159,26 @@ const DeskChangerPrefs = new Lang.Class({
         }));
         box.pack_end(button, false, false, 5);
         daemon_box.pack_start(box, false, false, 5);
+        // Allowed Mime Types
+        box = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL});
+        label = new Gtk.Label({label: _('Allowed Mime Types')});
+        box.pack_start(label, false, true, 5);
+        label = new Gtk.Label({label: ' '});
+        box.pack_start(label, true, true, 5);
+        this._allowed_mime_types = new Gtk.TextBuffer({text: this._settings.allowed_mime_types.join("\n")});
+        let textview = new Gtk.TextView({
+            buffer: this._allowed_mime_types,
+            justification: Gtk.Justification.RIGHT,
+        });
+        box.pack_end(textview, false, true, 5);
+        daemon_box.pack_start(box, false, false, 5);
+        box = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL});
+        button = new Gtk.Button({label: 'Save'});
+        button.connect('clicked', Lang.bind(this, function () {
+            this._settings.allowed_mime_types = this._allowed_mime_types.text.split("\n");
+        }));
+        box.pack_end(button, false, true, 5);
+        daemon_box.pack_start(box, false, false, 5);
         this.notebook.append_page(daemon_box, new Gtk.Label({label: _('Daemon')}));
     },
 

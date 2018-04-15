@@ -38,6 +38,16 @@ var DeskChangerSettings = new Lang.Class({
         this._handlers = [];
     },
 
+    get allowed_mime_types()
+    {
+        return this.schema.get_value('allowed-mime-types').deep_unpack();
+    },
+
+    set allowed_mime_types(value)
+    {
+        this.schema.set_value('allowed-mime-types', new GLib.Variant('as', value));
+    },
+
     get auto_rotate() {
         return this.schema.get_boolean('auto-rotate');
     },

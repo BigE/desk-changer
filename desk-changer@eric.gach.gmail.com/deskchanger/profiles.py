@@ -211,7 +211,7 @@ class BaseProfile(GObject.GObject):
             self._monitors.append(monitor)
             logger.debug('descending into %s to find wallpapers', location.get_uri())
             self._load_children(location, recursive)
-        elif info.get_file_type() == Gio.FileType.REGULAR and info.get_content_type() in ACCEPTED:
+        elif info.get_file_type() == Gio.FileType.REGULAR and info.get_content_type() in self._settings.get_value('allowed-mime-types'):
             logger.debug('adding wallpaper %s', location.get_uri())
             if location.get_uri() in self._wallpapers:
                 logger.warning('%s already loaded, skipping duplicate', location.get_uri())
