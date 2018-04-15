@@ -55,7 +55,6 @@ const DeskChangerPrefs = new Lang.Class({
         this._initExtension();
         this._initDaemon();
         this._load_profiles();
-        this._update_rotation();
         this.box.pack_start(this.notebook, true, true, 0);
         this.box.show_all();
         this._is_init = false;
@@ -83,6 +82,7 @@ const DeskChangerPrefs = new Lang.Class({
         this._rotation_combo_box.insert_text(0, 'interval');
         this._rotation_combo_box.insert_text(1, 'hourly');
         this._rotation_combo_box.insert_text(2, 'disabled');
+        this._update_rotation();
         this._rotation_combo_box.connect('changed', Lang.bind(this, function (object) {
             this._settings.rotation = object.get_active_text();
         }));
@@ -158,6 +158,26 @@ const DeskChangerPrefs = new Lang.Class({
             this._settings.interval = this._interval.get_value();
         }));
         box.pack_end(button, false, false, 5);
+        daemon_box.pack_start(box, false, false, 5);
+        // Allowed Mime Types
+        box = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL});
+        label = new Gtk.Label({label: _('Allowed Mime Types')});
+        box.pack_start(label, false, true, 5);
+        label = new Gtk.Label({label: ' '});
+        box.pack_start(label, true, true, 5);
+        this._allowed_mime_types = new Gtk.TextBuffer({text: this._settings.allowed_mime_types.join("\n")});
+        let textview = new Gtk.TextView({
+            buffer: this._allowed_mime_types,
+            justification: Gtk.Justification.RIGHT,
+        });
+        box.pack_end(textview, false, true, 5);
+        daemon_box.pack_start(box, false, false, 5);
+        box = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL});
+        button = new Gtk.Button({label: 'Save'});
+        button.connect('clicked', Lang.bind(this, function () {
+            this._settings.allowed_mime_types = this._allowed_mime_types.text.split("\n");
+        }));
+        box.pack_end(button, false, true, 5);
         daemon_box.pack_start(box, false, false, 5);
         this.notebook.append_page(daemon_box, new Gtk.Label({label: _('Daemon')}));
     },

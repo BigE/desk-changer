@@ -24,7 +24,7 @@ const GLib = imports.gi.GLib;
 const Lang = imports.lang;
 const Me = imports.misc.extensionUtils.getCurrentExtension();
 
-const DeskChangerSettings = new Lang.Class({
+var DeskChangerSettings = new Lang.Class({
     Name: 'DeskChangerSettings',
 
     _init: function () {
@@ -36,6 +36,16 @@ const DeskChangerSettings = new Lang.Class({
 
         this.schema = new Gio.Settings({settings_schema: source.lookup('org.gnome.shell.extensions.desk-changer', false)});
         this._handlers = [];
+    },
+
+    get allowed_mime_types()
+    {
+        return this.schema.get_value('allowed-mime-types').deep_unpack();
+    },
+
+    set allowed_mime_types(value)
+    {
+        this.schema.set_value('allowed-mime-types', new GLib.Variant('as', value));
     },
 
     get auto_rotate() {

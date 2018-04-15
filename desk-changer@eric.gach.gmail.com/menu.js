@@ -37,7 +37,7 @@ const debug = Me.imports.utils.debug;
 const error = Me.imports.utils.error;
 const Ui = Me.imports.ui;
 
-const DeskChangerControls = new Lang.Class({
+var DeskChangerControls = new Lang.Class({
     Name: 'DeskChangerControls',
     Extends: PopupMenu.PopupBaseMenuItem,
 
@@ -152,7 +152,7 @@ const DeskChangerControls = new Lang.Class({
     },
 });
 
-const DeskChangerDaemonControls = new Lang.Class({
+var DeskChangerDaemonControls = new Lang.Class({
     Name: 'DeskChangerDaemonControls',
     Extends: PopupMenu.PopupSwitchMenuItem,
 
@@ -179,7 +179,7 @@ const DeskChangerDaemonControls = new Lang.Class({
     }
 });
 
-const DeskChangerOpenCurrent = new Lang.Class({
+var DeskChangerOpenCurrent = new Lang.Class({
     Name: 'DeskChangerOpenCurrent',
     Extends: PopupMenu.PopupMenuItem,
 
@@ -202,7 +202,7 @@ const DeskChangerOpenCurrent = new Lang.Class({
     }
 });
 
-const DeskChangerPreviewMenuItem = new Lang.Class({
+var DeskChangerPreviewMenuItem = new Lang.Class({
     Name: 'DeskChangerPreviewMenuItem',
     Extends: PopupMenu.PopupBaseMenuItem,
 
@@ -212,7 +212,7 @@ const DeskChangerPreviewMenuItem = new Lang.Class({
         try {
             this.addActor(this._box, {align: St.Align.MIDDLE, span: -1});
         } catch (e) {
-            this.actor.add_actor(this._box, {align: St.Align.MIDDLE, span: -1});
+            this.actor.add_actor(this._box);
         }
         this._prefix = new St.Label({text: _('Open Next Wallpaper')});
         this._box.add(this._prefix);
@@ -241,7 +241,7 @@ const DeskChangerPreviewMenuItem = new Lang.Class({
     }
 });
 
-const DeskChangerPopupSubMenuMenuItem = new Lang.Class({
+var DeskChangerPopupSubMenuMenuItem = new Lang.Class({
     Abstract: true,
     Name: 'DeskChangerPopupSubMenuItem',
     Extends: PopupMenu.PopupSubMenuMenuItem,
@@ -262,7 +262,7 @@ const DeskChangerPopupSubMenuMenuItem = new Lang.Class({
     }
 });
 
-const DeskChangerPopupMenuItem = new Lang.Class({
+var DeskChangerPopupMenuItem = new Lang.Class({
     Name: 'DeskChangerPopupMenuItem',
     Extends: PopupMenu.PopupMenuItem,
 
@@ -296,7 +296,7 @@ const DeskChangerPopupMenuItem = new Lang.Class({
     }
 });
 
-const DeskChangerProfileBase = new Lang.Class({
+var DeskChangerProfileBase = new Lang.Class({
     Abstract: true,
     Name: 'DeskChangerProfileBase',
     Extends: DeskChangerPopupSubMenuMenuItem,
@@ -317,7 +317,7 @@ const DeskChangerProfileBase = new Lang.Class({
     }
 });
 
-const DeskChangerProfileDesktop = new Lang.Class({
+var DeskChangerProfileDesktop = new Lang.Class({
     Name: 'DeskChangerProfileDesktop',
     Extends: DeskChangerProfileBase,
 
@@ -326,7 +326,7 @@ const DeskChangerProfileDesktop = new Lang.Class({
     },
 });
 
-const DeskChangerProfileLockscreen = new Lang.Class({
+var DeskChangerProfileLockscreen = new Lang.Class({
     Name: 'DeskChangerProfileLockscreen',
     Extends: DeskChangerProfileBase,
 
@@ -341,7 +341,7 @@ const DeskChangerProfileLockscreen = new Lang.Class({
             value = _('(inherited)');
         }
 
-        this.label.text = _('Lock Screen Profile') + value;
+        this.label.text = _('Lock Screen Profile') + ': ' + value;
     },
 
     _populate_profiles: function () {
@@ -351,7 +351,7 @@ const DeskChangerProfileLockscreen = new Lang.Class({
     }
 });
 
-const DeskChangerRotation = new Lang.Class({
+var DeskChangerRotation = new Lang.Class({
     Name: 'DeskChangerRotation',
     Extends: DeskChangerPopupSubMenuMenuItem,
 
@@ -363,7 +363,7 @@ const DeskChangerRotation = new Lang.Class({
     }
 });
 
-const DeskChangerSwitch = new Lang.Class({
+var DeskChangerSwitch = new Lang.Class({
     Name: 'DeskChangerSwitch',
     Extends: PopupMenu.PopupSwitchMenuItem,
 

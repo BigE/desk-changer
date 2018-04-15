@@ -4,7 +4,6 @@ from hashlib import sha256
 import random
 from . import logger
 
-ACCEPTED = ['application/xml', 'image/jpeg', 'image/png']
 MAX_QUEUE_LENGTH = 100
 
 
@@ -35,6 +34,7 @@ class BaseProfile(GObject.GObject):
         self._wallpapers = []
         self._settings = Gio.Settings.new('org.gnome.shell.extensions.desk-changer')
         self._handler_profiles = self._settings.connect('changed::profiles', self._changed_profile)
+        self._handler_mime_types = self._settings.connect('changed::allowed-mime-types', self._changed_profile)
         self._handler_random = self._settings.connect('changed::random', self._changed_random)
         logger.debug('successfully created %s', self)
 
@@ -47,6 +47,7 @@ class BaseProfile(GObject.GObject):
         """
         self._remove_monitors()
         self._settings.disconnect(self._handler_profiles)
+        self._settings.disconnect(self._handler_mime_types)
         self._settings.disconnect(self._handler_random)
         del self._settings
 
@@ -120,9 +121,11 @@ class BaseProfile(GObject.GObject):
         logger.info('saving state of %s is disabled while type %s', self.name, self)
 
     def _changed_profile(self, obj, key):
-        if self._hash == sha256(str(self._settings.get_value(key).unpack().get(self.name)).encode('utf-8')):
+        if key == 'current-profile' and self._hash == sha256(str(self._settings.get_value('current-profile').unpack().get(self.name)).encode('utf-8')):
             logger.info('not reloading profile, hashes match')
             return
+        elif key == 'allowed-mime-types':
+            logger.info('reloading profile since mime types changed')
         self.load()
 
     def _changed_random(self, obj, key):
@@ -211,7 +214,7 @@ class BaseProfile(GObject.GObject):
             self._monitors.append(monitor)
             logger.debug('descending into %s to find wallpapers', location.get_uri())
             self._load_children(location, recursive)
-        elif info.get_file_type() == Gio.FileType.REGULAR and info.get_content_type() in ACCEPTED:
+        elif info.get_file_type() == Gio.FileType.REGULAR and info.get_content_type() in self._settings.get_value('allowed-mime-types'):
             logger.debug('adding wallpaper %s', location.get_uri())
             if location.get_uri() in self._wallpapers:
                 logger.warning('%s already loaded, skipping duplicate', location.get_uri())
