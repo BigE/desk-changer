@@ -187,17 +187,18 @@ const DeskChangerPreview = new Lang.Class({
         file = file.replace('file://', '');
         debug('setting preview to %s'.format(file));
         try{
-            let pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale(file, this._width, -1, true);
+            let scale_factor = St.ThemeContext.get_for_stage(global.stage).scale_factor;
+            let pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale(file, this._width * scale_factor, -1, true);
             let height = Math.round(pixbuf.get_height() / (pixbuf.get_width() / this._width));
             let image = new Clutter.Image();
             image.set_data(
                 pixbuf.get_pixels(),
                 (pixbuf.get_has_alpha()? Cogl.PixelFormat.RGBA_8888 : Cogl.PixelFormat.RGB_888),
-                this._width,
-                height,
+                this._width * scale_factor,
+                height * scale_factor,
                 pixbuf.get_rowstride()
             );
-            this._texture = new Clutter.Actor({height: height, width: this._width});
+            this._texture = new Clutter.Actor({height: height * scale_factor, width: this._width * scale_factor});
             this._texture.set_content(image);
             this.add_actor(this._texture);
         } catch (e) {
