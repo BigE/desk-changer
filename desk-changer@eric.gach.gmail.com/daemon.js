@@ -69,7 +69,7 @@ const DBusInterface = '<node>\
 </node>';
 const DBusProxy = Gio.DBusProxy.makeProxyWrapper(DBusInterface);
 
-const DeskChangerDaemon = new Lang.Class({
+var DeskChangerDaemon = new Lang.Class({
     Name: 'DeskChangerDaemon',
 
     _init: function (settings) {

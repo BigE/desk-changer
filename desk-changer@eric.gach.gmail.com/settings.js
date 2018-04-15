@@ -24,7 +24,7 @@ const GLib = imports.gi.GLib;
 const Lang = imports.lang;
 const Me = imports.misc.extensionUtils.getCurrentExtension();
 
-const DeskChangerSettings = new Lang.Class({
+var DeskChangerSettings = new Lang.Class({
     Name: 'DeskChangerSettings',
 
     _init: function () {

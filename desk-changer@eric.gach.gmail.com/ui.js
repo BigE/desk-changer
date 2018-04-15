@@ -34,7 +34,7 @@ const _ = Gettext.gettext;
 const debug = Me.imports.utils.debug;
 const error = Me.imports.utils.error;
 
-const DeskChangerButton = new Lang.Class({
+var DeskChangerButton = new Lang.Class({
     Name: 'DeskChangerButton',
     Extends: St.Button,
 
@@ -59,7 +59,7 @@ const DeskChangerButton = new Lang.Class({
     }
 });
 
-const DeskChangerIcon = new Lang.Class({
+var DeskChangerIcon = new Lang.Class({
     Name: 'DeskChangerIcon',
     Extends: St.Bin,
 
@@ -137,7 +137,7 @@ const DeskChangerIcon = new Lang.Class({
     }
 });
 
-const DeskChangerPreview = new Lang.Class({
+var DeskChangerPreview = new Lang.Class({
     Name: 'DeskChangerPreview',
     Extends: St.Bin,
 
@@ -222,7 +222,7 @@ const DeskChangerPreview = new Lang.Class({
     }
 });
 
-const DeskChangerStateButton = new Lang.Class({
+var DeskChangerStateButton = new Lang.Class({
     Name: 'DeskChangerStateButton',
     Extends: DeskChangerButton,
 
