@@ -341,7 +341,7 @@ const DeskChangerProfileLockscreen = new Lang.Class({
             value = _('(inherited)');
         }
 
-        this.label.text = _('Lock Screen Profile') + value;
+        this.label.text = _('Lock Screen Profile') + ': ' + value;
     },
 
     _populate_profiles: function () {
