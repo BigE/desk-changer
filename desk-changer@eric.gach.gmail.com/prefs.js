@@ -55,7 +55,6 @@ const DeskChangerPrefs = new Lang.Class({
         this._initExtension();
         this._initDaemon();
         this._load_profiles();
-        this._update_rotation();
         this.box.pack_start(this.notebook, true, true, 0);
         this.box.show_all();
         this._is_init = false;
@@ -83,6 +82,7 @@ const DeskChangerPrefs = new Lang.Class({
         this._rotation_combo_box.insert_text(0, 'interval');
         this._rotation_combo_box.insert_text(1, 'hourly');
         this._rotation_combo_box.insert_text(2, 'disabled');
+        this._update_rotation();
         this._rotation_combo_box.connect('changed', Lang.bind(this, function (object) {
             this._settings.rotation = object.get_active_text();
         }));
