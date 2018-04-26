@@ -126,6 +126,14 @@ var DeskChangerSettings = new Lang.Class({
         this.schema.set_value('profiles', new GLib.Variant("a{sa(sb)}", value));
     },
 
+    get profile_state() {
+        return this.schema.get_value('profile-state').deep_unpack();
+    },
+
+    set profile_state(value) {
+        this.schema.set_value('profile-state', new GLib.Variant('a{s(ss)}', value));
+    },
+
     get random() {
         return this.schema.get_boolean('random');
     },

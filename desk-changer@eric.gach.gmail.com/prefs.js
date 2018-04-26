@@ -97,8 +97,14 @@ const DeskChangerPrefs = new Lang.Class({
         label = new Gtk.Label({label: ' '});
         box.pack_start(label, true, true, 5);
         this._switchDaemon = new Gtk.Switch();
-        this._switchDaemon.set_active(this._daemon.is_running);
-        this._switch_handler = this._switchDaemon.connect('notify::active', Lang.bind(this._daemon, this._daemon.toggle));
+        this._switchDaemon.set_active(this._daemon.running);
+        this._switch_handler = this._switchDaemon.connect('notify::active', Lang.bind(this, function () {
+            if (this._daemon.running) {
+                this._daemon.stop();
+            } else {
+                this._daemon.start();
+            }
+        }));
         this._daemon.connect('toggled', Lang.bind(this, function (obj, state, pid) {
             if (this._switch_handler) {
                 this._switchDaemon.disconnect(this._switch_handler);

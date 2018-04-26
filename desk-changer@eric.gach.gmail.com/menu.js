@@ -32,7 +32,7 @@ const St = imports.gi.St;
 const Util = imports.misc.util;
 const _ = Gettext.gettext;
 
-const DeskChangerSettings = Me.imports.settings.DeskChangerSettings;
+const DeskChangerProfileError = Me.imports.profile.DeskChangerProfileError;
 const debug = Me.imports.utils.debug;
 const error = Me.imports.utils.error;
 const Ui = Me.imports.ui;
@@ -41,8 +41,8 @@ var DeskChangerControls = new Lang.Class({
     Name: 'DeskChangerControls',
     Extends: PopupMenu.PopupBaseMenuItem,
 
-    _init: function (dbus, settings) {
-        this._dbus = dbus;
+    _init: function (daemon, settings) {
+        this._daemon = daemon;
         this._settings = settings;
         this._bindings = [];
         this.parent({can_focus: false, reactive: false});
@@ -92,20 +92,20 @@ var DeskChangerControls = new Lang.Class({
 
     next: function () {
         debug('next');
-        this._dbus.NextRemote(function (result, _error) {
-            if (_error) {
-                Main.notifyError('Desk Changer', String(_error));
-            }
-        });
+        this._daemon.next();
     },
 
     prev: function() {
         debug('prev');
-        this._dbus.PrevRemote(function (result, _error) {
-            if (_error) {
-                Main.notifyError('Desk Changer', String(_error));
+        try {
+            this._daemon.prev();
+        } catch (e) {
+            if (e instanceof DeskChangerProfileError) {
+                Main.notifyError('DeskChanger', e.message);
+            } else {
+                Main.notifyError('DeskChanger', '%s'.format(e));
             }
-        });
+        }
     },
 
     _addKeyBinding: function (key, handler) {
@@ -160,11 +160,21 @@ var DeskChangerDaemonControls = new Lang.Class({
         // Switch label
         this.parent(_('DeskChanger Daemon'));
         this.daemon = daemon;
-        this.setToggleState(this.daemon.is_running);
+        this.setToggleState(this.daemon.running);
         this._handler = this.connect('toggled', Lang.bind(this, function () {
-            this.daemon.toggle();
+            try {
+                (this.daemon.running) ? this.daemon.stop() : this.daemon.start();
+            } catch (e) {
+                if (e instanceof DeskChangerProfileError) {
+                    Main.notifyError('DeskChanger', e.message);
+                } else {
+                    Main.notifyError('DeskChanger', _('failed to start daemon: %s'.format(e)));
+                }
+            }
+
+            this.setToggleState(this.daemon.running);
         }));
-        this._daemon_handler = this.daemon.connect('toggled', Lang.bind(this, function (obj, state) {
+        this._daemon_handler = this.daemon.connect('running', Lang.bind(this, function (obj, state) {
             this.setToggleState(state);
         }));
     },
