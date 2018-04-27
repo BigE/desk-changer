@@ -8,6 +8,9 @@ class Timer(object):
     __metaclass__ = ABCMeta
 
     def __init__(self, interval, callback):
+        if interval < 1:
+            # another attempt to prevent #50
+            raise ValueError
         self._callback = callback
         self._interval = interval
         self._source_id = GLib.timeout_add_seconds(interval, self.__callback__)
