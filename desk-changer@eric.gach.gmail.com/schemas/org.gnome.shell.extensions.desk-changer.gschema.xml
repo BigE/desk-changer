@@ -53,6 +53,7 @@
 				When timer is enabled, the interval is the amount of time in seconds between the daemon switching the
 				wallpaper to the next available wallpaper. Default is 300 seconds or 5 minutes
 			</description>
+			<range min="1" max="84600" />
 			<summary>Number of seconds between wallpaper changes</summary>
 		</key>
 		<key name="lockscreen-profile" type="s">

@@ -95,6 +95,11 @@ var DeskChangerSettings = new Lang.Class({
     },
 
     set interval(value) {
+        if (parseInt(value) > 1) {
+            debug('invalid interval value (value is < 1)');
+            return;
+        }
+
         this.schema.set_int('interval', parseInt(value));
     },
 
