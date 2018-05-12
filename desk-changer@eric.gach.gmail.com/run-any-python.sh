@@ -5,8 +5,7 @@ CODE_NO_PYTHON=254
 
 # input params
 
-if [ $# -eq 0 ]
-  then
+if [ $# -lt 1 ]; then
     echo "Runs the given script with the first found Python version"
     echo "Usage: $0 <PYTHON_SCRIPT>"
     exit $CODE_WRONG_USAGE
