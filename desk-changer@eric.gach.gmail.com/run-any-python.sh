@@ -23,15 +23,11 @@ function check_python() {
     fi;
 }
 
-function run_python() {
-    echo "Running: $@"
-    $1 "$2"
-}
-
 for P in "${PYTHONS[@]}"; do
     PYTHON="/usr/bin/env $P"
     if check_python "$PYTHON"; then
-        run_python "$PYTHON" "$SCRIPT"
+        echo "Running: $PYTHON \"$SCRIPT\""
+        $PYTHON "$SCRIPT"
         exit $?
     fi;
 done
