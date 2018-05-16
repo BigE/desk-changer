@@ -12,25 +12,26 @@ if [ $# -lt 1 ]; then
 fi
 SCRIPT=$1
 
-# python version checker
-
-PYTHON2='/usr/bin/env python'
-PYTHON3='/usr/bin/env python3'
+PYTHONS=(python python3 python2)
 
 function check_python() {
-    eval "$1 -V &> /dev/null"
-    if [ $? -eq 0 ]; then
+    # check if python executable is there and if GObject can be used
+    if $1 -c "import gi" &> /dev/null; then
         true
     else
         false
     fi;
 }
 
-if check_python "$PYTHON2"; then
-    eval "$PYTHON2 \"$SCRIPT\""
-elif check_python "$PYTHON3"; then
-    eval "$PYTHON3 \"$SCRIPT\""
-else
-    echo "NO PYTHON DETECTED!"
-    exit $CODE_NO_PYTHON
-fi;
+for P in "${PYTHONS[@]}"; do
+    PYTHON="/usr/bin/env $P"
+    if check_python "$PYTHON"; then
+        echo "Viable python found: $PYTHON"
+        eval "$PYTHON \"$SCRIPT\""
+        exit $?
+        break
+    fi;
+done
+
+echo "NO PYTHON DETECTED!"
+exit $CODE_NO_PYTHON
