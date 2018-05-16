@@ -10,7 +10,7 @@ if [ $# -lt 1 ]; then
     echo "Usage: $0 <PYTHON_SCRIPT>"
     exit $CODE_WRONG_USAGE
 fi
-SCRIPT=$1
+SCRIPT="$1"
 
 PYTHONS=(python python3 python2)
 
@@ -23,13 +23,16 @@ function check_python() {
     fi;
 }
 
+function run_python() {
+    echo "Running: $@"
+    $1 "$2"
+}
+
 for P in "${PYTHONS[@]}"; do
     PYTHON="/usr/bin/env $P"
     if check_python "$PYTHON"; then
-        echo "Viable python found: $PYTHON"
-        eval "$PYTHON \"$SCRIPT\""
+        run_python "$PYTHON" "$SCRIPT"
         exit $?
-        break
     fi;
 done
 
