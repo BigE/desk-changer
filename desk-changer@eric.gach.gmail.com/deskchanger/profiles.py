@@ -21,6 +21,8 @@ class BaseProfile(GObject.GObject):
     }
 
     def __init__(self, name):
+        if not hasattr(self, '_background'):
+            logger.critical('background object must be defined in profile')
         GObject.GObject.__init__(self)
         self._loaded = False
         self._name = name
@@ -102,13 +104,23 @@ class BaseProfile(GObject.GObject):
     def name(self):
         return self._name
 
-    @abstractmethod
     def next(self):
-        raise NotImplementedError()
+        current = None
+        if self._loaded is True:
+            current = self._background.get_string('picture-uri')
+        wallpaper = self._next(current)
+        if wallpaper:
+            self._set_wallpaper(wallpaper)
+        return wallpaper
 
-    @abstractmethod
     def prev(self):
-        raise NotImplementedError()
+        current = None
+        if self._loaded is True:
+            current = self._background.get_string('picture-uri')
+        wallpaper = self._prev(current)
+        if wallpaper:
+            self._set_wallpaper(wallpaper)
+        return wallpaper
 
     @GObject.Property(type=GObject.TYPE_STRV)
     def queue(self):
@@ -252,6 +264,10 @@ class BaseProfile(GObject.GObject):
             del monitor
         self._monitors = []
 
+    def _set_wallpaper(self, wallpaper):
+        self._background.set_string('picture-uri', wallpaper)
+        self.emit('changed', wallpaper)
+
 
 class DesktopProfile(BaseProfile):
     def __init__(self, name):
@@ -267,24 +283,6 @@ class DesktopProfile(BaseProfile):
     def destroy(self):
         del self._background
         super(DesktopProfile, self).destroy()
-
-    def next(self):
-        current = None
-        if self._loaded is True:
-            current = self._background.get_string('picture-uri')
-        wallpaper = self._next(current)
-        if wallpaper:
-            self._set_wallpaper(wallpaper)
-        return wallpaper
-
-    def prev(self):
-        current = None
-        if self._loaded is True:
-            current = self._background.get_string('picture-uri')
-        wallpaper = self._prev(current)
-        if wallpaper:
-            self._set_wallpaper(wallpaper)
-        return wallpaper
 
     def restore_state(self):
         logger.info('restoring state of profile %s', self.name)
@@ -307,10 +305,9 @@ class DesktopProfile(BaseProfile):
         self._settings.set_value('profile-state', GLib.Variant('a{s(ss)}', states))
 
     def _set_wallpaper(self, wallpaper):
-        self._background.set_string('picture-uri', wallpaper)
         if self._lockscreen:
             self._lockscreen.set_string('picture-uri', wallpaper)
-        self.emit('changed', wallpaper)
+        super(DesktopProfile, self)._set_wallpaper(wallpaper)
 
     def _update_lockscreen(self, obj, key):
         update = self._settings.get_boolean('update-lockscreen')
@@ -331,15 +328,6 @@ class LockscreenProfile(BaseProfile):
     def destroy(self):
         del self._background
         super(LockscreenProfile, self).destroy()
-
-    def next(self):
-        current = None
-        if self._loaded:
-            current = self._background.get_string('picture-uri')
-        return self._next(current)
-
-    def prev(self):
-        return self._prev(self._background.get_string('picture-uri'))
 
 
 class ProfileError(Exception):

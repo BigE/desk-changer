@@ -272,9 +272,9 @@ class Daemon(Gio.Application):
         name = self._settings.get_string('lockscreen-profile')
         if (len(name) == 0 or not self._settings.get_boolean('update-lockscreen')) and self._lockscreen_profile:
             # updating of the lock screen is disabled or inherited, release the Kraken!
-            self._lockscreen_profile.disconnect(self._lockscreen_profile_handler)
-            self._lockscreen_profile_handler = None
-            self._lockscreen_profile.release()
+            self._lockscreen_profile.disconnect(self._lockscreen_profile_handler_changed)
+            self._lockscreen_profile_handler_changed = None
+            self._lockscreen_profile.destroy()
             self._lockscreen_profile = None
         if self._settings.get_boolean('update-lockscreen'):
             if len(name) == 0 or name == self._desktop_profile.name:
