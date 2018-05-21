@@ -131,7 +131,11 @@ var DeskChangerDaemon = new Lang.Class({
             this.bus.QuitSync();
         } else {
             debug('starting daemon');
-            GLib.spawn_async(this._path, [this._path + '/desk-changer-daemon.py'], null, GLib.SpawnFlags.DO_NOT_REAP_CHILD, null);
+            let scriptArgv = [
+                this._path + '/run-any-python.sh',
+                this._path + '/desk-changer-daemon.py'
+            ]
+            GLib.spawn_async(this._path, scriptArgv, null, GLib.SpawnFlags.DO_NOT_REAP_CHILD, null);
         }
     },
 

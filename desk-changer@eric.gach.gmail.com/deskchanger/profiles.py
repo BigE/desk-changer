@@ -175,7 +175,7 @@ class BaseProfile(GObject.GObject):
             wallpaper = self._load_queue_random(current)
         else:
             if self._position == len(self._wallpapers):
-                self.info('reached end of profile %s, resetting counter to beginning', self)
+                logger.info('reached end of profile %s, resetting counter to beginning', self)
                 self._position = 0
             wallpaper = self._wallpapers[self._position]
             self._position += 1
