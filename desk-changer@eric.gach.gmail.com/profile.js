@@ -49,9 +49,11 @@ const DeskChangerProfileBase = new Lang.Class({
      * @param settings DeskChangerSettings
      * @private
      */
-    _init: function (profile_name, settings) {
+    _init: function (key, settings) {
+        this._key = key;
+        this._key_normalized = key.replace('-', '_');
         this._settings = settings;
-        this._profile_name = profile_name;
+        this._profile_name = this._settings[this._key_normalized];
         this._handler_profiles_id = null;
         this._history = []; //new DeskChangerProfileHistory();
         this._monitors = [];
@@ -62,15 +64,17 @@ const DeskChangerProfileBase = new Lang.Class({
         if (!this.hasOwnProperty('_background')) {
             throw 'must have property _background';
         }
+
+        this._profile_changed_id = this._settings.connect('changed::' + key, Lang.bind(this, this._profile_changed));
     },
 
     destroy: function () {
-        if (this._settings.remember_profile_state) {
-            this.save_state();
-        }
-
         if (this._handler_profiles_id) {
             this._settings.disconnect(this._handler_profiles_id);
+        }
+
+        if (this._profile_changed_id) {
+            this._settings.disconnect(this._profile_changed_id);
         }
 
         this.unload();
@@ -109,6 +113,10 @@ const DeskChangerProfileBase = new Lang.Class({
         // Now load up the queue
         this._fill_queue();
         debug('profile %s loaded with %d wallpapers'.format(this.profile_name, this._wallpapers.length));
+
+        if (this._settings.auto_rotate) {
+            this.next(false);
+        }
     },
 
     next: function (_current = true) {
@@ -136,29 +144,6 @@ const DeskChangerProfileBase = new Lang.Class({
         this.emit('preview', this._queue[0]);
         this._set_wallpaper(wallpaper);
         return wallpaper;
-    },
-
-    restore_state: function () {
-        if (this._settings.profile_state.hasOwnProperty(this.profile_name)) {
-            this._queue = this._settings.profile_state[this.profile_name];
-            delete this._settings.profile_state[this.profile_name];
-            debug('restored state of profile %s'.format(this.profile_name));
-            if (this._queue.length > 0) {
-                this.emit('preview', this._queue[0]);
-            }
-        }
-    },
-
-    save_state: function () {
-        if (this._queue.length === 0) {
-            debug('ERROR: failed to save state of profile %s because queue is empty');
-            return;
-        } else if (this._settings.profile_state.hasOwnProperty(this.profile_name)) {
-            debug('overwriting state of profile %s'.format(this.profile_name));
-        }
-
-        this._settings.profile_state[this.profile_name] = this._queue;
-        debug('saved state of profile %s'.format(this.profile_name));
     },
 
     unload: function () {
@@ -272,6 +257,12 @@ const DeskChangerProfileBase = new Lang.Class({
         }
     },
 
+    _profile_changed: function (settings, key) {
+        this.unload();
+        this._profile_name = settings[key];
+        this.load();
+    },
+
     _set_wallpaper: function (wallpaper) {
         debug('setting wallpaper for %s(%s) to %s'.format(this.__name__, this.profile_name, wallpaper));
         this._background.set_string('picture-uri', wallpaper);
@@ -287,7 +278,38 @@ var DeskChangerProfileDesktop = new Lang.Class({
 
     _init: function (settings) {
         this._background = Gio.Settings.new('org.gnome.desktop.background');
-        this.parent(settings.current_profile, settings);
+        this.parent('current-profile', settings);
+    },
+
+    restore_state: function () {
+        if (this._settings.profile_state.hasOwnProperty(this.profile_name)) {
+            this._queue = this._settings.profile_state[this.profile_name];
+            delete this._settings.profile_state[this.profile_name];
+            debug('restored state of profile %s'.format(this.profile_name));
+            if (this._queue.length > 0) {
+                this.emit('preview', this._queue[0]);
+            }
+        }
+    },
+
+    save_state: function () {
+        if (this._queue.length === 0) {
+            debug('ERROR: failed to save state of profile %s because queue is empty'.format(this.profile_name));
+            return;
+        } else if (this._settings.profile_state.hasOwnProperty(this.profile_name)) {
+            debug('overwriting state of profile %s'.format(this.profile_name));
+        }
+
+        this._settings.profile_state[this.profile_name] = this._queue;
+        debug('saved state of profile %s'.format(this.profile_name));
+    },
+
+    _profile_changed: function (settings, key) {
+        if (this._settings.remember_profile_state) {
+            this.save_state();
+        }
+
+        this.parent(settings, key);
     },
 });
 

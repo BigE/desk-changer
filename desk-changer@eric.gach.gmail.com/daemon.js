@@ -169,8 +169,8 @@ var DeskChangerDaemon = new Lang.Class({
 
     start: function () {
         this.desktop_profile.load();
-        this._init_rotation();
         this.parent();
+        this._init_rotation();
         this.emit('running', true);
     },
 
