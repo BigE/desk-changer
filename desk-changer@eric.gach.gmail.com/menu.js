@@ -382,7 +382,7 @@ var DeskChangerSwitch = new Lang.Class({
         this._settings = settings;
         this.parent(label);
         this.setToggleState(this._settings[setting]);
-        this._handler_changed = this._settings.connect('changed::' + this._setting.replace('_', '-'), Lang.bind(this, this._changed));
+        this._handler_changed = this._settings.connect('changed::' + this._setting.replace(new RegExp('[_]+', 'g'), '-'), Lang.bind(this, this._changed));
         this._handler_toggled = this.connect('toggled', Lang.bind(this, this._toggled));
     },
 

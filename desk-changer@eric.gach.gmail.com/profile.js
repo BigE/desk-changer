@@ -259,7 +259,7 @@ const DeskChangerProfileBase = new Lang.Class({
 
     _profile_changed: function (settings, key) {
         this.unload();
-        this._profile_name = settings[key];
+        this._profile_name = this._settings[this._key_normalized];
         this.load();
     },
 
