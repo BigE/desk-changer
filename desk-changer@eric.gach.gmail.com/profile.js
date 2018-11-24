@@ -262,6 +262,7 @@ const DeskChangerProfileBase = new Lang.Class({
     _set_wallpaper: function (wallpaper) {
         debug('setting wallpaper for %s(%s) to %s'.format(this.__name__, this.profile_name, wallpaper));
         this._background.set_string('picture-uri', wallpaper);
+        this.emit('changed', wallpaper);
     },
 });
 
