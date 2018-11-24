@@ -156,7 +156,7 @@ const DeskChangerSystemIndicator = new Lang.Class({
 });
 
 let daemon, indicator, settings, shellSettings;
-let changed_id, current_profile_id, error_id, notifications_id, random_id, rotation_id;
+let changed_id, current_profile_id, notifications_id, random_id, rotation_id;
 
 function disable() {
     debug('disabling extension');
@@ -177,10 +177,6 @@ function disable() {
         daemon.disconnectSignal(changed_id);
     }
 
-    if (error_id) {
-        daemon.disconnectSignal(error_id);
-    }
-
     if (random_id) {
         settings.disconnect(random_id);
     }
@@ -191,7 +187,6 @@ function disable() {
 
     changed_id = null;
     current_profile_id = null;
-    error_id = null;
     notifications_id = null;
     random_id = null;
     rotation_id = null;
@@ -210,14 +205,10 @@ function enable() {
         Main.notify('Desk Changer', ((settings.notifications) ? _('Notifications are now enabled') : _('Notifications are now disabled')));
     });
 
-    /*changed_id = daemon.connectSignal('changed', function (emitter, signalName, parameters) {
+    changed_id = daemon.desktop_profile.connect('changed', function (obj, wallpaper) {
         if (settings.notifications)
-            Main.notify('Desk Changer', _('Wallpaper Changed: %s'.format(parameters[0])));
+            Main.notify('Desk Changer', _('Wallpaper Changed: %s'.format(wallpaper)));
     });
-
-    error_id = daemon.connectSignal('error', function (emitter, signalName, parameters) {
-        Main.notifyError('Desk Changer', _('Daemon Error: %s'.format(parameters[0])));
-    });*/
 
     random_id = settings.connect('changed::random', function () {
         if (settings.notifications) {
@@ -254,7 +245,7 @@ function enable() {
 
     if (!daemon.running && settings.auto_start) {
         // run if auto start is enabled and its not already running
-        //daemon.start();
+        daemon.start();
     }
 
     if (settings.integrate_system_menu) {
@@ -282,7 +273,7 @@ function init() {
 
     Gio.DBus.session.connect('closed', function () {
         if (daemon.running) {
-            //daemon.stop();
+            daemon.stop();
         }
     });
 
