@@ -174,7 +174,7 @@ function disable() {
     }
 
     if (changed_id) {
-        daemon.disconnectSignal(changed_id);
+        daemon.disconnect(changed_id);
     }
 
     if (random_id) {
