@@ -183,7 +183,10 @@ const DeskChangerProfileBase = new Lang.Class({
             do {
                 wallpaper = this._wallpapers[Math.floor(Math.random() * this._wallpapers.length)];
 
-                if (wallpaper in this._history && (this._wallpapers.length >= MAX_QUEUE_LENGTH || this._history[0] === wallpaper)) {
+                if (this._background.get_string('picture-uri') === wallpaper) {
+                    // current wallpaper. oh noes!
+                    wallpaper = null;
+                } else if (wallpaper in this._history && (this._wallpapers.length >= MAX_QUEUE_LENGTH || this._history[0] === wallpaper)) {
                     // Already shown too recently, try again
                     wallpaper = null;
                 } else if (wallpaper in this._queue && (this._wallpapers.length >= MAX_QUEUE_LENGTH || this._queue.length < this._wallpapers.length)) {
