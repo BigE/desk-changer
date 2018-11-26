@@ -21,6 +21,7 @@
  */
 const Lang = imports.lang;
 const Me = imports.misc.extensionUtils.getCurrentExtension();
+const GLib = imports.gi.GLib;
 const Gio = imports.gi.Gio;
 const Signals = imports.signals;
 
@@ -66,6 +67,7 @@ const DeskChangerDaemonDBusServer = new Lang.Class({
 
     _init: function () {
         this._dbus_id = null;
+        this._dbus_connection = null;
         this._running = false;
 
         try {
@@ -117,6 +119,24 @@ const DeskChangerDaemonDBusServer = new Lang.Class({
     _dbus_handle_set: function (connection, sender, object_path, interface_name, method_name, parameters, invocation) {
     },
 
+    _emit_changed: function (uri) {
+        if (this._dbus_connection) {
+            let params = new GLib.VariantBuilder(new GLib.VariantType('r'));
+            params.add_value(GLib.Variant.new_string(uri));
+            debug('dbus::changed ' + uri);
+            this._dbus_connection.emit_signal(null, DeskChangerDaemonDBusPath, DeskChangerDaemonDBusName, 'changed', params.end());
+        }
+    },
+
+    _emit_preview: function (uri) {
+        if (this._dbus_connection) {
+            let params = new GLib.VariantBuilder(new GLib.VariantType('r'));
+            params.add_value(GLib.Variant.new_string(uri));
+            debug('dbus::preview ' + uri);
+            this._dbus_connection.emit_signal(null, DeskChangerDaemonDBusPath, DeskChangerDaemonDBusName, 'preview', params.end());
+        }
+    },
+
     _on_bus_acquired: function (connection) {
         debug(this._dbus_id);
         if (this._dbus_id !== null) return;
@@ -129,12 +149,14 @@ const DeskChangerDaemonDBusServer = new Lang.Class({
                 Lang.bind(this, this._dbus_handle_get),
                 Lang.bind(this, this._dbus_handle_set),
             );
+            this._dbus_connection = connection;
         } catch (e) {
             debug(e);
         } finally {
             if (this._dbus_id === null || this._dbus_id === 0) {
                 debug('failed to register dbus object');
                 this._dbus_id = null;
+                this._dbus_connection = null;
             }
         }
     },
@@ -149,9 +171,26 @@ var DeskChangerDaemon = new Lang.Class({
         this.parent();
         this.desktop_profile = new profile.DeskChangerProfileDesktop(this._settings);
         this.lockscreen_profile = null;
+
+        this._changed_id = this.desktop_profile.connect('changed', Lang.bind(this, function (obj, uri) {
+            this._emit_changed(uri);
+        }));
+
+        this._preview_id = this.desktop_profile.connect('preview', Lang.bind(this, function (obj, uri) {
+            debug(uri);
+            this._emit_preview(uri);
+        }));
     },
 
     destroy: function () {
+        if (this._changed_id) {
+            this.desktop_profile.disconnect(this._changed_id);
+        }
+
+        if (this._preview_id) {
+            this.desktop_profile.disconnect(this._preview_id);
+        }
+
         this.parent();
     },
 
