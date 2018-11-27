@@ -205,7 +205,7 @@ function enable() {
         Main.notify('Desk Changer', ((settings.notifications) ? _('Notifications are now enabled') : _('Notifications are now disabled')));
     });
 
-    changed_id = daemon.desktop_profile.connect('changed', function (obj, wallpaper) {
+    changed_id = daemon.connect('changed', function (obj, wallpaper) {
         if (settings.notifications)
             Main.notify('Desk Changer', _('Wallpaper Changed: %s'.format(wallpaper)));
     });
