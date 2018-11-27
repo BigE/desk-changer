@@ -6,18 +6,57 @@ const Signals = imports.signals;
 const debug = Me.imports.utils.debug;
 const MAX_QUEUE_LENGTH = 100;
 
-/*const DeskChangerProfileHistory = new Lang.Class({
-    Name: 'DeskChangerProfileHistory',
-    Extends: Array,
+const DeskChangerProfileQueue = new Lang.Class({
+    Name: 'DeskChangerProfileQueue',
 
-    append: function (value) {
-        this.parent(value);
-        while (this.length > MAX_QUEUE_LENGTH) {
-            // TODO debug output
-            this.pop();
+    _init: function () {
+        this.queue = [];
+    },
+
+    get length() {
+        return this.queue.length;
+    },
+
+    get preview() {
+        return (this.queue.length > 0)? this.queue[this.queue.length - 1] : undefined;
+    },
+
+    clear: function () {
+        this.queue = [];
+    },
+
+    dequeue: function () {
+        if (this.queue.length === 0) return undefined;
+        return this.queue.pop();
+    },
+
+    enqueue: function (uri) {
+        this.queue.push(uri);
+
+        while (this.queue.length > MAX_QUEUE_LENGTH) {
+            this.queue.unshift();
         }
     },
-});*/
+
+    in_queue: function (uri) {
+        return (uri in this.queue);
+    },
+
+    remove: function (uri) {
+        let index = this.queue.indexOf(uri);
+
+        if (index >= 0) {
+            this.queue.splice(index, 1);
+            return true;
+        }
+
+        return false;
+    },
+
+    restore: function (queue) {
+        this.queue = queue;
+    }
+});
 
 var DeskChangerProfileError = new Lang.Class({
     Name: 'DeskChangerProfileError',
@@ -54,11 +93,10 @@ const DeskChangerProfileBase = new Lang.Class({
         this._key_normalized = key.replace(new RegExp('-', 'g'), '_');
         this._settings = settings;
         this._profile_name = this._settings[this._key_normalized];
-        this._handler_profiles_id = null;
-        this._history = []; //new DeskChangerProfileHistory();
+        this._history = new DeskChangerProfileQueue();
         this._loaded = false;
         this._monitors = [];
-        this._queue = [];
+        this._queue = new DeskChangerProfileQueue();
         this._sequence = 0;
         this._wallpapers = [];
 
@@ -70,10 +108,6 @@ const DeskChangerProfileBase = new Lang.Class({
     },
 
     destroy: function () {
-        if (this._handler_profiles_id) {
-            this._settings.disconnect(this._handler_profiles_id);
-        }
-
         if (this._profile_changed_id) {
             this._settings.disconnect(this._profile_changed_id);
         }
@@ -116,10 +150,10 @@ const DeskChangerProfileBase = new Lang.Class({
 
     next: function (_current = true) {
         let current = (_current)? this._background.get_string('picture-uri') : null,
-            wallpaper = this._queue.pop();
+            wallpaper = this._queue.dequeue();
 
         if (current) {
-            this._history.push(current);
+            this._history.enqueue(current);
         }
 
         this._set_wallpaper(wallpaper);
@@ -134,8 +168,8 @@ const DeskChangerProfileBase = new Lang.Class({
             throw new DeskChangerProfileError(_('No more wallpapers available in history'), this);
         }
 
-        wallpaper = this._history.pop();
-        this._queue.push(this._background.get_string('picture-uri'));
+        wallpaper = this._history.dequeue();
+        this._queue.enqueue(this._background.get_string('picture-uri'));
         this._emit_preview();
         this._set_wallpaper(wallpaper);
         return wallpaper;
@@ -146,9 +180,9 @@ const DeskChangerProfileBase = new Lang.Class({
             monitor.cancel();
         });
 
-        this._history = []; //new DeskChangerProfileHistory();
+        this._history.clear();
         this._monitors = [];
-        this._queue = [];
+        this._queue.clear();
         this._sequence = 0;
         this._wallpapers = [];
         this._loaded = false;
@@ -160,11 +194,7 @@ const DeskChangerProfileBase = new Lang.Class({
     },
 
     get preview() {
-        if (this._queue.length) {
-            return this._queue[this._queue.length - 1];
-        }
-
-        return null;
+        return this._queue.preview;
     },
 
     get profile_name() {
@@ -180,6 +210,7 @@ const DeskChangerProfileBase = new Lang.Class({
     },
 
     _file_changed: function () {
+        // TODO: write the code to detect file changes in directories
     },
 
     _fill_queue: function () {
@@ -199,10 +230,10 @@ const DeskChangerProfileBase = new Lang.Class({
                 if (this._background.get_string('picture-uri') === wallpaper) {
                     // current wallpaper. oh noes!
                     wallpaper = null;
-                } else if (wallpaper in this._history && (this._wallpapers.length >= MAX_QUEUE_LENGTH || this._history[0] === wallpaper)) {
+                } else if (this._history.in_queue(wallpaper) && (this._wallpapers.length >= MAX_QUEUE_LENGTH || this._history[0] === wallpaper)) {
                     // Already shown too recently, try again
                     wallpaper = null;
-                } else if (wallpaper in this._queue && (this._wallpapers.length >= MAX_QUEUE_LENGTH || this._queue.length < this._wallpapers.length)) {
+                } else if (this._queue.in_queue(wallpaper) && (this._wallpapers.length >= MAX_QUEUE_LENGTH || this._queue.length < this._wallpapers.length)) {
                     // Already in the queue, try again
                     wallpaper = null;
                 }
@@ -215,7 +246,7 @@ const DeskChangerProfileBase = new Lang.Class({
             }
         }
 
-        this._queue.push(wallpaper);
+        this._queue.enqueue(wallpaper);
         this._emit_preview();
         debug('added %s to the queue'.format(wallpaper));
     },
@@ -304,7 +335,7 @@ var DeskChangerProfileDesktop = new Lang.Class({
 
     restore_state: function () {
         if (this._settings.profile_state.hasOwnProperty(this.profile_name)) {
-            this._queue = this._settings.profile_state[this.profile_name];
+            this._queue.restore(this._settings.profile_state[this.profile_name]);
             let profile_state = this._settings.profile_state;
             delete profile_state[this.profile_name];
             this._settings.profile_state = profile_state;
@@ -321,7 +352,7 @@ var DeskChangerProfileDesktop = new Lang.Class({
         }
 
         let profile_state = this._settings.profile_state;
-        profile_state[this.profile_name] = [this._queue[0], this._background.get_string('picture-uri')];
+        profile_state[this.profile_name] = [this._queue.preview, this._background.get_string('picture-uri')];
         this._settings.profile_state = profile_state;
         debug('saved state of profile %s'.format(this.profile_name));
     },
