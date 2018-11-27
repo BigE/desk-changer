@@ -126,6 +126,8 @@ const DeskChangerDaemonDBusServer = new Lang.Class({
             debug('dbus::changed ' + uri);
             this._dbus_connection.emit_signal(null, DeskChangerDaemonDBusPath, DeskChangerDaemonDBusName, 'changed', params.end());
         }
+
+        this.emit('changed', uri);
     },
 
     _emit_preview: function (uri) {
@@ -135,10 +137,11 @@ const DeskChangerDaemonDBusServer = new Lang.Class({
             debug('dbus::preview ' + uri);
             this._dbus_connection.emit_signal(null, DeskChangerDaemonDBusPath, DeskChangerDaemonDBusName, 'preview', params.end());
         }
+
+        this.emit('preview', uri);
     },
 
     _on_bus_acquired: function (connection) {
-        debug(this._dbus_id);
         if (this._dbus_id !== null) return;
 
         try {
@@ -170,19 +173,41 @@ var DeskChangerDaemon = new Lang.Class({
         this._settings = settings;
         this.parent();
         this.desktop_profile = new profile.DeskChangerProfileDesktop(this._settings);
-        this.lockscreen_profile = null;
+        this.lockscreen_profile = new profile.DeskChangerProfileLockscreen(this._settings);
+
+        this._desktop_profile_id = this.desktop_profile.connect('loaded', Lang.bind(this, function (obj) {
+            if (this.running && this._settings.auto_rotate) {
+                let wallpaper = this.desktop_profile.next(false);
+                if (this._settings.update_lockscreen && !this.lockscreen_profile.loaded) {
+                    this.lockscreen_profile._set_wallpaper(wallpaper);
+                }
+            }
+        }));
+
+        this._lockscreen_profile_id = this.lockscreen_profile.connect('loaded', Lang.bind(this, function (obj) {
+            if (this.running && this._settings.auto_rotate) {
+                this.lockscreen_profile.next(false);
+            }
+        }));
 
         this._changed_id = this.desktop_profile.connect('changed', Lang.bind(this, function (obj, uri) {
             this._emit_changed(uri);
         }));
 
         this._preview_id = this.desktop_profile.connect('preview', Lang.bind(this, function (obj, uri) {
-            debug(uri);
             this._emit_preview(uri);
         }));
     },
 
     destroy: function () {
+        if (this._desktop_profile_id) {
+            this.desktop_profile.disconnect(this._desktop_profile_id);
+        }
+
+        if (this._lockscreen_profile_id) {
+            this.lockscreen_profile.disconnect(this._lockscreen_profile_id);
+        }
+
         if (this._changed_id) {
             this.desktop_profile.disconnect(this._changed_id);
         }
@@ -194,27 +219,59 @@ var DeskChangerDaemon = new Lang.Class({
         this.parent();
     },
 
-    next: function () {
+    next: function (_current = true) {
         let wallpaper;
-        wallpaper = this.desktop_profile.next();
+        wallpaper = this.desktop_profile.next(_current);
+
+        if (this._settings.update_lockscreen) {
+            if (this.lockscreen_profile.loaded) {
+                // if the lockscreen profile isn't the same, trigger the rotation
+                this.lockscreen_profile.next(_current);
+            } else {
+                // if the lockscreen profile is inherited from the desktop, set the wallpaper
+                this.lockscreen_profile._set_wallpaper(wallpaper);
+            }
+        }
+
         return wallpaper;
     },
 
     prev: function () {
         let wallpaper;
         wallpaper = this.desktop_profile.prev();
+
+        if  (this._settings.update_lockscreen) {
+            if (this.lockscreen_profile.loaded) {
+                this.lockscreen_profile.next();
+            } else {
+                this.lockscreen_profile._set_wallpaper(wallpaper);
+            }
+        }
+
         return wallpaper;
     },
 
     start: function () {
         this.desktop_profile.load();
+
+        if (this._settings.update_lockscreen && this._settings.lockscreen_profile) {
+            this.lockscreen_profile.load();
+        }
+
         this.parent();
         this._init_rotation();
         this.emit('running', true);
+
+        if (this._settings.auto_rotate) {
+            this.next(false);
+        }
     },
 
     stop: function () {
         this.desktop_profile.unload();
+        if (this.lockscreen_profile.loaded) {
+            this.lockscreen_profile.unload();
+        }
 
         if (this.timer) {
             this.timer.destroy();

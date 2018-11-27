@@ -51,11 +51,12 @@ const DeskChangerProfileBase = new Lang.Class({
      */
     _init: function (key, settings) {
         this._key = key;
-        this._key_normalized = key.replace('-', '_');
+        this._key_normalized = key.replace(new RegExp('-', 'g'), '_');
         this._settings = settings;
         this._profile_name = this._settings[this._key_normalized];
         this._handler_profiles_id = null;
         this._history = []; //new DeskChangerProfileHistory();
+        this._loaded = false;
         this._monitors = [];
         this._queue = [];
         this._sequence = 0;
@@ -108,11 +109,9 @@ const DeskChangerProfileBase = new Lang.Class({
         this._wallpapers.sort();
         // Now load up the queue
         this._fill_queue();
+        this._loaded = true;
+        this.emit('loaded');
         debug('profile %s loaded with %d wallpapers'.format(this.profile_name, this._wallpapers.length));
-
-        if (this._settings.auto_rotate) {
-            this.next(false);
-        }
     },
 
     next: function (_current = true) {
@@ -136,8 +135,8 @@ const DeskChangerProfileBase = new Lang.Class({
         }
 
         wallpaper = this._history.pop();
-        this._queue.unshift(this._background.get_string('picture-uri'));
-        this.emit('preview', this._queue[0]);
+        this._queue.push(this._background.get_string('picture-uri'));
+        this._emit_preview();
         this._set_wallpaper(wallpaper);
         return wallpaper;
     },
@@ -152,18 +151,32 @@ const DeskChangerProfileBase = new Lang.Class({
         this._queue = [];
         this._sequence = 0;
         this._wallpapers = [];
+        this._loaded = false;
+        debug('profile %s unloaded'.format(this.profile_name));
+    },
+
+    get loaded() {
+        return this._loaded;
     },
 
     get preview() {
         if (this._queue.length) {
-            return this._queue[0];
+            return this._queue[this._queue.length - 1];
         }
 
         return null;
     },
 
     get profile_name() {
+        if (this._profile_name === '') {
+            return '(inherited)';
+        }
+
         return this._profile_name;
+    },
+
+    _emit_preview: function () {
+        this.emit('preview', this.preview);
     },
 
     _file_changed: function () {
@@ -175,7 +188,7 @@ const DeskChangerProfileBase = new Lang.Class({
         if (this._queue.length > 0) {
             // Queue only needs one item at minimum
             debug('wallpaper queue already has %d in it, skipping'.format(this._queue.length));
-            this.emit('preview', this._queue[0]);
+            this._emit_preview();
             return;
         }
 
@@ -203,7 +216,7 @@ const DeskChangerProfileBase = new Lang.Class({
         }
 
         this._queue.push(wallpaper);
-        this.emit('preview', wallpaper);
+        this._emit_preview();
         debug('added %s to the queue'.format(wallpaper));
     },
 
@@ -257,9 +270,17 @@ const DeskChangerProfileBase = new Lang.Class({
     },
 
     _profile_changed: function (settings, key) {
-        this.unload();
+        let loaded = this.loaded;
+
+        if (loaded) {
+            this.unload();
+        }
+
         this._profile_name = this._settings[this._key_normalized];
-        this.load();
+
+        if (loaded) {
+            this.load();
+        }
     },
 
     _set_wallpaper: function (wallpaper) {
@@ -288,9 +309,6 @@ var DeskChangerProfileDesktop = new Lang.Class({
             delete profile_state[this.profile_name];
             this._settings.profile_state = profile_state;
             debug('restored state of profile %s'.format(this.profile_name));
-            if (this._queue.length > 0) {
-                this.emit('preview', this._queue[0]);
-            }
         }
     },
 
@@ -310,7 +328,7 @@ var DeskChangerProfileDesktop = new Lang.Class({
 
     unload: function ()
     {
-        if (this._settings.remember_profile_state) {
+        if (this.loaded && this._settings.remember_profile_state) {
             this.save_state();
         }
 
@@ -326,7 +344,7 @@ var DeskChangerProfileDesktop = new Lang.Class({
     },
 
     _profile_changed: function (settings, key) {
-        if (this._settings.remember_profile_state) {
+        if (this.loaded && this._settings.remember_profile_state) {
             this.save_state();
         }
 
@@ -341,6 +359,32 @@ var DeskChangerProfileLockscreen = new Lang.Class({
 
     _init: function (settings) {
         this._background = Gio.Settings.new('org.gnome.desktop.screensaver');
-        this.parent(settings.lockscreen_profile, settings);
+        this.parent('lockscreen-profile', settings);
+        this._update_lockscreen_id = this._settings.connect('changed::update-lockscreen', Lang.bind(this, function (settings, key) {
+            if (this._settings.update_lockscreen && this._settings.lockscreen_profile === '' && this._settings.auto_rotate) {
+                this._inherit_wallpaper();
+            }
+        }));
     },
+
+    _profile_changed: function (settings, key) {
+        if (this.loaded && this._settings.lockscreen_profile === '') {
+            this.unload();
+        }
+
+        this.parent(settings, key);
+
+        if (!this.loaded && this._settings.update_lockscreen && this._profile_name) {
+            this.load();
+        } else if (!this.loaded && this._settings.update_lockscreen) {
+            this._inherit_wallpaper();
+        }
+    },
+
+    _inherit_wallpaper: function () {
+        // slight hack... this is the only place we can really update the lockscreen when we revert to inherited
+        let settings = Gio.Settings.new('org.gnome.desktop.background');
+        this._set_wallpaper(settings.get_string('picture-uri'));
+        settings.destroy();
+    }
 });
