@@ -1,4 +1,5 @@
 const Me = imports.misc.extensionUtils.getCurrentExtension();
+const Convenience = Me.imports.convenience;
 const Lang = imports.lang;
 const Gio = imports.gi.Gio;
 const Signals = imports.signals;
@@ -329,7 +330,7 @@ var DeskChangerProfileDesktop = new Lang.Class({
     Extends: DeskChangerProfileBase,
 
     _init: function (settings) {
-        this._background = Gio.Settings.new('org.gnome.desktop.background');
+        this._background = Convenience.getSettings('org.gnome.desktop.background');
         this.parent('current-profile', settings);
     },
 
@@ -389,7 +390,7 @@ var DeskChangerProfileLockscreen = new Lang.Class({
     Extends: DeskChangerProfileBase,
 
     _init: function (settings) {
-        this._background = Gio.Settings.new('org.gnome.desktop.screensaver');
+        this._background = Convenience.getSettings('org.gnome.desktop.screensaver');
         this.parent('lockscreen-profile', settings);
         this._update_lockscreen_id = this._settings.connect('changed::update-lockscreen', Lang.bind(this, function (settings, key) {
             if (this._settings.update_lockscreen && this._settings.lockscreen_profile === '' && this._settings.auto_rotate) {
@@ -414,7 +415,7 @@ var DeskChangerProfileLockscreen = new Lang.Class({
 
     _inherit_wallpaper: function () {
         // slight hack... this is the only place we can really update the lockscreen when we revert to inherited
-        let settings = Gio.Settings.new('org.gnome.desktop.background');
+        let settings = Convenience.getSettings('org.gnome.desktop.background');
         this._set_wallpaper(settings.get_string('picture-uri'));
         settings.destroy();
     }

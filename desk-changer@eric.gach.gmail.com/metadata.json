@@ -2,6 +2,7 @@
   "description": "Simple wallpaper changer with multiple profile support. Supports integration into the system menu or its own panel icon. The daemon is written in Python and runs independently of the extension.",
   "gettext-domain": "desk-changer",
   "name": "Desk Changer",
+  "settings-schema": "org.gnome.shell.extensions.desk-changer",
   "shell-version": [
     "3.18",
     "3.20",

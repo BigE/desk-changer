@@ -261,15 +261,8 @@ function init() {
     Convenience.initTranslations();
     debug('initalizing extension version: %s'.format(DeskChangerVersion));
     settings = new DeskChangerSettings();
-    shellSettings = new Gio.Settings({'schema': 'org.gnome.shell'});
+    shellSettings = Convenience.getSettings('org.gnome.shell');
     daemon = new DeskChangerDaemon(settings);
-    if (Main.screenShield !== null) {
-        daemon.lockscreen = Main.screenShield.locked;
-        Main.screenShield.connect('locked-changed', function () {
-            // lockscreen mode toggle through signals
-            daemon.lockscreen = Main.screenShield.locked;
-        });
-    }
 
     Gio.DBus.session.connect('closed', function () {
         if (daemon.running) {

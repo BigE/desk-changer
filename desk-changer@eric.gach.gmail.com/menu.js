@@ -21,6 +21,7 @@
  */
 
 const Me = imports.misc.extensionUtils.getCurrentExtension();
+const Convenience = Me.imports.convenience;
 const Gettext = imports.gettext.domain(Me.metadata.uuid);
 const Gio = imports.gi.Gio;
 const Lang = imports.lang;
@@ -194,7 +195,7 @@ var DeskChangerOpenCurrent = new Lang.Class({
     Extends: PopupMenu.PopupMenuItem,
 
     _init: function () {
-        this._background = new Gio.Settings({'schema': 'org.gnome.desktop.background'});
+        this._background = Convenience.getSettings('org.gnome.desktop.background');
         // Menu item label
         this.parent(_('Open Current Wallpaper'));
         this._activate_id = this.connect('activate', Lang.bind(this, this._activate));
