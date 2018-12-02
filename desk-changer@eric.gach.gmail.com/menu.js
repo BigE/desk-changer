@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2014-2017 Eric Gach <eric.gach@gmail.com>
+ * Copyright (c) 2014-2018 Eric Gach <eric.gach@gmail.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,6 +21,7 @@
  */
 
 const Me = imports.misc.extensionUtils.getCurrentExtension();
+const Convenience = Me.imports.convenience;
 const Gettext = imports.gettext.domain(Me.metadata.uuid);
 const Gio = imports.gi.Gio;
 const Lang = imports.lang;
@@ -32,7 +33,7 @@ const St = imports.gi.St;
 const Util = imports.misc.util;
 const _ = Gettext.gettext;
 
-const DeskChangerSettings = Me.imports.settings.DeskChangerSettings;
+const DeskChangerProfileError = Me.imports.profile.DeskChangerProfileError;
 const debug = Me.imports.utils.debug;
 const error = Me.imports.utils.error;
 const Ui = Me.imports.ui;
@@ -41,8 +42,8 @@ var DeskChangerControls = new Lang.Class({
     Name: 'DeskChangerControls',
     Extends: PopupMenu.PopupBaseMenuItem,
 
-    _init: function (dbus, settings) {
-        this._dbus = dbus;
+    _init: function (daemon, settings) {
+        this._daemon = daemon;
         this._settings = settings;
         this._bindings = [];
         this.parent({can_focus: false, reactive: false});
@@ -92,20 +93,20 @@ var DeskChangerControls = new Lang.Class({
 
     next: function () {
         debug('next');
-        this._dbus.NextRemote(function (result, _error) {
-            if (_error) {
-                Main.notifyError('Desk Changer', String(_error));
-            }
-        });
+        this._daemon.next();
     },
 
     prev: function() {
         debug('prev');
-        this._dbus.PrevRemote(function (result, _error) {
-            if (_error) {
-                Main.notifyError('Desk Changer', String(_error));
+        try {
+            this._daemon.prev();
+        } catch (e) {
+            if (e instanceof DeskChangerProfileError) {
+                Main.notifyError('DeskChanger', e.message);
+            } else {
+                Main.notifyError('DeskChanger', '%s'.format(e));
             }
-        });
+        }
     },
 
     _addKeyBinding: function (key, handler) {
@@ -160,11 +161,21 @@ var DeskChangerDaemonControls = new Lang.Class({
         // Switch label
         this.parent(_('DeskChanger Daemon'));
         this.daemon = daemon;
-        this.setToggleState(this.daemon.is_running);
+        this.setToggleState(this.daemon.running);
         this._handler = this.connect('toggled', Lang.bind(this, function () {
-            this.daemon.toggle();
+            try {
+                (this.daemon.running) ? this.daemon.stop() : this.daemon.start();
+            } catch (e) {
+                if (e instanceof DeskChangerProfileError) {
+                    Main.notifyError('DeskChanger', e.message);
+                } else {
+                    Main.notifyError('DeskChanger', _('failed to start daemon: %s'.format(e)));
+                }
+            }
+
+            this.setToggleState(this.daemon.running);
         }));
-        this._daemon_handler = this.daemon.connect('toggled', Lang.bind(this, function (obj, state) {
+        this._daemon_handler = this.daemon.connect('running', Lang.bind(this, function (obj, state) {
             this.setToggleState(state);
         }));
     },
@@ -184,7 +195,7 @@ var DeskChangerOpenCurrent = new Lang.Class({
     Extends: PopupMenu.PopupMenuItem,
 
     _init: function () {
-        this._background = new Gio.Settings({'schema': 'org.gnome.desktop.background'});
+        this._background = Convenience.getSettings('org.gnome.desktop.background');
         // Menu item label
         this.parent(_('Open Current Wallpaper'));
         this._activate_id = this.connect('activate', Lang.bind(this, this._activate));
@@ -372,7 +383,7 @@ var DeskChangerSwitch = new Lang.Class({
         this._settings = settings;
         this.parent(label);
         this.setToggleState(this._settings[setting]);
-        this._handler_changed = this._settings.connect('changed::' + this._setting.replace('_', '-'), Lang.bind(this, this._changed));
+        this._handler_changed = this._settings.connect('changed::' + this._setting.replace(new RegExp('[_]+', 'g'), '-'), Lang.bind(this, this._changed));
         this._handler_toggled = this.connect('toggled', Lang.bind(this, this._toggled));
     },
 

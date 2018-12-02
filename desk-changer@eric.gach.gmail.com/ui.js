@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2014-2017 Eric Gach <eric.gach@gmail.com>
+ * Copyright (c) 2014-2018 Eric Gach <eric.gach@gmail.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -74,10 +74,9 @@ var DeskChangerIcon = new Lang.Class({
         this._preview = null;
         // this will switch between the icon and preview when the setting is changed
         this._settings.connect('changed::icon-preview', Lang.bind(this, this.update_child));
-        this.daemon.connectSignal('preview', Lang.bind(this, function (proxy, e, properties) {
-            let file = properties[0];
+        this._preview_id = this.daemon.desktop_profile.connect('preview', Lang.bind(this, function (obj, wallpaper) {
             if (this._icon) {
-                this.update_child(file);
+                this.update_child(wallpaper);
             }
         }));
         this.update_child();
@@ -90,6 +89,10 @@ var DeskChangerIcon = new Lang.Class({
 
         if (this._preview) {
             this._preview.destroy();
+        }
+
+        if (this._preview_id) {
+            this.daemon.desktop_profile.disconnect(this._preview_id);
         }
 
         this.parent();
@@ -150,27 +153,27 @@ var DeskChangerPreview = new Lang.Class({
         this.daemon = daemon;
         this._texture = null;
         this._width = width;
-        this._next_file_id = this.daemon.connectSignal('preview', Lang.bind(this, function (proxy, signalName, parameters) {
-            let file = parameters[0];
+        this._next_file_id = this.daemon.desktop_profile.connect('preview', Lang.bind(this, function (obj, file) {
             this.set_wallpaper(file);
         }));
-        this._toggled_id = this.daemon.connect('toggled', Lang.bind(this, function () {
-            if (!this.daemon.is_running && this._texture) {
-                debug('clearing preview, daemon stopped');
+        this._daemon_running_id = this.daemon.connect('running', Lang.bind(this, function (obj, running) {
+            if (!running && this._texture) {
                 this._texture.destroy();
                 this._texture = null;
             }
         }));
 
-        if (this.daemon.bus.queue && this.daemon.bus.queue.length > 0) {
-            this.set_wallpaper(this.daemon.bus.queue[0], false);
+        if (this.daemon.desktop_profile.preview) {
+            this.set_wallpaper(this.daemon.desktop_profile.preview);
         }
 
         this.set_child(this._texture);
     },
 
     destroy: function () {
-        this.daemon.disconnectSignal(this._next_file_id);
+        this.daemon.desktop_profile.disconnect(this._next_file_id);
+        this.daemon.disconnect(this._daemon_running_id);
+
         if (this._texture) {
             this._texture.destroy();
             this._texture = null;

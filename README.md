@@ -10,24 +10,6 @@ on the fly without reloading the daemon.
 ## Requirements
 
 * gnome-shell 3.8 or higher
-* Python 2 or 3 with [PyGObject](https://wiki.gnome.org/action/show/Projects/PyGObject?action=show&redirect=PyGObject) (This is for the daemon)
-
-##### Fedora/CentOS
-These packages must be installed for the extension to work. They are **NOT** installed by default.
-###### For python2
-`yum install python python-gobject pygobject2`
-
-###### For python3
-`yum install python3 python3-gobject pygobject3`
-
-##### Debian/Ubuntu
-The following packages should already be installed. No setup should be needed for the extension to work.
-
-###### For python2
-`apt-get install python python-gi`
-
-###### For python3
-`apt-get install python3 python3-gi`
 
 ## Install
 
@@ -46,17 +28,31 @@ with the built in toggle switch.
 ## General Information
 ### Daemon
 
-The daemon is simply a Gio.Application running as a service. To view more information about the daemon, run it from the
-command line with the `-h` or `--help` option.
+The daemon is now part of the extension itself and has no command line interface. The only interface available to the
+daemon now is the DBus interface
 
->$ ./desk-changer-daemon.py -h  
->Usage:
->  desk-changer-daemon.py [OPTION...]
->
->Help Options:
->  -h, --help                Show help options
->  --help-all                Show all help options
->
+#### DBUS Interface
+**Name**: org.gnome.Shell.Extensions.DeskChanger.Daemon
+
+**Path**: /org/gnome/Shell/Extensions/DeskChanger/Daemon
+
+##### Methods
+* LoadProfile(String profile) - Loads the specified profile
+* Next() - Moves to the next wallpaper, returns the uri
+* Prev() - Moves to the previous wallpaper, returns the uri
+* Start() - Starts the daemon
+* Stop() - Stops the daemon
+
+##### Properties
+* history - Read only array of history
+* queue - Read only array of the queue
+* lockscreen - writable boolean value if the lockscreen is active
+
+##### Signals
+* changed - Emitted when the wallpaper is changed, uri to wallpaper file
+* error - _Not implemented_
+* preview - Emitted when a new preview is available, uri to preview file
+
 
 ### dconf-editor
 

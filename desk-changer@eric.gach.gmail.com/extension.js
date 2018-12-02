@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2014-2017 Eric Gach <eric.gach@gmail.com>
+ * Copyright (c) 2014-2018 Eric Gach <eric.gach@gmail.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -48,10 +48,10 @@ const DeskChangerIndicator = new Lang.Class({
     Name: 'DeskChangerIndicator',
     Extends: PanelMenu.Button,
 
-    _init: function () {
+    _init: function (daemon) {
         this.settings = new DeskChangerSettings();
         this.parent(0.0, 'DeskChanger');
-        this.daemon = new DeskChangerDaemon(this.settings);
+        this.daemon = daemon;
 
         this.actor.add_child(new Ui.DeskChangerIcon(this.daemon, this.settings));
         this.menu.addMenuItem(new Menu.DeskChangerProfileDesktop(this.settings));
@@ -72,7 +72,7 @@ const DeskChangerIndicator = new Lang.Class({
         this.menu.addMenuItem(new Menu.DeskChangerOpenCurrent());
         this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
         this.menu.addMenuItem(new Menu.DeskChangerRotation(this.settings, true));
-        this.menu.addMenuItem(new Menu.DeskChangerControls(this.daemon.bus, this.settings));
+        this.menu.addMenuItem(new Menu.DeskChangerControls(this.daemon, this.settings));
         this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
         this.menu.addMenuItem(new Menu.DeskChangerDaemonControls(this.daemon));
         // Simple settings for the extension
@@ -97,7 +97,6 @@ const DeskChangerIndicator = new Lang.Class({
     destroy: function () {
         this.parent();
         this.settings.destroy();
-        this.daemon.destroy();
     }
 });
 
@@ -105,9 +104,9 @@ const DeskChangerSystemIndicator = new Lang.Class({
     Name: 'DeskChangerSystemIndicator',
     Extends: PanelMenu.SystemIndicator,
 
-    _init: function (menu) {
+    _init: function (daemon, menu) {
         this.parent();
-        this.daemon = new DeskChangerDaemon();
+        this.daemon = daemon;
 
         this.settings = new DeskChangerSettings();
         this._menu = new PopupMenu.PopupSubMenuMenuItem('DeskChanger', true);
@@ -116,7 +115,7 @@ const DeskChangerSystemIndicator = new Lang.Class({
         this._menu.menu.addMenuItem(new Menu.DeskChangerPreviewMenuItem(this.daemon));
         this._menu.menu.addMenuItem(new Menu.DeskChangerOpenCurrent());
         this._menu.menu.addMenuItem(new Menu.DeskChangerRotation(this.settings, false));
-        this._menu.menu.addMenuItem(new Menu.DeskChangerControls(this.daemon.bus, this.settings));
+        this._menu.menu.addMenuItem(new Menu.DeskChangerControls(this.daemon, this.settings));
         this._menu.menu.addMenuItem(new Menu.DeskChangerDaemonControls(this.daemon));
         // Simple settings for the extension
         let settings = new PopupMenu.PopupMenuItem(_('DeskChanger Settings'));
@@ -138,7 +137,6 @@ const DeskChangerSystemIndicator = new Lang.Class({
 
         this._menu.destroy();
         this.settings.destroy();
-        this.daemon.destroy();
     },
 
     _update_indicator: function () {
@@ -158,7 +156,7 @@ const DeskChangerSystemIndicator = new Lang.Class({
 });
 
 let daemon, indicator, settings, shellSettings;
-let changed_id, current_profile_id, error_id, notifications_id, random_id, rotation_id;
+let changed_id, current_profile_id, notifications_id, random_id, rotation_id;
 
 function disable() {
     debug('disabling extension');
@@ -176,11 +174,7 @@ function disable() {
     }
 
     if (changed_id) {
-        daemon.disconnectSignal(changed_id);
-    }
-
-    if (error_id) {
-        daemon.disconnectSignal(error_id);
+        daemon.disconnect(changed_id);
     }
 
     if (random_id) {
@@ -193,16 +187,10 @@ function disable() {
 
     changed_id = null;
     current_profile_id = null;
-    error_id = null;
     notifications_id = null;
     random_id = null;
     rotation_id = null;
     indicator = null;
-
-    if (shellSettings.get_strv('enabled-extensions').indexOf(Me.uuid) === -1 && daemon.is_running) {
-        debug('Extension disabled, stopping daemon');
-        daemon.toggle();
-    }
 }
 
 function enable() {
@@ -217,13 +205,9 @@ function enable() {
         Main.notify('Desk Changer', ((settings.notifications) ? _('Notifications are now enabled') : _('Notifications are now disabled')));
     });
 
-    changed_id = daemon.connectSignal('changed', function (emitter, signalName, parameters) {
+    changed_id = daemon.connect('changed', function (obj, wallpaper) {
         if (settings.notifications)
-            Main.notify('Desk Changer', _('Wallpaper Changed: %s'.format(parameters[0])));
-    });
-
-    error_id = daemon.connectSignal('error', function (emitter, signalName, parameters) {
-        Main.notifyError('Desk Changer', _('Daemon Error: %s'.format(parameters[0])));
+            Main.notify('Desk Changer', _('Wallpaper Changed: %s'.format(wallpaper)));
     });
 
     random_id = settings.connect('changed::random', function () {
@@ -259,19 +243,16 @@ function enable() {
         }
     });
 
-    if (!daemon.is_running && settings.auto_start) {
+    if (!daemon.running && settings.auto_start) {
         // run if auto start is enabled and its not already running
-        daemon.toggle();
-    } else if (daemon.is_running) {
-        // must set this here if the previews are to be set correctly, even though signal hits later
-        daemon.lockscreen = false;
+        daemon.start();
     }
 
     if (settings.integrate_system_menu) {
-        indicator = new DeskChangerSystemIndicator(Main.panel.statusArea.aggregateMenu.menu);
+        indicator = new DeskChangerSystemIndicator(daemon, Main.panel.statusArea.aggregateMenu.menu);
         Main.panel.statusArea.aggregateMenu._indicators.insert_child_at_index(indicator.indicators, 0);
     } else {
-        indicator = new DeskChangerIndicator();
+        indicator = new DeskChangerIndicator(daemon);
         Main.panel.addToStatusArea('deskchanger', indicator);
     }
 }
@@ -280,19 +261,12 @@ function init() {
     Convenience.initTranslations();
     debug('initalizing extension version: %s'.format(DeskChangerVersion));
     settings = new DeskChangerSettings();
-    shellSettings = new Gio.Settings({'schema': 'org.gnome.shell'});
+    shellSettings = Convenience.getSettings('org.gnome.shell');
     daemon = new DeskChangerDaemon(settings);
-    if (Main.screenShield !== null) {
-        daemon.lockscreen = Main.screenShield.locked;
-        Main.screenShield.connect('locked-changed', function () {
-            // lockscreen mode toggle through signals
-            daemon.lockscreen = Main.screenShield.locked;
-        });
-    }
 
     Gio.DBus.session.connect('closed', function () {
-        if (daemon.is_running) {
-            daemon.toggle();
+        if (daemon.running) {
+            daemon.stop();
         }
     });
 

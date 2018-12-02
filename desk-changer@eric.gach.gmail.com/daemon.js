@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2014-2017 Eric Gach <eric.gach@gmail.com>
+ * Copyright (c) 2014-2018 Eric Gach <eric.gach@gmail.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -19,15 +19,22 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+
 const Lang = imports.lang;
 const Me = imports.misc.extensionUtils.getCurrentExtension();
-const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
+const Gio = imports.gi.Gio;
 const Signals = imports.signals;
 
 const debug = Me.imports.utils.debug;
+const profile = Me.imports.profile;
+const timer = Me.imports.timer;
 
-const DeskChangerDaemonInterface = '<node>\
+
+var DeskChangerDaemonDBusName = 'org.gnome.Shell.Extensions.DeskChanger.Daemon';
+var DeskChangerDaemonDBusPath = '/org/gnome/Shell/Extensions/DeskChanger/Daemon';
+
+var DeskChangerDaemonDBusInterface = Gio.DBusNodeInfo.new_for_xml('<node>\
     <interface name="org.gnome.Shell.Extensions.DeskChanger.Daemon">\
         <method name="LoadProfile">\
             <arg direction="in" name="profile" type="s" />\
@@ -38,12 +45,13 @@ const DeskChangerDaemonInterface = '<node>\
         <method name="Prev">\
             <arg direction="out" name="uri" type="s" />\
         </method>\
-        <method name="Quit"></method>\
+        <method name="Start"></method>\
+        <method name="Stop"></method>\
         <signal name="changed">\
             <arg direction="out" name="uri" type="s" />\
         </signal>\
         <signal name="error">\
-            <arg direction="out" name="uri" type="s" />\
+            <arg direction="out" name="message" type="s" />\
         </signal>\
         <signal name="preview">\
             <arg direction="out" name="uri" type="s" />\
@@ -52,113 +60,262 @@ const DeskChangerDaemonInterface = '<node>\
         <property type="b" name="lockscreen" access="write" />\
         <property type="as" name="queue" access="read" />\
     </interface>\
-</node>';
-const DeskChangerDaemonProxy = Gio.DBusProxy.makeProxyWrapper(DeskChangerDaemonInterface);
+</node>');
 
-const DBusInterface = '<node>\
-  <interface name="org.freedesktop.DBus">\
-    <method name="ListNames">\
-      <arg direction="out" type="as"/>\
-    </method>\
-    <signal name="NameOwnerChanged">\
-      <arg type="s"/>\
-      <arg type="s"/>\
-      <arg type="s"/>\
-    </signal>\
-  </interface>\
-</node>';
-const DBusProxy = Gio.DBusProxy.makeProxyWrapper(DBusInterface);
+const DeskChangerDaemonDBusServer = new Lang.Class({
+    Name: 'DeskChangerDaemonDBusServer',
+    Abstract: true,
+
+    _init: function () {
+        this._dbus_id = null;
+        this._dbus_connection = null;
+        this._running = false;
+
+        try {
+            this._dbus = Gio.bus_own_name(Gio.BusType.SESSION, DeskChangerDaemonDBusName, Gio.BusNameOwnerFlags.NONE, Lang.bind(this, this._on_bus_acquired), null, function () {
+                debug('unable to acquire bus name %s'.format(DeskChangerDaemonDBusName));
+            });
+        } catch (e) {
+            debug('unable to own dbus name (%s)'.format(e));
+        }
+    },
+
+    destroy: function () {
+        this.stop();
+        Gio.bus_unown_name(this._dbus);
+    },
+
+    start: function () {
+        this._running = true;
+    },
+
+    stop: function () {
+        this._running = false;
+    },
+
+    get running() {
+        return this._running;
+    },
+
+    _dbus_handle_call: function (connection, sender, object_path, interface_name, method_name, parameters, invocation) {
+        switch (method_name.toLowerCase()) {
+            case 'start':
+                this.start();
+                break;
+
+            case 'stop':
+                this.stop();
+                break;
+
+            default:
+                invocation.return_dbus_error('org.freedesktop.DBus.Error.UnknownMethod',
+                                             'Method ' + method_name + ' in ' + interface_name + ' does not exist');
+                break;
+        }
+    },
+
+    _dbus_handle_get: function (connection, sender, object_path, interface_name, method_name, parameters, invocation) {
+    },
+
+    _dbus_handle_set: function (connection, sender, object_path, interface_name, method_name, parameters, invocation) {
+    },
+
+    _emit_changed: function (uri) {
+        if (this._dbus_connection) {
+            let params = new GLib.VariantBuilder(new GLib.VariantType('r'));
+            params.add_value(GLib.Variant.new_string(uri));
+            debug('dbus::changed ' + uri);
+            this._dbus_connection.emit_signal(null, DeskChangerDaemonDBusPath, DeskChangerDaemonDBusName, 'changed', params.end());
+        }
+
+        this.emit('changed', uri);
+    },
+
+    _emit_preview: function (uri) {
+        if (this._dbus_connection) {
+            let params = new GLib.VariantBuilder(new GLib.VariantType('r'));
+            params.add_value(GLib.Variant.new_string(uri));
+            debug('dbus::preview ' + uri);
+            this._dbus_connection.emit_signal(null, DeskChangerDaemonDBusPath, DeskChangerDaemonDBusName, 'preview', params.end());
+        }
+
+        this.emit('preview', uri);
+    },
+
+    _on_bus_acquired: function (connection) {
+        if (this._dbus_id !== null) return;
+
+        try {
+            this._dbus_id = connection.register_object(
+                DeskChangerDaemonDBusPath,
+                DeskChangerDaemonDBusInterface.interfaces[0],
+                Lang.bind(this, this._dbus_handle_call),
+                Lang.bind(this, this._dbus_handle_get),
+                Lang.bind(this, this._dbus_handle_set),
+            );
+            this._dbus_connection = connection;
+        } catch (e) {
+            debug(e);
+        } finally {
+            if (this._dbus_id === null || this._dbus_id === 0) {
+                debug('failed to register dbus object');
+                this._dbus_id = null;
+                this._dbus_connection = null;
+            }
+        }
+    },
+});
 
 var DeskChangerDaemon = new Lang.Class({
     Name: 'DeskChangerDaemon',
+    Extends: DeskChangerDaemonDBusServer,
 
     _init: function (settings) {
-        this._bus_handlers = [];
-        this.settings = settings;
-        this._is_running = false;
-        this._path = Me.dir.get_path();
-        this.bus = new DeskChangerDaemonProxy(Gio.DBus.session, 'org.gnome.Shell.Extensions.DeskChanger.Daemon', '/org/gnome/Shell/Extensions/DeskChanger/Daemon');
-        this._bus = new DBusProxy(Gio.DBus.session, 'org.freedesktop.DBus', '/org/freedesktop/DBus');
-        this._owner_changed_id = this._bus.connectSignal('NameOwnerChanged', Lang.bind(this, function (emitter, signalName, params) {
-            if (params[0] === "org.gnome.Shell.Extensions.DeskChanger.Daemon") {
-                if (params[1] !== "" && params[2] === "") {
-                    this._off();
-                }
-                if (params[1] === "" && params[2] !== "") {
-                    this._on();
+        this._settings = settings;
+        this.parent();
+        this.desktop_profile = new profile.DeskChangerProfileDesktop(this._settings);
+        this.lockscreen_profile = new profile.DeskChangerProfileLockscreen(this._settings);
+
+        this._desktop_profile_id = this.desktop_profile.connect('loaded', Lang.bind(this, function (obj) {
+            if (this.running && this._settings.auto_rotate) {
+                let wallpaper = this.desktop_profile.next(false);
+                if (this._settings.update_lockscreen && !this.lockscreen_profile.loaded) {
+                    this.lockscreen_profile._set_wallpaper(wallpaper);
                 }
             }
         }));
 
-        let result = this._bus.ListNamesSync();
-        result = String(result).split(',');
-        for (let item in result) {
-            if (result[item] === "org.gnome.Shell.Extensions.DeskChanger.Daemon") {
-                this._on();
-                break;
+        this._lockscreen_profile_id = this.lockscreen_profile.connect('loaded', Lang.bind(this, function (obj) {
+            if (this.running && this._settings.auto_rotate) {
+                this.lockscreen_profile.next(false);
             }
-        }
-    },
+        }));
 
-    connectSignal: function (signal, callback) {
-        let handler_id = this.bus.connectSignal(signal, callback);
-        this._bus_handlers.push(handler_id);
-        debug('added dbus handler ' + handler_id);
-        return handler_id;
+        this._changed_id = this.desktop_profile.connect('changed', Lang.bind(this, function (obj, uri) {
+            this._emit_changed(uri);
+        }));
+
+        this._preview_id = this.desktop_profile.connect('preview', Lang.bind(this, function (obj, uri) {
+            this._emit_preview(uri);
+        }));
     },
 
     destroy: function () {
-        while (this._bus_handlers.length) {
-            this.disconnectSignal(this._bus_handlers[0]);
+        if (this._desktop_profile_id) {
+            this.desktop_profile.disconnect(this._desktop_profile_id);
         }
 
-        this._bus.disconnectSignal(this._owner_changed_id);
+        if (this._lockscreen_profile_id) {
+            this.lockscreen_profile.disconnect(this._lockscreen_profile_id);
+        }
+
+        if (this._changed_id) {
+            this.desktop_profile.disconnect(this._changed_id);
+        }
+
+        if (this._preview_id) {
+            this.desktop_profile.disconnect(this._preview_id);
+        }
+
+        this.parent();
     },
 
-    disconnectSignal: function (handler_id) {
-        let index = this._bus_handlers.indexOf(handler_id);
+    next: function (_current = true) {
+        let wallpaper;
+        wallpaper = this.desktop_profile.next(_current);
 
-        debug('removing dbus handler ' + handler_id);
-        this.bus.disconnectSignal(handler_id);
-        if (index > -1) {
-            this._bus_handlers.splice(index, 1);
+        if (this._settings.update_lockscreen) {
+            if (this.lockscreen_profile.loaded) {
+                // if the lockscreen profile isn't the same, trigger the rotation
+                this.lockscreen_profile.next(_current);
+            } else {
+                // if the lockscreen profile is inherited from the desktop, set the wallpaper
+                this.lockscreen_profile._set_wallpaper(wallpaper);
+            }
+        }
+
+        return wallpaper;
+    },
+
+    prev: function () {
+        let wallpaper;
+        wallpaper = this.desktop_profile.prev();
+
+        if  (this._settings.update_lockscreen) {
+            if (this.lockscreen_profile.loaded) {
+                this.lockscreen_profile.next();
+            } else {
+                this.lockscreen_profile._set_wallpaper(wallpaper);
+            }
+        }
+
+        return wallpaper;
+    },
+
+    start: function () {
+        this.desktop_profile.load();
+
+        if (this._settings.update_lockscreen && this._settings.lockscreen_profile) {
+            this.lockscreen_profile.load();
+        }
+
+        this.parent();
+        this._init_rotation();
+        this.emit('running', true);
+
+        if (this._settings.auto_rotate) {
+            this.next(false);
         }
     },
 
-    toggle: function () {
-        if (this._is_running) {
-            debug('stopping daeomn');
-            this.bus.QuitSync();
-        } else {
-            debug('starting daemon');
-            let scriptArgv = [
-                this._path + '/run-any-python.sh',
-                this._path + '/desk-changer-daemon.py'
-            ]
-            GLib.spawn_async(this._path, scriptArgv, null, GLib.SpawnFlags.DO_NOT_REAP_CHILD, null);
+    stop: function () {
+        this.desktop_profile.unload();
+        if (this.lockscreen_profile.loaded) {
+            this.lockscreen_profile.unload();
+        }
+
+        if (this.timer) {
+            this.timer.destroy();
+            this.timer = null;
+        }
+
+        this.parent();
+        this.emit('running', false);
+    },
+
+    _dbus_handle_call: function (connection, sender, object_path, interface_name, method_name, parameters, invocation) {
+        switch (method_name.toLowerCase()) {
+            case 'next':
+                invocation.return_value(new GLib.Variant('(s)', [this.next(),]));
+                break;
+            case 'prev':
+                try {
+                    invocation.return_value(new GLib.Variant('(s)', [this.prev(),]));
+                } catch (e) {
+                    if (e instanceof profile.DeskChangerProfileError) {
+                        invocation.return_dbus_error(DeskChangerDaemonDBusName.concat('.Error.HistoryEmpty'), e.message);
+                    } else {
+                        invocation.return_dbus_error(DeskChangerDaemonDBusName.concat('.Error'), e);
+                    }
+                }
+                break;
+            default:
+                this.parent(connection, sender, object_path, interface_name, method_name, parameters, invocation);
+                break;
         }
     },
 
-    _off: function () {
-        this._is_running = false;
-        debug('emit(\'toggled\', false)');
-        this.emit('toggled', false);
-    },
+    _init_rotation: function() {
+        switch (this._settings.rotation) {
+            case 'interval':
+                this.timer = new timer.DeskChangerTimerInterval(this._settings, Lang.bind(this, this.next));
+                break;
 
-    _on: function () {
-        debug('the desk-changer daemon is running');
-        this._is_running = true;
-        debug('emit(\'toggled\', true)');
-        this.emit('toggled', true);
+            case 'hourly':
+                this.timer = new timer.DeskChangerTimerHourly(Lang.bind(this, this.next));
+                break;
+        }
     },
-
-    get is_running() {
-        return this._is_running;
-    },
-
-    set lockscreen(value) {
-        this.bus.lockscreen = Boolean(value);
-    }
 });
 
 Signals.addSignalMethods(DeskChangerDaemon.prototype);

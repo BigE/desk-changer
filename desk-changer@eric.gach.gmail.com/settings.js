@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2014-2017 Eric Gach <eric.gach@gmail.com>
+ * Copyright (c) 2014-2018 Eric Gach <eric.gach@gmail.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,18 +23,13 @@ const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
 const Lang = imports.lang;
 const Me = imports.misc.extensionUtils.getCurrentExtension();
+const Convenience = Me.imports.convenience;
 
 var DeskChangerSettings = new Lang.Class({
     Name: 'DeskChangerSettings',
 
     _init: function () {
-        let source = Gio.SettingsSchemaSource.new_from_directory(
-            Me.dir.get_child('schemas').get_path(),
-            Gio.SettingsSchemaSource.get_default(),
-            false
-        );
-
-        this.schema = new Gio.Settings({settings_schema: source.lookup('org.gnome.shell.extensions.desk-changer', false)});
+        this.schema = Convenience.getSettings();
         this._handlers = [];
     },
 
@@ -129,6 +124,14 @@ var DeskChangerSettings = new Lang.Class({
 
     set profiles(value) {
         this.schema.set_value('profiles', new GLib.Variant("a{sa(sb)}", value));
+    },
+
+    get profile_state() {
+        return this.schema.get_value('profile-state').deep_unpack();
+    },
+
+    set profile_state(value) {
+        this.schema.set_value('profile-state', new GLib.Variant('a{s(ss)}', value));
     },
 
     get random() {
