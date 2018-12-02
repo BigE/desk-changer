@@ -19,6 +19,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+
 const Lang = imports.lang;
 const Me = imports.misc.extensionUtils.getCurrentExtension();
 const GLib = imports.gi.GLib;
