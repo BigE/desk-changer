@@ -34,7 +34,7 @@ const timer = Me.imports.timer;
 var DeskChangerDaemonDBusName = 'org.gnome.Shell.Extensions.DeskChanger.Daemon';
 var DeskChangerDaemonDBusPath = '/org/gnome/Shell/Extensions/DeskChanger/Daemon';
 
-var DeskChangerDaemonDBusInterface = Gio.DBusNodeInfo.new_for_xml('<node>\
+var DeskChangerDaemonDBusInterface = '<node>\
     <interface name="org.gnome.Shell.Extensions.DeskChanger.Daemon">\
         <method name="LoadProfile">\
             <arg direction="in" name="profile" type="s" />\
@@ -45,8 +45,12 @@ var DeskChangerDaemonDBusInterface = Gio.DBusNodeInfo.new_for_xml('<node>\
         <method name="Prev">\
             <arg direction="out" name="uri" type="s" />\
         </method>\
-        <method name="Start"></method>\
-        <method name="Stop"></method>\
+        <method name="Start">\
+            <arg direction="out" name="started" type="b" />\
+        </method>\
+        <method name="Stop">\
+            <arg direction="out" name="stopped" type="b" />\
+        </method>\
         <signal name="changed">\
             <arg direction="out" name="uri" type="s" />\
         </signal>\
@@ -57,10 +61,12 @@ var DeskChangerDaemonDBusInterface = Gio.DBusNodeInfo.new_for_xml('<node>\
             <arg direction="out" name="uri" type="s" />\
         </signal>\
         <property type="as" name="history" access="read" />\
-        <property type="b" name="lockscreen" access="write" />\
+        <property type="b" name="running" access="read" />\
         <property type="as" name="queue" access="read" />\
     </interface>\
-</node>');
+</node>';
+
+var DeskChangerDaemonDBusInterfaceObject = Gio.DBusNodeInfo.new_for_xml(DeskChangerDaemonDBusInterface);
 
 const DeskChangerDaemonDBusServer = new Lang.Class({
     Name: 'DeskChangerDaemonDBusServer',
@@ -101,10 +107,12 @@ const DeskChangerDaemonDBusServer = new Lang.Class({
         switch (method_name.toLowerCase()) {
             case 'start':
                 this.start();
+                invocation.return_value(new GLib.Variant('(b)', [true,]));
                 break;
 
             case 'stop':
                 this.stop();
+                invocation.return_value(new GLib.Variant('(b)', [true,]));
                 break;
 
             default:
@@ -114,10 +122,14 @@ const DeskChangerDaemonDBusServer = new Lang.Class({
         }
     },
 
-    _dbus_handle_get: function (connection, sender, object_path, interface_name, method_name, parameters, invocation) {
+    _dbus_handle_get: function (connection, sender, object_path, interface_name, property_name, parameters, invocation) {
+        invocation.return_dbus_error('org.freedesktop.DBus.Error.InvalidArgs',
+            'Property ' + property_name + ' in ' + interface_name + ' does not exist');
     },
 
-    _dbus_handle_set: function (connection, sender, object_path, interface_name, method_name, parameters, invocation) {
+    _dbus_handle_set: function (connection, sender, object_path, interface_name, property_name, parameters, invocation) {
+        invocation.return_dbus_error('org.freedesktop.DBus.Error.InvalidArgs',
+            'Property ' + property_name + ' in ' + interface_name + ' does not exist');
     },
 
     _emit_changed: function (uri) {
@@ -127,8 +139,6 @@ const DeskChangerDaemonDBusServer = new Lang.Class({
             debug('dbus::changed ' + uri);
             this._dbus_connection.emit_signal(null, DeskChangerDaemonDBusPath, DeskChangerDaemonDBusName, 'changed', params.end());
         }
-
-        this.emit('changed', uri);
     },
 
     _emit_preview: function (uri) {
@@ -138,8 +148,6 @@ const DeskChangerDaemonDBusServer = new Lang.Class({
             debug('dbus::preview ' + uri);
             this._dbus_connection.emit_signal(null, DeskChangerDaemonDBusPath, DeskChangerDaemonDBusName, 'preview', params.end());
         }
-
-        this.emit('preview', uri);
     },
 
     _on_bus_acquired: function (connection) {
@@ -148,7 +156,7 @@ const DeskChangerDaemonDBusServer = new Lang.Class({
         try {
             this._dbus_id = connection.register_object(
                 DeskChangerDaemonDBusPath,
-                DeskChangerDaemonDBusInterface.interfaces[0],
+                DeskChangerDaemonDBusInterfaceObject.interfaces[0],
                 Lang.bind(this, this._dbus_handle_call),
                 Lang.bind(this, this._dbus_handle_get),
                 Lang.bind(this, this._dbus_handle_set),
@@ -193,10 +201,12 @@ var DeskChangerDaemon = new Lang.Class({
 
         this._changed_id = this.desktop_profile.connect('changed', Lang.bind(this, function (obj, uri) {
             this._emit_changed(uri);
+            this.emit('changed', uri);
         }));
 
         this._preview_id = this.desktop_profile.connect('preview', Lang.bind(this, function (obj, uri) {
             this._emit_preview(uri);
+            this.emit('preview', uri);
         }));
     },
 
@@ -303,6 +313,19 @@ var DeskChangerDaemon = new Lang.Class({
                 this.parent(connection, sender, object_path, interface_name, method_name, parameters, invocation);
                 break;
         }
+    },
+
+    _dbus_handle_get: function (connection, sender, object_path, interface_name, property_name, parameters, invocation) {
+        switch (property_name) {
+            case 'history':
+                return new GLib.Variant('as', this.desktop_profile._history.queue);
+            case 'queue':
+                return new GLib.Variant('as', this.desktop_profile._queue.queue);
+            case 'running':
+                return new GLib.Variant('b', this.running);
+        }
+
+        this.parent(connection, sender, object_path, interface_name, property_name, parameters, invocation);
     },
 
     _init_rotation: function() {

@@ -41,19 +41,15 @@ const Ui = Me.imports.ui;
 
 /**
  * This is the actual indicator that should be added to the main panel.
- *
- * @type {Lang.Class}
  */
-const DeskChangerIndicator = new Lang.Class({
-    Name: 'DeskChangerIndicator',
-    Extends: PanelMenu.Button,
-
-    _init: function (daemon) {
+class DeskChangerIndicator extends PanelMenu.Button {
+    constructor(daemon) {
+        super(0.0, 'DeskChanger');
         this.settings = new DeskChangerSettings();
-        this.parent(0.0, 'DeskChanger');
         this.daemon = daemon;
 
-        this.actor.add_child(new Ui.DeskChangerIcon(this.daemon, this.settings));
+        this._icon = new Ui.DeskChangerIcon(this.daemon, this.settings);
+        this.actor.add_child(this._icon);
         this.menu.addMenuItem(new Menu.DeskChangerProfileDesktop(this.settings));
         if (this.settings.update_lockscreen) {
             this.menu.addMenuItem(new Menu.DeskChangerProfileLockscreen(this.settings));
@@ -92,20 +88,18 @@ const DeskChangerIndicator = new Lang.Class({
                 });
             }
         }));
-    },
+    }
 
-    destroy: function () {
-        this.parent();
+    destroy() {
+        this._icon.destroy();
+        super.destroy();
         this.settings.destroy();
     }
-});
+}
 
-const DeskChangerSystemIndicator = new Lang.Class({
-    Name: 'DeskChangerSystemIndicator',
-    Extends: PanelMenu.SystemIndicator,
-
-    _init: function (daemon, menu) {
-        this.parent();
+class DeskChangerSystemIndicator extends PanelMenu.SystemIndicator {
+    constructor(daemon, menu) {
+        super();
         this.daemon = daemon;
 
         this.settings = new DeskChangerSettings();
@@ -128,18 +122,18 @@ const DeskChangerSystemIndicator = new Lang.Class({
         this._indicator = null;
         this.settings.connect('changed::icon-preview', Lang.bind(this, this._update_indicator));
         this._update_indicator();
-    },
+    }
 
-    destroy: function () {
+    destroy() {
         if (this._indicator) {
             this._indicator.destroy();
         }
 
         this._menu.destroy();
         this.settings.destroy();
-    },
+    }
 
-    _update_indicator: function () {
+    _update_indicator() {
         if (this._indicator !== null) {
             this.indicators.remove_actor(this._indicator);
             this._indicator.destroy();
@@ -149,11 +143,11 @@ const DeskChangerSystemIndicator = new Lang.Class({
         if (this.settings.icon_preview) {
             this._indicator = new Ui.DeskChangerIcon(this.daemon, this.settings);
             this.indicators.add_actor(this._indicator);
-            this._indicator.connect('notify::visible', Lang.bind(this, this._syncIndicatorsVisible));
+            this._indicator.connect('notify::visible', this._syncIndicatorsVisible.bind(this));
             this._syncIndicatorsVisible();
         }
     }
-});
+}
 
 let daemon, indicator, settings, shellSettings;
 let changed_id, current_profile_id, notifications_id, random_id, rotation_id;

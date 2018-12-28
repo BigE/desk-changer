@@ -85,6 +85,7 @@ var DeskChangerControls = new Lang.Class({
             this._removeKeyBinding(this._bindings[i]);
         }
 
+        // Commented these out because they now cause errors
         this._next.destroy();
         this._prev.destroy();
         this._random.destroy();
