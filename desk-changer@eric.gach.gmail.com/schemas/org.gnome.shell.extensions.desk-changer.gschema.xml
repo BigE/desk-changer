@@ -30,6 +30,12 @@
 			</description>
 			<summary>Currently loaded profile</summary>
 		</key>
+		<key name="debug" type="b">
+			<default>false</default>
+			<description>When enabled, the entire extension will output a lot more debugging information. This should
+			only be used when needed as it can greatly increase log size.</description>
+			<summary>Enable debugging output of the extension</summary>
+		</key>
 		<key name="icon-preview" type="b">
 			<default>false</default>
 			<description>

@@ -23,8 +23,9 @@
 const Me = imports.misc.extensionUtils.getCurrentExtension();
 const debug = Me.imports.utils.debug;
 const Convenience = Me.imports.convenience;
+const DeskChangerDaemon = Me.imports.daemon.DeskChangerDaemon;
 
-let settings;
+let settings, daemon;
 
 function disable() {
     debug('disabling extension');
@@ -32,9 +33,13 @@ function disable() {
 
 function enable() {
     debug('enabling extension');
+    if (settings.get_boolean('auto-start') && !daemon.running) {
+        daemon.start();
+    }
 }
 
 function init() {
-    debug('init %s version %s'.format(Me.uuid, Me.metadata.version));
+    log('init %s version %s'.format(Me.uuid, Me.metadata.version));
     settings = Convenience.getSettings();
+    daemon = new DeskChangerDaemon(settings);
 }

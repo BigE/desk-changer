@@ -1,4 +1,5 @@
 const Me = imports.misc.extensionUtils.getCurrentExtension();
+const Convenience = Me.imports.convenience;
 
 function error(exception, message=null) {
     let output = null;
@@ -12,9 +13,13 @@ function error(exception, message=null) {
 }
 
 function debug(message) {
-    let caller = getCaller();
-    let output = '[' + Me.metadata.uuid + '/' + caller.split('/').pop() + '] ' + message
-    log(output);
+    let settings = Convenience.getSettings();
+
+    if (settings.get_boolean('debug')) {
+        let caller = getCaller();
+        let output = '[' + Me.metadata.uuid + '/' + caller.split('/').pop() + '] ' + message
+        log(output);
+    }
 }
 
 /**
