@@ -30,13 +30,19 @@ const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
 const GObject = imports.gi.GObject;
 
-var DeskChangerDaemonDBusName = 'org.gnome.Shell.Extensions.DeskChanger.Daemon';
-var DeskChangerDaemonDBusPath = '/org/gnome/Shell/Extensions/DeskChanger/Daemon';
-var DeskChangerDaemonDBusInterface = '<node>\
+var DaemonDBusName = 'org.gnome.Shell.Extensions.DeskChanger.Daemon';
+var DaemonDBusPath = '/org/gnome/Shell/Extensions/DeskChanger/Daemon';
+var DaemonDBusInterface = '<node>\
     <interface name="%s">\
         <method name="LoadProfile">\
             <arg direction="in" name="profile" type="s" />\
             <arg direction="out" name="success" type="b" />\
+        </method>\
+        <method name="Next">\
+            <arg direction="out" name="uri" type="s" />\
+        </method>\
+        <method name="Prev">\
+            <arg direction="out" name="uri" type="s" />\
         </method>\
         <method name="Start">\
             <arg direction="out" name="success" type="b" />\
@@ -49,11 +55,11 @@ var DeskChangerDaemonDBusInterface = '<node>\
             <arg direction="out" name="uri" type="s" />\
         </signal>\
     </interface>\
-</node>'.format(DeskChangerDaemonDBusName);
+</node>'.format(DaemonDBusName);
 
-let DeskChangerDaemonDBusInterfaceObject = Gio.DBusNodeInfo.new_for_xml(DeskChangerDaemonDBusInterface).interfaces[0];
+let DaemonDBusInterfaceObject = Gio.DBusNodeInfo.new_for_xml(DaemonDBusInterface).interfaces[0];
 
-let DeskChangerDaemonDBusServer = GObject.registerClass({
+let DaemonDBusServer = GObject.registerClass({
     Properties: {
         'running': GObject.ParamSpec.boolean('running', 'Running', 'Boolean value if the daemon is running',
             GObject.ParamFlags.CONSTRUCT | GObject.ParamFlags.READABLE, false)
@@ -67,11 +73,11 @@ let DeskChangerDaemonDBusServer = GObject.registerClass({
         this._running = false;
 
         try {
-            this._dbus = Gio.bus_own_name(Gio.BusType.SESSION, DeskChangerDaemonDBusName, Gio.BusNameOwnerFlags.NONE, this._on_bus_acquired.bind(this), null, function () {
-                debug('unable to acquire bus name %s'.format(DeskChangerDaemonDBusName));
+            this._dbus = Gio.bus_own_name(Gio.BusType.SESSION, DaemonDBusName, Gio.BusNameOwnerFlags.NONE, this._on_bus_acquired.bind(this), null, function () {
+                debug('unable to acquire bus name %s'.format(DaemonDBusName));
             });
         } catch (e) {
-            error(e, 'unable to own dbus name %s'.format(DeskChangerDaemonDBusName));
+            error(e, 'unable to own dbus name %s'.format(DaemonDBusName));
         }
     }
 
@@ -128,14 +134,14 @@ let DeskChangerDaemonDBusServer = GObject.registerClass({
 
         try {
             this._dbus_id = connection.register_object(
-                DeskChangerDaemonDBusPath,
-                DeskChangerDaemonDBusInterfaceObject,
+                DaemonDBusPath,
+                DaemonDBusInterfaceObject,
                 this._dbus_handle_call.bind(this),
                 this._dbus_handle_get.bind(this),
                 this._dbus_handle_set.bind(this),
             );
             this._dbus_connection = connection;
-            debug('acquired dbus connection for %s'.format(DeskChangerDaemonDBusPath));
+            debug('acquired dbus connection for %s'.format(DaemonDBusPath));
         } catch (e) {
             error(e, 'failed to register dbus object: %s'.format(e));
         } finally {
@@ -148,40 +154,44 @@ let DeskChangerDaemonDBusServer = GObject.registerClass({
     }
 });
 
-var DeskChangerDaemon = GObject.registerClass(
-class DeskChangerDaemon extends DeskChangerDaemonDBusServer {
+var Daemon = GObject.registerClass({
+    Signals: {
+        'changed': { param_types: [GObject.TYPE_STRING] },
+    },
+},
+class DeskChangerDaemon extends DaemonDBusServer {
     _init(settings, params = {}) {
         super._init(params);
         this._settings = settings;
-        this._desktop_profile = new profile.DeskChangerDesktopProfile(this._settings);
+        this.desktop_profile = new profile.DeskChangerDesktopProfile(this._settings);
     }
 
     next() {
-        let wallpaper = this._desktop_profile.next();
-        this.emit('next', wallpaper);
+        let wallpaper = this.desktop_profile.next();
+        this.emit('changed', wallpaper);
         return wallpaper;
     }
 
     prev() {
-        let wallpaper = this._desktop_profile.prev();
-        this.emit('prev', wallpaper);
+        let wallpaper = this.desktop_profile.prev();
+        this.emit('changed', wallpaper);
         return wallpaper;
     }
 
     start() {
-        this._desktop_profile.load();
+        this.desktop_profile.load();
         this._timer = new timer.DeskChangerTimer(this._settings.get_int('interval'), this.next.bind(this));
         super.start();
 
         // If we're configured to automatically rotate, do it!
         if (this._settings.get_boolean('auto-rotate')) {
-            this._desktop_profile.next(false);
+            this.desktop_profile.next(false);
         }
     }
 
     stop() {
         this._timer.destroy();
-        this._desktop_profile.unload();
+        this.desktop_profile.unload();
         super.stop();
     }
 
@@ -191,11 +201,16 @@ class DeskChangerDaemon extends DeskChangerDaemonDBusServer {
                 break;
 
             case 'next':
-                break;
+                let uri = this.next();
+                invocation.return_value(new GLib.Variant('(s)', [uri, ]));
+                return;
 
             case 'prev':
                 break;
         }
+
         super._dbus_handle_call(connection, sender, object_path, interface_name, method_name, parameters, invocation);
     }
 });
+
+

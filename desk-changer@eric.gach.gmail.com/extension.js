@@ -21,21 +21,104 @@
  */
 
 const Me = imports.misc.extensionUtils.getCurrentExtension();
-const debug = Me.imports.utils.debug;
+const Gettext = imports.gettext.domain(Me.metadata.uuid);
+const Utils = Me.imports.utils;
 const Convenience = Me.imports.convenience;
-const DeskChangerDaemon = Me.imports.daemon.DeskChangerDaemon;
+const DeskChangerDaemon = Me.imports.daemon.Daemon;
+const DeskChangerPanelMenuButton = Me.imports.ui.panelMenu.Button;
 
-let settings, daemon;
+const Main = imports.ui.main;
+const _ = Gettext.gettext;
+
+    // general
+let settings, daemon, button,
+    // signals
+    changed_id, current_profile_id, notifications_id, random_id, rotation_id;
 
 function disable() {
-    debug('disabling extension');
+    Utils.debug('disabling extension');
+
+    // button go bye bye
+    if (typeof button.destroy === 'function') {
+        button.destroy();
+    }
+    button = null;
+
+    if (changed_id) {
+        daemon.disconnect(changed_id);
+    }
+    changed_id = null;
+
+    if (current_profile_id) {
+        settings.disconnect(current_profile_id);
+    }
+    current_profile_id = null;
+
+    if (notifications_id) {
+        settings.disconnect(notifications_id);
+    }
+    notifications_id = null;
+
+    if (random_id) {
+        settings.disconnect(random_id);
+    }
+    random_id = null;
+
+    if (rotation_id) {
+        settings.disconnect(rotation_id);
+    }
+    rotation_id = null;
 }
 
 function enable() {
-    debug('enabling extension');
-    if (settings.get_boolean('auto-start') && !daemon.running) {
+    Utils.debug('enabling extension');
+
+    if (settings.auto_start && !daemon.running) {
         daemon.start();
     }
+
+    changed_id = daemon.connect('changed', function (obj, file) {
+        Utils.notify(_(`Wallpaper changed: ${file}`));
+    });
+
+    current_profile_id = settings.connect('changed::current-profile', function () {
+        Utils.notify(_(`Profile changed to ${settings.current_profile}`));
+    });
+
+    notifications_id = settings.connect('changed::notifications', function () {
+        Utils.notify(((settings.notifications) ?
+            _('Notifications are now enabled') :
+            _('Notifications are now disabled')
+        ), true);
+    });
+
+    random_id = settings.connect('changed::random', function () {
+        Utils.notify(((settings.random)?
+            _('Wallpapers will be shown in a random order') :
+            _('Wallpapers will be shown in the order they were loaded')
+        ));
+    });
+
+    rotation_id = settings.connect('changed::rotation', function () {
+        let message;
+
+        switch (settings.rotation) {
+            case 'interval':
+                message = _(`Rotation will occur every ${settings.interval} seconds`);
+                break;
+            case 'hourly':
+                message = _('Rotation will occur at the beginning of every hour');
+                break;
+            default:
+                message = _('Rotation has been disabled');
+                break;
+        }
+
+        Utils.notify(message);
+    });
+
+    button = new DeskChangerPanelMenuButton(daemon, settings);
+    Main.panel.addToStatusArea('DeskChanger', button);
 }
 
 function init() {

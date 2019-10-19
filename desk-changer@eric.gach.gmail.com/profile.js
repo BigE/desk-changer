@@ -42,6 +42,11 @@ var DeskChangerProfile = GObject.registerClass(
     Properties: {
         'loaded': GObject.ParamSpec.boolean('loaded', 'Loaded', 'Check if the profile is currently loaded',
             GObject.ParamFlags.CONSTRUCT | GObject.ParamFlags.READABLE, false),
+        'preview': GObject.ParamSpec.string('preview', 'Preview', 'URI to the next wallpaper to be displayed',
+            GObject.ParamFlags.CONSTRUCT | GObject.ParamFlags.READABLE, ''),
+    },
+    Signals: {
+        'preview': { param_types: [GObject.TYPE_STRING] },
     },
 },
 class DeskChangerProfile extends GObject.Object {
@@ -64,6 +69,10 @@ class DeskChangerProfile extends GObject.Object {
 
     get loaded() {
         return this._loaded;
+    }
+
+    get preview() {
+        return this._queue.preview;
     }
 
     destroy() {
