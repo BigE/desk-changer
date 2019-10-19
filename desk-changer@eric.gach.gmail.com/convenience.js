@@ -217,7 +217,7 @@ class DeskChangerSettings extends Gio.Settings {
 
         if (this.debug) {
             let caller = getCaller();
-            debug('connect %s (%d)'.format(signal, handler_id), getCaller());
+            debug(`connect ${signal} (${handler_id})`, getCaller());
         }
 
         return handler_id;
@@ -225,7 +225,7 @@ class DeskChangerSettings extends Gio.Settings {
 
     disconnect(handler_id) {
         if (this.debug) {
-            debug('disconnect (%d)'.format(handler_id), getCaller());
+            debug(`disconnect (${handler_id})`, getCaller());
         }
 
         return super.disconnect(handler_id);

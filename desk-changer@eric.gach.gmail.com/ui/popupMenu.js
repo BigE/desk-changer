@@ -19,7 +19,7 @@ class DeskChangerPopupMenuItem extends PopupMenu.PopupMenuItem {
             this.setOrnament(PopupMenu.Ornament.DOT);
         }
 
-        this._handler_key_changed = settings.connect('changed::' + this._key_normalized, (settings, key) => {
+        this._handler_key_changed = settings.connect(`changed::${this._key_normalized}`, (settings, key) => {
             if (settings[key] === this._value) {
                 this.setOrnament(PopupMenu.Ornament.DOT);
             } else {
@@ -58,7 +58,7 @@ class DeskChangerPopupSubMenuMenuItem extends PopupMenu.PopupSubMenuMenuItem {
         this._prefix = prefix;
         this._key = key;
         this._key_normalized = key.replace('_', '-');
-        this._changed_id = settings.connect('changed::%s'.format(this._key_normalized), this.setLabel.bind(this));
+        this._changed_id = settings.connect(`changed::${this._key_normalized}`, this.setLabel.bind(this));
         this.setLabel(settings, key);
         this.setSensitive(sensitive);
     }
@@ -72,7 +72,7 @@ class DeskChangerPopupSubMenuMenuItem extends PopupMenu.PopupSubMenuMenuItem {
     }
 
     setLabel(settings, key) {
-        this.label.text = '%s: %s'.format(this._prefix, settings[key]);
+        this.label.text = `${this._prefix}: ${settings[key]}`;
     }
 }
 );
@@ -89,7 +89,7 @@ class DeskChangerPopupSubMenuMenuItemProfile extends PopupSubMenuMenuItem {
     _populate_profiles(settings) {
         this.menu.removeAll();
         for (let index in settings.profiles) {
-            Utils.debug('adding menu: %s -> %s'.format(index, this._prefix));
+            Utils.debug(`adding menu: ${index} -> ${this._prefix}`);
             let item = new PopupMenuItem(index, index, settings, this._key);
             this.menu.addMenuItem(item);
         }

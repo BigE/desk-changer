@@ -21,10 +21,9 @@
  */
 
 const Me = imports.misc.extensionUtils.getCurrentExtension();
-const error = Me.imports.utils.error;
-const debug = Me.imports.utils.debug;
-const profile = Me.imports.profile;
-const timer = Me.imports.timer;
+const Utils = Me.imports.utils;
+const Profile = Me.imports.profile;
+const Timer = Me.imports.timer;
 
 const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
@@ -32,8 +31,8 @@ const GObject = imports.gi.GObject;
 
 var DaemonDBusName = 'org.gnome.Shell.Extensions.DeskChanger.Daemon';
 var DaemonDBusPath = '/org/gnome/Shell/Extensions/DeskChanger/Daemon';
-var DaemonDBusInterface = '<node>\
-    <interface name="%s">\
+var DaemonDBusInterface = `<node>\
+    <interface name="${DaemonDBusName}">\
         <method name="LoadProfile">\
             <arg direction="in" name="profile" type="s" />\
             <arg direction="out" name="success" type="b" />\
@@ -55,7 +54,7 @@ var DaemonDBusInterface = '<node>\
             <arg direction="out" name="uri" type="s" />\
         </signal>\
     </interface>\
-</node>'.format(DaemonDBusName);
+</node>`;
 
 let DaemonDBusInterfaceObject = Gio.DBusNodeInfo.new_for_xml(DaemonDBusInterface).interfaces[0];
 
@@ -74,10 +73,10 @@ let DaemonDBusServer = GObject.registerClass({
 
         try {
             this._dbus = Gio.bus_own_name(Gio.BusType.SESSION, DaemonDBusName, Gio.BusNameOwnerFlags.NONE, this._on_bus_acquired.bind(this), null, function () {
-                debug('unable to acquire bus name %s'.format(DaemonDBusName));
+                Utils.debug(`unable to acquire bus name ${DaemonDBusName}`);
             });
         } catch (e) {
-            error(e, 'unable to own dbus name %s'.format(DaemonDBusName));
+            Utils.error(e, `unable to own dbus name ${DaemonDBusName}`);
         }
     }
 
@@ -90,12 +89,12 @@ let DaemonDBusServer = GObject.registerClass({
 
     start() {
         this._running = true;
-        debug('daemon started');
+        Utils.debug('daemon started');
     }
 
     stop() {
         this._running = false;
-        debug('daemon stopped');
+        Utils.debug('daemon stopped');
     }
 
     get running() {
@@ -117,7 +116,7 @@ let DaemonDBusServer = GObject.registerClass({
             default:
                 invocation.return_dbus_error('org.freedesktop.DBus.Error.UnknownMethod',
                                              'Method ' + method_name + ' in ' + interface_name + ' does not exist');
-                debug('unknown dbus method %s'.format(method_name));
+                Utils.debug(`unknown dbus method ${method_name}`);
                 break;
         }
     }
@@ -141,12 +140,12 @@ let DaemonDBusServer = GObject.registerClass({
                 this._dbus_handle_set.bind(this),
             );
             this._dbus_connection = connection;
-            debug('acquired dbus connection for %s'.format(DaemonDBusPath));
+            Utils.debug(`acquired dbus connection for ${DaemonDBusPath}`);
         } catch (e) {
-            error(e, 'failed to register dbus object: %s'.format(e));
+            error(e, `failed to register dbus object: ${e}`);
         } finally {
             if (this._dbus_id === null || this._dbus_id === 0) {
-                debug('failed to register dbus object');
+                Utils.debug('failed to register dbus object');
                 this._dbus_id = null;
                 this._dbus_connection = null;
             }
@@ -163,7 +162,7 @@ class DeskChangerDaemon extends DaemonDBusServer {
     _init(settings, params = {}) {
         super._init(params);
         this._settings = settings;
-        this.desktop_profile = new profile.DeskChangerDesktopProfile(this._settings);
+        this.desktop_profile = new Profile.DeskChangerDesktopProfile(this._settings);
     }
 
     next() {
@@ -180,7 +179,7 @@ class DeskChangerDaemon extends DaemonDBusServer {
 
     start() {
         this.desktop_profile.load();
-        this._timer = new timer.DeskChangerTimer(this._settings.get_int('interval'), this.next.bind(this));
+        this._timer = new Timer.DeskChangerTimer(this._settings.get_int('interval'), this.next.bind(this));
         super.start();
 
         // If we're configured to automatically rotate, do it!

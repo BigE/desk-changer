@@ -1,5 +1,5 @@
 const Me = imports.misc.extensionUtils.getCurrentExtension();
-const debug = Me.imports.utils.debug;
+const Utils = Me.imports.utils;
 
 const GLib = imports.gi.GLib;
 const GObject = imports.gi.GObject;
@@ -22,7 +22,7 @@ class DeskChangerTimer extends GObject.Object {
         this._interval = parseInt(interval);
         super._init(params);
         this._timer = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, this._interval, this.__callback__.bind(this));
-        debug('added timer %s'.format(this._timer));
+        Utils.debug(`added timer ${this._timer}`);
     }
 
     get callback() {
@@ -44,7 +44,7 @@ class DeskChangerTimer extends GObject.Object {
     }
 
     destroy() {
-        debug('removing timer %s'.format(this._timer));
+        Utils.debug(`removing timer ${this._timer}`);
         GLib.remove_source(this._timer);
     }
 });

@@ -84,7 +84,7 @@ class DeskChangerProfile extends GObject.Object {
         let wallpaper;
 
         if (this._queue.length > 0) {
-            Utils.debug('queue already has %s wallpapers, skipping fill'.format(this._queue.length));
+            Utils.debug(`queue already has ${this._queue.length} wallpapers, skipping fill`);
             this._emit_preview(this._queue.preview);
             return;
         }
@@ -117,18 +117,17 @@ class DeskChangerProfile extends GObject.Object {
 
     load(profile=null) {
         this._profile = profile || this._settings.get_string(this._profile_key);
-        Utils.debug('loading profile %s'.format(this._profile));
+        Utils.debug(`loading profile ${this._profile}`);
         let profiles = this._settings.get_value('profiles').deep_unpack();
 
         if (!this._profile in profiles) {
-            Utils.debug('unable to find profile %s'.format(this._profile));
+            Utils.debug(`unable to find profile ${this._profile}`);
             this.unload();
             return false;
         }
 
         if (profile === null) {
-            this._profile_changed_id = this._settings.connect('changed::%s'.format(this._profile_key), this.reload.bind(this));
-            Utils.debug('connected changed::%s'.format(this._profile_key));
+            this._profile_changed_id = this._settings.connect(`changed::${this._profile_key}`, this.reload.bind(this));
         }
 
         profiles[this._profile].forEach((item) => {
@@ -138,7 +137,7 @@ class DeskChangerProfile extends GObject.Object {
 
         this._loaded = true;
         this.fill_queue();
-        Utils.debug('loaded profile %s with %s wallpapers'.format(this._profile, this._wallpapers.length));
+        Utils.debug(`loaded profile ${this._profile} with ${this._wallpapers.length} wallpapers`);
         this.emit('loaded', this._profile);
         return true;
     }
@@ -172,20 +171,20 @@ class DeskChangerProfile extends GObject.Object {
         // don't do anything.. we're not even loaded
         if (!this._loaded) return;
 
-        Utils.debug('reload profile %s'.format(this._profile));
+        Utils.debug(`reload profile ${this._profile}`);
         this.unload();
         this.load();
     }
 
     unload() {
-        Utils.debug('unloading profile %s'.format(this._profile));
+        Utils.debug(`unloading profile ${this._profile}`);
         if (this._profile_changed_id) {
             this._settings.disconnect(this._profile_changed_id);
         }
 
         for (let monitor in this._monitors) {
             monitor.cancel();
-            Utils.debug('cleared monitor %s'.format(monitor));
+            Utils.debug(`cleared monitor ${monitor}`);
         }
 
         this._monitors = [];
@@ -201,7 +200,7 @@ class DeskChangerProfile extends GObject.Object {
 
     _emit_preview(wallpaper) {
         this.emit('preview', wallpaper);
-        Utils.debug('preview(%s)'.format(wallpaper));
+        Utils.debug(`preview(${wallpaper})`);
     }
 
     _load_location(location, recursive) {
@@ -210,7 +209,7 @@ class DeskChangerProfile extends GObject.Object {
         try {
             enumerator = location.enumerate_children('standard::*', Gio.FileQueryInfoFlags.NONE, null);
         } catch (e) {
-            Utils.error(e, 'failed to load %s from profile %s', location.get_uri(), this._profile);
+            Utils.error(e, `failed to load ${location.get_uri()} from profile ${this._profile}`);
             return;
         }
 
@@ -226,13 +225,13 @@ class DeskChangerProfile extends GObject.Object {
         let location, info,
             allowed_mimes = this._settings.get_value('allowed-mime-types').deep_unpack();
 
-        Utils.debug('loading %s%s'.format(uri, (recursive)? ' recursively' : ''));
+        Utils.debug(`loading ${uri}${(recursive)? ' recursively' : ''}`);
 
         try {
             location = Gio.File.new_for_uri(uri);
             info = location.query_info('standard::*', Gio.FileQueryInfoFlags.NONE, null);
         } catch (e) {
-            Utils.error(e, 'failed to get info for %s on profile %s'.format(uri, this._profile));
+            Utils.error(e, `failed to get info for ${uri} on profile ${this._profile}`);
             return;
         }
 
@@ -241,27 +240,27 @@ class DeskChangerProfile extends GObject.Object {
                 let monitor = location.monitor_directory(Gio.FileMonitorFlags.NONE, new Gio.Cancellable());
                 monitor.connect('changed', this._directory_changed.bind(this));
                 this._monitors.push(monitor);
-                Utils.debug('added monitor for %s'.format(uri));
+                Utils.debug(`added monitor for ${uri}`);
             } catch (e) {
-                Utils.error(e, 'failed to set monitor on %s'.format(uri));
+                Utils.error(e, `failed to set monitor on ${uri}`);
             }
 
             this._load_location(location, recursive);
         } else if (info.get_file_type() === Gio.FileType.REGULAR && allowed_mimes.includes(info.get_content_type())) {
             if (location.get_uri() in this._wallpapers) {
-                Utils.debug('ignoring duplicate location %s'.format(location.get_uri()));
+                Utils.debug(`ignoring duplicate location ${location.get_uri()}`);
                 return;
             }
 
             this._wallpapers.push(location.get_uri());
         } else {
-            Utils.debug('skipping unknown format %s: %s'.format(info.get_content_type(), location.get_uri()));
+            Utils.debug(`skipping unknown format ${info.get_content_type()}: ${location.get_uri()}`);
         }
     }
 
     _set_wallpaper(wallpaper) {
         this._background.set_string('picture-uri', wallpaper);
-        Utils.debug('set wallpaper %s'.format(wallpaper));
+        Utils.debug(`set wallpaper ${wallpaper}`);
     }
 }
 );
@@ -298,13 +297,13 @@ class DeskChangerProfileQueue extends GObject.Object {
     dequeue() {
         if (this._queue.length === 0) return undefined;
         let uri = this._queue.pop();
-        Utils.debug('removed %s from the queue'.format(uri));
+        Utils.debug(`removed ${uri} from the queue`);
         return uri;
     }
 
     enqueue(uri) {
         this._queue.push(uri);
-        Utils.debug('added %s to the queue'.format(uri));
+        Utils.debug(`added ${uri} to the queue`);
     }
 
     exists(uri) {
@@ -316,11 +315,11 @@ class DeskChangerProfileQueue extends GObject.Object {
 
         if (index >= 0) {
             this._queue.splice(index, 1);
-            Utils.debug('removed %s from the queue'.format(uri));
+            Utils.debug(`removed ${uri} from the queue`);
             return true;
         }
 
-        Utils.debug('unable to remove %s from the queue'.format(uri));
+        Utils.debug(`unable to remove ${uri} from the queue`);
         return false;
     }
 

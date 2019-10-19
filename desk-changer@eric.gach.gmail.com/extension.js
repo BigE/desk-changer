@@ -122,7 +122,7 @@ function enable() {
 }
 
 function init() {
-    log('init %s version %s'.format(Me.uuid, Me.metadata.version));
+    log(`init ${Me.uuid} version ${Me.metadata.version}`);
     settings = Convenience.getSettings();
     daemon = new DeskChangerDaemon(settings);
 }
