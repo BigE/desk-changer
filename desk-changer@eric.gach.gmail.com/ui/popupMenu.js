@@ -1,9 +1,12 @@
 const Me = imports.misc.extensionUtils.getCurrentExtension();
 const Gettext = imports.gettext.domain(Me.metadata.uuid);
 const Utils = Me.imports.utils;
+const DeskChangerPreview = Me.imports.ui.preview.Preview;
 
 const GObject = imports.gi.GObject;
 const PopupMenu = imports.ui.popupMenu;
+const St = imports.gi.St;
+const Util = imports.misc.util;
 const _ = Gettext.gettext;
 
 let PopupMenuItem = GObject.registerClass(
@@ -73,6 +76,39 @@ class DeskChangerPopupSubMenuMenuItem extends PopupMenu.PopupSubMenuMenuItem {
 
     setLabel(settings, key) {
         this.label.text = `${this._prefix}: ${settings[key]}`;
+    }
+}
+);
+
+var PreviewMenuItem = GObject.registerClass(
+class DeskChangerPopupMenuPreviewMenuItem extends PopupMenu.PopupBaseMenuItem {
+    _init(daemon) {
+        super._init({reactive: true});
+        this._box = new St.BoxLayout({vertical: true});
+        this.add_actor(this._box, {align: St.Align.MIDDLE, span: -1});
+        this._prefix = new St.Label({text: _('Open next wallpaper')});
+        this._box.add(this._prefix);
+        this._preview = new DeskChangerPreview(220, daemon);
+        this._box.add(this._preview);
+        this._activate_id = this.connect('activate', () => {
+            if (this._preview.file) {
+                Utils.debug(`opening file ${this._preview.file}`);
+                Util.spawn(['xdg-open', this._preview.file]);
+            } else {
+                Utils.error('no preview set');
+            }
+        });
+        Utils.debug(`connect activate ${this._activate_id}`);
+    }
+
+    destroy() {
+        Utils.debug(`disconnect activate ${this._activate_id}`);
+        this.disconnect(this._activate_id);
+
+        this._preview.destroy();
+        this._prefix.destroy();
+        this._box.destroy();
+        super.destroy();
     }
 }
 );

@@ -1,5 +1,6 @@
 const Me = imports.misc.extensionUtils.getCurrentExtension();
 const DeskChangerPopupMenu = Me.imports.ui.popupMenu;
+const DeskChangerPreview = Me.imports.ui.preview.Preview;
 
 const Gio = imports.gi.Gio;
 const GObject = imports.gi.GObject;
@@ -14,7 +15,7 @@ class DeskChangerPanelMenuButton extends PanelMenu.Button {
         this._daemon = daemon;
         this._settings = settings;
 
-        this._icon = new Icon(this._daemon, settings);
+        this._icon = new Icon(daemon, settings);
         this.add_child(this._icon);
         this.menu.addMenuItem(new DeskChangerPopupMenu.ProfileDesktop(settings));
         this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
@@ -22,6 +23,8 @@ class DeskChangerPanelMenuButton extends PanelMenu.Button {
         this.menu.addMenuItem(new DeskChangerPopupMenu.Switch(_('Notifications'), 'notifications', settings));
         this.menu.addMenuItem(new DeskChangerPopupMenu.Switch(_('Remember profile state'), 'remember_profile_state', settings));
         this.menu.addMenuItem(new DeskChangerPopupMenu.Switch(_('Update lock screen'), 'update_lockscreen', settings));
+        this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
+        this.menu.addMenuItem(new DeskChangerPopupMenu.PreviewMenuItem(daemon));
 
         if (settings.update_lockscreen) {
             this.menu.addMenuItem(new DeskChangerPopupMenu.ProfileLockScreen(settings), 1);
@@ -98,7 +101,7 @@ class DeskChangerPanelMenuIcon extends St.Bin {
 
     _create_preview(file) {
         this._destroy_preview();
-        //this._preview = new DeskChangerPreview(34, this._daemon, this.update_child.bind(this));
+        this._preview = new DeskChangerPreview(34, this._daemon, this.update_child.bind(this));
 
         if (!(this._preview.file)) {
             if (typeof file === 'string') {

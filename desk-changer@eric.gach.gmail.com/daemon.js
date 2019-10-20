@@ -62,7 +62,10 @@ let DaemonDBusServer = GObject.registerClass({
     Properties: {
         'running': GObject.ParamSpec.boolean('running', 'Running', 'Boolean value if the daemon is running',
             GObject.ParamFlags.CONSTRUCT | GObject.ParamFlags.READABLE, false)
-    }
+    },
+    Signals: {
+        'toggled': { param_types: [GObject.TYPE_BOOLEAN] }
+    },
 }, class DeskChangerDaemonDBusServer extends GObject.Object {
     _init(params={}) {
         super._init(params);
@@ -90,11 +93,13 @@ let DaemonDBusServer = GObject.registerClass({
     start() {
         this._running = true;
         Utils.debug('daemon started');
+        this.emit('toggled', this._running);
     }
 
     stop() {
         this._running = false;
         Utils.debug('daemon stopped');
+        this.emit('toggled', this._running);
     }
 
     get running() {
