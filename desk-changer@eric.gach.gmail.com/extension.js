@@ -78,22 +78,22 @@ function enable() {
     }
 
     changed_id = daemon.connect('changed', function (obj, file) {
-        Utils.notify(_(`Wallpaper changed: ${file}`));
+        notify(_(`Wallpaper changed: ${file}`));
     });
 
     current_profile_id = settings.connect('changed::current-profile', function () {
-        Utils.notify(_(`Profile changed to ${settings.current_profile}`));
+        notify(_(`Profile changed to ${settings.current_profile}`));
     });
 
     notifications_id = settings.connect('changed::notifications', function () {
-        Utils.notify(((settings.notifications) ?
+        notify(((settings.notifications) ?
             _('Notifications are now enabled') :
             _('Notifications are now disabled')
         ), true);
     });
 
     random_id = settings.connect('changed::random', function () {
-        Utils.notify(((settings.random)?
+        notify(((settings.random)?
             _('Wallpapers will be shown in a random order') :
             _('Wallpapers will be shown in the order they were loaded')
         ));
@@ -114,11 +114,17 @@ function enable() {
                 break;
         }
 
-        Utils.notify(message);
+        notify(message);
     });
 
     button = new DeskChangerPanelMenuButton(daemon, settings);
     Main.panel.addToStatusArea('DeskChanger', button);
+}
+
+function notify(message, force) {
+    if (settings.notifications || force === true) {
+        Main.notify('DeskChanger', message);
+    }
 }
 
 function init() {
