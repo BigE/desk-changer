@@ -167,31 +167,47 @@ class DeskChangerDaemon extends DaemonDBusServer {
     _init(settings, params = {}) {
         super._init(params);
         this._settings = settings;
-        this.desktop_profile = new Profile.DesktopProfile(this._settings);
+        this.desktop_profile = new Profile.DesktopProfile(settings);
+        this.lockscreen_profile = new Profile.LockScreenProfile(settings);
+
         this._loaded_id = this.desktop_profile.connect('loaded', () => {
-            this.desktop_profile.next(false);
+            let wallpaper = this.desktop_profile.next(false);
+            if (settings.update_lockscreen && this.lockscreen_profile.inherit) {
+                this.lockscreen_profile.next(false, wallpaper);
+            }
+        });
+        this._lockscreen_loaded_id = this.lockscreen_profile.connect('loaded', () => {
+            this.lockscreen_profile.next(false);
         });
     }
 
     destroy() {
         this.desktop_profile.disconnect(this._loaded_id);
+        this.lockscreen_profile.disconnect(this._lockscreen_loaded_id);
         super.destroy();
     }
 
     next() {
         let wallpaper = this.desktop_profile.next();
+        if (this._settings.update_lockscreen) {
+            (this.lockscreen_profile.inherit) ? this.lockscreen_profile.next(true, wallpaper) : this.lockscreen_profile.next();
+        }
         this.emit('changed', wallpaper);
         return wallpaper;
     }
 
     prev() {
         let wallpaper = this.desktop_profile.prev();
+        if (this._settings.update_lockscreen) {
+            (this.lockscreen_profile.inherit) ? this.lockscreen_profile.prev(true, wallpaper) : this.lockscreen_profile.prev();
+        }
         this.emit('changed', wallpaper);
         return wallpaper;
     }
 
     start() {
         this.desktop_profile.load();
+        this.lockscreen_profile.load();
         this._timer = new Timer.Timer(this._settings.get_int('interval'), this.next.bind(this));
         super.start();
     }
@@ -199,6 +215,7 @@ class DeskChangerDaemon extends DaemonDBusServer {
     stop() {
         this._timer.destroy();
         this.desktop_profile.unload();
+        this.lockscreen_profile.unload();
         super.stop();
     }
 

@@ -181,11 +181,12 @@ let PopupSubMenuMenuItem = GObject.registerClass(
 class DeskChangerPopupSubMenuMenuItem extends PopupMenu.PopupSubMenuMenuItem {
     _init(prefix, key, settings, sensitive=true) {
         super._init('');
+        this._prefix = prefix;
         this._settings = settings;
         this._changed_id = settings.connect(`changed::${key.replace('_', '-')}`, () => {
-            this.setLabel(`${prefix}: ${settings[key]}`);
+            this.setLabel(settings[key]);
         });
-        this.setLabel(`${prefix}: ${settings[key]}`);
+        this.setLabel(settings[key]);
         this.setSensitive(sensitive);
     }
 
@@ -198,7 +199,7 @@ class DeskChangerPopupSubMenuMenuItem extends PopupMenu.PopupSubMenuMenuItem {
     }
 
     setLabel(label) {
-        this.label.text = label;
+        this.label.text = `${this._prefix}: ${label}`;
     }
 }
 );
@@ -257,7 +258,6 @@ class DeskChangerPopupSubMenuMenuItemProfile extends PopupSubMenuMenuItem {
     _populate_profiles(settings, key) {
         this.menu.removeAll();
         for (let index in settings.profiles) {
-            Utils.debug(`adding menu: ${index} -> ${this._prefix}`);
             let item = new PopupMenuItem(index, index, settings, key);
             this.menu.addMenuItem(item);
         }
@@ -279,14 +279,12 @@ class DeskChangerPopupSubMenuMenuItemProfileLockScreen extends ProfileMenuItem {
         super._init(_('Lock Screen Profile'), 'lockscreen_profile', settings, sensitive);
     }
 
-    setLabel(settings, key) {
-        let value = settings[key];
-
-        if (!value) {
-            value = _('(inherited)');
+    setLabel(label) {
+        if (!label) {
+            label = '(inherited)';
         }
 
-        this.label.text = _('Lock Screen Profile') + ':' + value;
+        super.setLabel(label);
     }
 
     _populate_profiles(settings, key) {

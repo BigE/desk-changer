@@ -65,6 +65,9 @@ class DeskChangerProfile extends GObject.Object {
         this._sequence = 0;
         this._settings = settings;
         this._wallpapers = [];
+        this._profile_changed_id = settings.connect(`changed::${profile_key}`, () => {
+            this.reload();
+        });
         super._init(params);
     }
 
@@ -79,6 +82,12 @@ class DeskChangerProfile extends GObject.Object {
     destroy() {
         if (this._loaded)
             this.unload();
+
+        if (this._profile_changed_id) {
+            this._settings.disconnect(this._profile_changed_id);
+        }
+
+        super.destroy();
     }
 
     fill_queue() {
@@ -127,10 +136,6 @@ class DeskChangerProfile extends GObject.Object {
             return false;
         }
 
-        if (profile === null) {
-            this._profile_changed_id = this._settings.connect(`changed::${this._profile_key}`, this.reload.bind(this));
-        }
-
         profiles[this._profile].forEach((item) => {
             let [uri, recursive] = item;
             this._load_uri(uri, recursive, true);
@@ -143,9 +148,9 @@ class DeskChangerProfile extends GObject.Object {
         return true;
     }
 
-    next(_current=true) {
+    next(_current=true, _wallpaper=null) {
         let current = (_current)? this._background.get_string('picture-uri') : null,
-            wallpaper = this._queue.dequeue();
+            wallpaper = (_wallpaper)? _wallpaper : this._queue.dequeue();
 
         if (current) {
             this._history.enqueue(current);
@@ -156,13 +161,13 @@ class DeskChangerProfile extends GObject.Object {
         return wallpaper;
     }
 
-    prev(_current=true) {
+    prev(_current=true, _wallpaper=null) {
         if (this._history.length === 0) {
             return false;
         }
 
         let current = (_current)? this._background.get_string('picture-uri') : null,
-            wallpaper = this._history.dequeue();
+            wallpaper = (_wallpaper)? _wallpaper : this._history.dequeue();
 
         if (current) {
             this._queue.enqueue(current);
@@ -183,9 +188,6 @@ class DeskChangerProfile extends GObject.Object {
 
     unload() {
         Utils.debug(`unloading profile ${this._profile}`);
-        if (this._profile_changed_id) {
-            this._settings.disconnect(this._profile_changed_id);
-        }
 
         for (let monitor in this._monitors) {
             this._monitors[monitor].cancel();
@@ -342,6 +344,30 @@ class DeskChangerDesktopProfile extends Profile {
     _init(settings, params = {}) {
         this._background = Convenience.getSettings('org.gnome.desktop.background');
         super._init(settings, 'current-profile', params);
+    }
+}
+);
+
+var LockScreenProfile = GObject.registerClass(
+class DeskChangerLockScreenProfile extends Profile {
+    _init(settings, params={}) {
+        this._background = Convenience.getSettings('org.gnome.desktop.screensaver');
+        super._init(settings, 'lockscreen-profile', params);
+    }
+
+    get inherit()
+    {
+        return (!this._settings.lockscreen_profile);
+    }
+
+    load() {
+        if (this.inherit) {
+            Utils.debug('lockscreen profile inherits desktop - bailing');
+            this._loaded = true;
+            return;
+        }
+
+        super.load();
     }
 }
 );

@@ -223,7 +223,7 @@ class DeskChangerSettings extends Gio.Settings {
         this.set_boolean('remember-profile-state', value);
 
         if (this.debug) {
-            debug(`set remember-profile-state: ${value}`);
+            debug(`set remember-profile-state: ${value}`, getCaller());
         }
     }
 
