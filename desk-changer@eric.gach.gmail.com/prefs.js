@@ -20,9 +20,247 @@
  * THE SOFTWARE.
  */
 
+const Me = imports.misc.extensionUtils.getCurrentExtension();
+const Convenience = Me.imports.convenience;
+const Utils = Me.imports.utils;
+
+const Gettext = imports.gettext.domain('desk-changer');
+const GObject = imports.gi.GObject;
+const Gtk = imports.gi.Gtk;
+const _ = Gettext.gettext;
+
+let DeskChangerPrefs = GObject.registerClass(
+class DeskChangerPrefs extends GObject.Object {
+    _init() {
+        let notebook = new Gtk.Notebook(),
+            settings = Convenience.getSettings();
+
+        this.box = new Gtk.Box({
+            border_width: 10,
+            orientation: Gtk.Orientation.VERTICAL,
+            spacing: 10,
+        });
+
+
+        this._init_profiles(notebook, settings);
+
+        this.box.pack_start(notebook, true, true, 0);
+        this.box.show_all();
+    }
+
+    _init_profiles(notebook, settings) {
+        let folders = new Gtk.ListStore(),
+            profiles_box = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL}),
+            hbox = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL}),
+            label = new Gtk.Label({label: _('Profile')}),
+            profiles_combo_box = new Gtk.ComboBoxText(),
+            add_profile = new Gtk.Button({label: _('Add')}),
+            remove_profile = new Gtk.Button({label: _('Remove')});
+
+        // Profile dropdown
+        add_profile.connect('clicked', () => {
+            let dialog = new Gtk.Dialog(),
+                mbox = dialog.get_content_area(),
+                box = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL}),
+                label = new Gtk.Label({label: _('Profile Name')}),
+                input = new Gtk.Entry();
+            box.pack_start(label, false, true, 10);
+            box.pack_start(input, true, true, 10);
+            box.show_all();
+            mbox.pack_start(box, true, true, 10);
+            dialog.add_button(_('OK'), Gtk.ResponseType.OK);
+            dialog.add_button(_('Cancel'), Gtk.ResponseType.CANCEL);
+            let result = dialog.run();
+            if (result === Gtk.ResponseType.OK) {
+                let _profiles = settings.profiles;
+                _profiles[input.get_text()] = [];
+                settings.profiles = _profiles;
+                this._load_profiles(profiles_combo_box, settings, input.get_text());
+            }
+            dialog.destroy();
+        });
+
+        remove_profile.connect('clicked', () => {
+            let profile, dialog, box, label;
+            profile = profiles_combo_box.get_active_text();
+            dialog = new Gtk.Dialog();
+            box = dialog.get_content_area();
+            label = new Gtk.Label({label: _('Are you sure you want to delete the profile "%s"?'.format(profile))});
+            box.pack_start(label, true, true, 10);
+            box.show_all();
+            dialog.add_button(_('Yes'), Gtk.ResponseType.YES);
+            dialog.add_button(_('No'), Gtk.ResponseType.NO);
+            let response = dialog.run();
+            if (response == Gtk.ResponseType.YES) {
+                let _profiles = settings.profiles;
+                delete _profiles[profile];
+                settings.profiles = _profiles;
+                this._load_profiles(profiles_combo_box, settings, settings.current_profile);
+            }
+            dialog.destroy();
+        });
+
+        folders.set_column_types([GObject.TYPE_STRING, GObject.TYPE_BOOLEAN]);
+        profiles_combo_box.connect('changed', (instance) => {
+            for (let profile in settings.profiles) {
+                if (profile === instance.get_active_text()) {
+                    folders.clear();
+
+                    for (let folder in settings.profiles[profile]) {
+                        folder = [settings.profiles[profile][folder][0], settings.profiles[profile][folder][1]];
+                        folders.insert_with_valuesv(-1, [0, 1], folder);
+                    }
+
+                    break;
+                }
+            }
+        });
+
+        this._load_profiles(profiles_combo_box, settings);
+
+        hbox.pack_start(label, false, false, 10);
+        hbox.pack_start(profiles_combo_box, true, true, 10);
+        hbox.pack_start(add_profile, false, false, 0);
+        hbox.pack_start(remove_profile, false, false, 0);
+        profiles_box.pack_start(hbox, false, false, 10);
+
+        // Treeview for profile folders
+        let profiles = new Gtk.TreeView(),
+            renderer = new Gtk.CellRendererText(),
+            column = new Gtk.TreeViewColumn({title: _('Uri'), expand: true});
+
+        profiles.get_selection().set_mode(Gtk.SelectionMode.SINGLE);
+        profiles.set_model(folders);
+        renderer.set_property('editable', true);
+        renderer.connect('edited', (renderer, path, new_text) => {
+            let [bool, iter] = folders.get_iter_from_string(path);
+            folders.set_value(iter, 0, new_text);
+            this._save_profile(profiles_combo_box.get_active_text(), folders, settings);
+            profiles_combo_box.do_changed();
+        });
+        column.pack_start(renderer, true);
+        column.add_attribute(renderer, 'text', 0);
+        profiles.append_column(column);
+
+        renderer = new Gtk.CellRendererToggle();
+        renderer.connect('toggled', (widget, path) => {
+            let iter = folders.get_iter_from_string(path)[1],
+                _profiles = settings.profiles;
+            folders.set_value(iter, 1, !folders.get_value(iter, 1));
+            _profiles[profiles_combo_box.get_active_text()][path][1] = Boolean(folders.get_value(iter, 1));
+            settings.profiles = _profiles;
+            this._load_profiles(profiles_combo_box, settings);
+        });
+        column = new Gtk.TreeViewColumn({title: _('Sub Folders'), expand: false});
+        column.pack_start(renderer, false);
+        column.add_attribute(renderer, 'active', 1);
+        profiles.append_column(column);
+        profiles_box.pack_start(profiles, true, true, 10);
+
+        // Add/Remove URI buttons
+        let remove = new Gtk.Button({label: _('Remove')}),
+            add = new Gtk.Button({label: _('Add Image')});
+
+        remove.connect('clicked', () => {
+            let [bool, list, iter] = profiles.get_selection().get_selected(),
+                path = list.get_path(iter),
+                _profiles = settings.profiles;
+            _profiles[profiles_combo_box.get_active_text()].splice(path.get_indices(), 1);
+            settings.profiles = _profiles;
+            remove.set_sensitive(false);
+        });
+        remove.set_sensitive(false);
+
+        add.connect('clicked', () => {
+            this._add_item(_('Add Image'), Gtk.FileChooserAction.OPEN, profiles_combo_box, settings);
+        });
+
+        profiles.connect('cursor_changed', () => {
+            remove.set_sensitive(true);
+        });
+
+        hbox = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL});
+        hbox.pack_start(add, false, true, 10);
+
+        add = new Gtk.Button({label: _('Add Folder')});
+        add.connect('clicked', () => {
+            this._add_item(_('Add Folder'), Gtk.FileChooserAction.SELECT_FOLDER, profiles_combo_box, settings);
+        });
+
+        hbox.pack_start(add, false, true, 10);
+        hbox.pack_start(new Gtk.Label({label: ' '}), true, true, 0);
+        hbox.pack_start(remove, false, true, 10);
+        profiles_box.pack_start(hbox, false, true, 10);
+
+        notebook.append_page(profiles_box, new Gtk.Label({label: _('Profiles')}));
+    }
+
+
+    _add_item(title, action, combo_box, settings) {
+        let dialog, filter_image, response;
+        dialog = new Gtk.FileChooserDialog({title: title, action: action});
+        if (action != Gtk.FileChooserAction.SELECT_FOLDER) {
+            filter_image = new Gtk.FileFilter();
+            filter_image.set_name("Image files");
+            filter_image.add_mime_type("image/*");
+            dialog.add_filter(filter_image);
+        }
+        dialog.add_button(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL);
+        dialog.add_button(Gtk.STOCK_OPEN, Gtk.ResponseType.OK);
+        dialog.set_select_multiple(true);
+        response = dialog.run();
+        if (response === Gtk.ResponseType.OK) {
+            let paths = dialog.get_uris(), profile, profiles = settings.profiles;
+            profile = combo_box.get_active_text();
+            for (let path in paths) {
+                profiles[profile].push([paths[path], false]);
+            }
+            settings.profiles = profiles;
+            this._load_profiles(combo_box, settings);
+        }
+        dialog.destroy();
+    }
+
+    _load_profiles(combo_box, settings, text=null) {
+        let active = combo_box.get_active(),
+            i = 0;
+
+        if (!text) {
+            text = combo_box.get_active_text();
+        }
+
+        combo_box.remove_all();
+
+        for (let profile in settings.profiles) {
+            combo_box.insert_text(i, profile);
+
+            if (text === profile || (active === -1 && profile === settings.current_profile)) {
+                combo_box.set_active(i);
+            }
+
+            i++;
+        }
+    }
+
+    _save_profile(profile, folders, settings) {
+        let _profile = [],
+            profiles = settings.profiles;
+
+        folders.foreach((model, path, iter) => {
+            _profile.push([model.get_value(iter, 0), model.get_value(iter, 1)]);
+        });
+
+        profiles[profile] = _profile;
+        settings.profiles = profiles;
+    }
+}
+);
 
 function buildPrefsWidget() {
+    let widget = new DeskChangerPrefs();
+    return widget.box;
 }
 
 function init() {
+    Utils.debug('init');
 }
