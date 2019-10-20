@@ -10,7 +10,7 @@ const Signals = imports.signals;
 const MAX_QUEUE_LENGTH = 128;
 
 
-var DeskChangerProfileError = GObject.registerClass({
+var ProfileError = GObject.registerClass({
     Properties: {
         'caller': GObject.ParamSpec.string('caller', 'Caller', 'Caller of the exception',
             GObject.ParamFlags.CONSTRUCT | GObject.ParamFlags.READABLE, ''),
@@ -36,7 +36,7 @@ class DeskChangerProfileError extends GObject.Object {
     }
 });
 
-var DeskChangerProfile = GObject.registerClass(
+var Profile = GObject.registerClass(
 {
     Abstract: true,
     Properties: {
@@ -52,15 +52,15 @@ var DeskChangerProfile = GObject.registerClass(
 class DeskChangerProfile extends GObject.Object {
     _init(settings, profile_key, params={}) {
         if (this._background === undefined)
-            throw new DeskChangerProfileError('no background setting is defined');
+            throw new ProfileError('no background setting is defined');
 
         this._loaded = false;
         this._monitors = [];
         this._profile = null;
         this._profile_key = profile_key;
         this._profile_changed_id = null;
-        this._queue = new DeskChangerProfileQueue();
-        this._history = new DeskChangerProfileQueue();
+        this._queue = new ProfileQueue();
+        this._history = new ProfileQueue();
         this._sequence = 0;
         this._settings = settings;
         this._wallpapers = [];
@@ -265,9 +265,9 @@ class DeskChangerProfile extends GObject.Object {
 }
 );
 
-Signals.addSignalMethods(DeskChangerProfile.prototype);
+Signals.addSignalMethods(Profile.prototype);
 
-let DeskChangerProfileQueue = GObject.registerClass({
+let ProfileQueue = GObject.registerClass({
     Properties: {
         'length': GObject.ParamSpec.uint('length', 'Length', 'The length of the current queue',
             GObject.ParamFlags.READABLE, 0, GLib.MAXUINT32, 0),
@@ -330,8 +330,8 @@ class DeskChangerProfileQueue extends GObject.Object {
 }
 );
 
-var DeskChangerDesktopProfile = GObject.registerClass(
-class DeskChangerDesktopProfile extends DeskChangerProfile {
+var DesktopProfile = GObject.registerClass(
+class DeskChangerDesktopProfile extends Profile {
     _init(settings, params = {}) {
         this._background = Convenience.getSettings('org.gnome.desktop.background');
         super._init(settings, 'current-profile', params);

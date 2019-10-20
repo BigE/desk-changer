@@ -6,7 +6,7 @@ const GObject = imports.gi.GObject;
 const Signals = imports.signals;
 
 
-var DeskChangerTimer = GObject.registerClass({
+var Timer = GObject.registerClass({
     Properties: {
         'interval': GObject.ParamSpec.uint('interval', 'Interval', 'The interval that the callback is called.',
             GObject.ParamFlags.READABLE, 0, GLib.MAXUINT32, 300),
@@ -49,11 +49,11 @@ class DeskChangerTimer extends GObject.Object {
     }
 });
 
-Signals.addSignalMethods(DeskChangerTimer.prototype);
+Signals.addSignalMethods(Timer.prototype);
 
 
-var DeskChangerTimerHourly = GObject.registerClass(
-class DeskChangerTimerHourly extends DeskChangerTimer {
+var TimerHourly = GObject.registerClass(
+class DeskChangerTimerHourly extends Timer {
     _init(callback, params = {}) {
         this._done = false;
         super._init(5, callback, params);
