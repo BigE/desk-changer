@@ -7,6 +7,7 @@ const GObject = imports.gi.GObject;
 const PanelMenu = imports.ui.panelMenu;
 const PopupMenu = imports.ui.popupMenu;
 const St = imports.gi.St;
+const Util = imports.misc.util;
 
 var Button = GObject.registerClass(
 class DeskChangerPanelMenuButton extends PanelMenu.Button {
@@ -31,6 +32,12 @@ class DeskChangerPanelMenuButton extends PanelMenu.Button {
         this.menu.addMenuItem(new DeskChangerPopupMenu.ControlsMenuItem(daemon, settings));
         this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
         this.menu.addMenuItem(new DeskChangerPopupMenu.DaemonMenuItem(daemon));
+
+        let menu_item = new PopupMenu.PopupMenuItem(_('DeskChanger Settings'));
+        menu_item.connect('activate', function () {
+            Util.spawn(['gnome-shell-extension-prefs', Me.metadata.uuid]);
+        });
+        this.menu.addMenuItem(menu_item);
 
         if (settings.update_lockscreen) {
             this.menu.addMenuItem(new DeskChangerPopupMenu.ProfileLockScreen(settings), 1);
