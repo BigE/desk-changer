@@ -30,7 +30,9 @@ class DeskChangerPopupMenuControlsMenuItem extends PopupMenu.PopupBaseMenuItem {
             daemon.desktop_profile.next();
         });
         this._prev = new DeskChangerControl.ButtonControl('media-skip-backward', () => {
-            daemon.desktop_profile.prev();
+            if (!daemon.desktop_profile.prev()) {
+                Main.notifyError('DeskChanger', _('No more wallpapers available in history'));
+            }
         });
         this._random = new DeskChangerControl.StateButtonControl([
             {
@@ -146,15 +148,15 @@ class DeskChangerPopupMenuItem extends PopupMenu.PopupMenuItem {
             this.setOrnament(PopupMenu.Ornament.DOT);
         }
 
-        this._handler_key_changed = settings.connect(`changed::${this._key_normalized}`, (settings, key) => {
-            if (settings[key] === this._value) {
+        this._handler_key_changed = settings.connect(`changed::${this._key_normalized}`, () => {
+            if (settings[key] === value) {
                 this.setOrnament(PopupMenu.Ornament.DOT);
             } else {
                 this.setOrnament(PopupMenu.Ornament.NONE);
             }
         });
 
-        this._handler_id = this.connect('activate', (value, settings, key) => {
+        this._handler_id = this.connect('activate', () => {
             settings[key] = value;
         });
     }
@@ -180,11 +182,10 @@ class DeskChangerPopupSubMenuMenuItem extends PopupMenu.PopupSubMenuMenuItem {
     _init(prefix, key, settings, sensitive=true) {
         super._init('');
         this._settings = settings;
-        this._prefix = prefix;
-        this._key = key;
-        this._key_normalized = key.replace('_', '-');
-        this._changed_id = settings.connect(`changed::${this._key_normalized}`, this.setLabel.bind(this));
-        this.setLabel(settings, key);
+        this._changed_id = settings.connect(`changed::${key.replace('_', '-')}`, () => {
+            this.setLabel(`${prefix}: ${settings[key]}`);
+        });
+        this.setLabel(`${prefix}: ${settings[key]}`);
         this.setSensitive(sensitive);
     }
 
@@ -196,8 +197,8 @@ class DeskChangerPopupSubMenuMenuItem extends PopupMenu.PopupSubMenuMenuItem {
         super.destroy();
     }
 
-    setLabel(settings, key) {
-        this.label.text = `${this._prefix}: ${settings[key]}`;
+    setLabel(label) {
+        this.label.text = label;
     }
 }
 );
@@ -241,14 +242,22 @@ let ProfileMenuItem = GObject.registerClass({
 class DeskChangerPopupSubMenuMenuItemProfile extends PopupSubMenuMenuItem {
     _init(label, key, settings, sensitive=true) {
         super._init(label, key, settings, sensitive);
-        this._populate_profiles(settings);
+        this._settings = settings;
+        this._profiles_changed_id = settings.connect('changed::profiles', () => {
+            this._populate_profiles(settings, key);
+        });
+        this._populate_profiles(settings, key);
     }
 
-    _populate_profiles(settings) {
+    destroy() {
+        this._settings.disconnect(this._profiles_changed_id);
+    }
+
+    _populate_profiles(settings, key) {
         this.menu.removeAll();
         for (let index in settings.profiles) {
             Utils.debug(`adding menu: ${index} -> ${this._prefix}`);
-            let item = new PopupMenuItem(index, index, settings, this._key);
+            let item = new PopupMenuItem(index, index, settings, key);
             this.menu.addMenuItem(item);
         }
     }
