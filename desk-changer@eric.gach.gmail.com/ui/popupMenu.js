@@ -208,7 +208,7 @@ class DeskChangerPopupMenuPreviewMenuItem extends PopupMenu.PopupBaseMenuItem {
     _init(daemon) {
         super._init({reactive: true});
         this._box = new St.BoxLayout({vertical: true});
-        this.add_actor(this._box, {align: St.Align.MIDDLE, span: -1});
+        this.add_actor(this._box);
         this._prefix = new St.Label({text: _('Open next wallpaper')});
         this._box.add(this._prefix);
         this._preview = new DeskChangerControl.PreviewControl(220, daemon);
@@ -251,6 +251,7 @@ class DeskChangerPopupSubMenuMenuItemProfile extends PopupSubMenuMenuItem {
 
     destroy() {
         this._settings.disconnect(this._profiles_changed_id);
+        super.destroy();
     }
 
     _populate_profiles(settings, key) {
@@ -281,17 +282,17 @@ class DeskChangerPopupSubMenuMenuItemProfileLockScreen extends ProfileMenuItem {
     setLabel(settings, key) {
         let value = settings[key];
 
-        if (value === '' || value === settings.current_profile) {
+        if (!value) {
             value = _('(inherited)');
         }
 
         this.label.text = _('Lock Screen Profile') + ':' + value;
     }
 
-    _populate_profiles(settings) {
-        super._populate_profiles(settings);
+    _populate_profiles(settings, key) {
+        super._populate_profiles(settings, 'lockscreen_profile', key);
 
-        let inherit = new PopupMenuItem(_('(inherit from desktop)'), '', settings, this._key);
+        let inherit = new PopupMenuItem(_('(inherit from desktop)'), '', settings, key);
         this.menu.addMenuItem(inherit);
     }
 }

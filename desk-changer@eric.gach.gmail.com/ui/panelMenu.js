@@ -39,17 +39,17 @@ class DeskChangerPanelMenuButton extends PanelMenu.Button {
         this.menu.addMenuItem(menu_item);
 
         if (settings.update_lockscreen) {
-            this.menu.addMenuItem(new DeskChangerPopupMenu.ProfileLockScreen(settings), 1);
+            this.menu.addMenuItem(new DeskChangerPopupMenu.ProfileLockScreenMenuItem(settings), 1);
         }
 
         this._update_lockscreen_id = settings.connect('changed::update-lockscreen', (settings, key) => {
             if (settings.update_lockscreen) {
-                this.menu.addMenuItem(new DeskChangerPopupMenu.ProfileLockScreen(settings), 1);
+                this.menu.addMenuItem(new DeskChangerPopupMenu.ProfileLockScreenMenuItem(settings), 1);
             } else {
                 this.menu.box.get_children().map((actor) => {
                     return actor._delegate;
                 }).filter((item) => {
-                    item instanceof DeskChangerPopupMenu.ProfileLockScreen && item.destroy();
+                    item instanceof DeskChangerPopupMenu.ProfileLockScreenMenuItem && item.destroy();
                 });
             }
         });
