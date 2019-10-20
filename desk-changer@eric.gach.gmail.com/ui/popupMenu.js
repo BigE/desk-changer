@@ -104,3 +104,28 @@ class DeskChangerPopupSubMenuMenuItemProfileDesktop extends Profile {
     }
 }
 );
+
+var ProfileLockScreen = GObject.registerClass(
+class DeskChangerPopupSubMenuMenuItemProfileLockScreen extends Profile {
+    _init(settings, sensitive=true) {
+        super._init(_('Lock Screen Profile'), 'lockscreen_profile', settings, sensitive);
+    }
+
+    setLabel(settings, key) {
+        let value = settings[key];
+
+        if (value === '' || value === settings.current_profile) {
+            value = _('(inherited)');
+        }
+
+        this.label.text = _('Lock Screen Profile') + ':' + value;
+    }
+
+    _populate_profiles(settings) {
+        super._populate_profiles(settings);
+
+        let inherit = new PopupMenuItem(_('(inherit from desktop)'), '', settings, this._key);
+        this.menu.addMenuItem(inherit);
+    }
+}
+);

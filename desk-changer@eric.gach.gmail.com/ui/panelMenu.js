@@ -11,14 +11,31 @@ class DeskChangerPanelMenuButton extends PanelMenu.Button {
     _init(daemon, settings) {
         super._init(0.0, 'DeskChanger');
         this._daemon = daemon;
+        this._settings = settings;
 
         this._icon = new Icon(this._daemon, settings);
         this.add_child(this._icon);
         this.menu.addMenuItem(new PopupMenu.ProfileDesktop(settings));
+
+        if (settings.update_lockscreen) {
+            this.menu.addMenuItem(new PopupMenu.ProfileLockScreen(settings));
+        }
+        this._update_lockscreen_id = settings.connect('changed::update-lockscreen', (settings, key) => {
+            if (settings.update_lockscreen) {
+                this.menu.addMenuItem(new PopupMenu.ProfileLockScreen(settings), 1);
+            } else {
+                this.menu.box.get_children().map((actor) => {
+                    return actor._delegate;
+                }).filter((item) => {
+                    item instanceof PopupMenu.ProfileLockScreen && item.destroy();
+                });
+            }
+        });
     }
 
     destroy() {
         this._icon.destroy();
+        this._settings.disconnect(this._update_lockscreen_id);
         super.destroy();
     }
 }
