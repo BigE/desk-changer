@@ -46,6 +46,7 @@ var Profile = GObject.registerClass(
             GObject.ParamFlags.CONSTRUCT | GObject.ParamFlags.READABLE, ''),
     },
     Signals: {
+        'loaded': { param_types: [GObject.TYPE_BOOLEAN] },
         'preview': { param_types: [GObject.TYPE_STRING] },
     },
 },
@@ -155,7 +156,11 @@ class DeskChangerProfile extends GObject.Object {
         return wallpaper;
     }
 
-    prev() {
+    prev(_current=true) {
+        if (this._history.length === 0) {
+            return false;
+        }
+
         let current = (_current)? this._background.get_string('picture-uri') : null,
             wallpaper = this._history.dequeue();
 
@@ -183,13 +188,15 @@ class DeskChangerProfile extends GObject.Object {
         }
 
         for (let monitor in this._monitors) {
-            monitor.cancel();
+            this._monitors[monitor].cancel();
             Utils.debug(`cleared monitor ${monitor}`);
         }
 
         this._monitors = [];
         this._profile = null;
         this._wallpapers = [];
+        this._history.clear();
+        this._queue.clear();
         this._loaded = false;
         return true;
     }

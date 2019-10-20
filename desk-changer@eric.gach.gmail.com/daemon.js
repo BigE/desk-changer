@@ -168,6 +168,14 @@ class DeskChangerDaemon extends DaemonDBusServer {
         super._init(params);
         this._settings = settings;
         this.desktop_profile = new Profile.DesktopProfile(this._settings);
+        this._loaded_id = this.desktop_profile.connect('loaded', () => {
+            this.desktop_profile.next(false);
+        });
+    }
+
+    destroy() {
+        this.desktop_profile.disconnect(this._loaded_id);
+        super.destroy();
     }
 
     next() {
@@ -186,11 +194,6 @@ class DeskChangerDaemon extends DaemonDBusServer {
         this.desktop_profile.load();
         this._timer = new Timer.Timer(this._settings.get_int('interval'), this.next.bind(this));
         super.start();
-
-        // If we're configured to automatically rotate, do it!
-        if (this._settings.get_boolean('auto-rotate')) {
-            this.desktop_profile.next(false);
-        }
     }
 
     stop() {
