@@ -174,18 +174,6 @@ class DeskChangerSettings extends Gio.Settings {
         }
     }
 
-    get profiles() {
-        return this.get_value('profiles').deep_unpack();
-    }
-
-    set profiles(value) {
-        this.set_value('profiles', new GLib.Variant('a{sa(sb)}', value));
-
-        if (this.debug) {
-            debug(`set profiles: ${value}`, getCaller());
-        }
-    }
-
     get notifications() {
         return this.get_boolean('notifications');
     }
@@ -199,6 +187,18 @@ class DeskChangerSettings extends Gio.Settings {
         }
     }
 
+    get profiles() {
+        return this.get_value('profiles').deep_unpack();
+    }
+
+    set profiles(value) {
+        this.set_value('profiles', new GLib.Variant('a{sa(sb)}', value));
+
+        if (this.debug) {
+            debug(`set profiles: ${value}`, getCaller());
+        }
+    }
+
     get random() {
         return this.get_boolean('random');
     }
@@ -209,6 +209,20 @@ class DeskChangerSettings extends Gio.Settings {
 
         if (this.debug) {
             debug(`set random: ${value}`, getCaller());
+        }
+    }
+
+    get remember_profile_state() {
+        return this.get_boolean('remember-profile-state');
+    }
+
+    set remember_profile_state(value) {
+        value = Boolean(value);
+
+        this.set_boolean('remember-profile-state', value);
+
+        if (this.debug) {
+            debug(`set remember-profile-state: ${value}`);
         }
     }
 

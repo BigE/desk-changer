@@ -1,9 +1,10 @@
 const Me = imports.misc.extensionUtils.getCurrentExtension();
-const PopupMenu = Me.imports.ui.popupMenu;
+const DeskChangerPopupMenu = Me.imports.ui.popupMenu;
 
 const Gio = imports.gi.Gio;
 const GObject = imports.gi.GObject;
 const PanelMenu = imports.ui.panelMenu;
+const PopupMenu = imports.ui.popupMenu;
 const St = imports.gi.St;
 
 var Button = GObject.registerClass(
@@ -15,19 +16,25 @@ class DeskChangerPanelMenuButton extends PanelMenu.Button {
 
         this._icon = new Icon(this._daemon, settings);
         this.add_child(this._icon);
-        this.menu.addMenuItem(new PopupMenu.ProfileDesktop(settings));
+        this.menu.addMenuItem(new DeskChangerPopupMenu.ProfileDesktop(settings));
+        this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
+        this.menu.addMenuItem(new DeskChangerPopupMenu.Switch(_('Change with profile'), 'auto_rotate', settings));
+        this.menu.addMenuItem(new DeskChangerPopupMenu.Switch(_('Notifications'), 'notifications', settings));
+        this.menu.addMenuItem(new DeskChangerPopupMenu.Switch(_('Remember profile state'), 'remember_profile_state', settings));
+        this.menu.addMenuItem(new DeskChangerPopupMenu.Switch(_('Update lock screen'), 'update_lockscreen', settings));
 
         if (settings.update_lockscreen) {
-            this.menu.addMenuItem(new PopupMenu.ProfileLockScreen(settings));
+            this.menu.addMenuItem(new DeskChangerPopupMenu.ProfileLockScreen(settings), 1);
         }
+
         this._update_lockscreen_id = settings.connect('changed::update-lockscreen', (settings, key) => {
             if (settings.update_lockscreen) {
-                this.menu.addMenuItem(new PopupMenu.ProfileLockScreen(settings), 1);
+                this.menu.addMenuItem(new DeskChangerPopupMenu.ProfileLockScreen(settings), 1);
             } else {
                 this.menu.box.get_children().map((actor) => {
                     return actor._delegate;
                 }).filter((item) => {
-                    item instanceof PopupMenu.ProfileLockScreen && item.destroy();
+                    item instanceof DeskChangerPopupMenu.ProfileLockScreen && item.destroy();
                 });
             }
         });

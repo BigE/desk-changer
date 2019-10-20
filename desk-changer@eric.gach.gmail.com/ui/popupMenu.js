@@ -129,3 +129,33 @@ class DeskChangerPopupSubMenuMenuItemProfileLockScreen extends Profile {
     }
 }
 );
+
+var Switch = GObject.registerClass(
+class DeskChangerPopupSwitchMenuItem extends PopupMenu.PopupSwitchMenuItem {
+    _init(label, key, settings) {
+        super._init(label);
+        this._settings = settings;
+        this._key = key;
+        this._key_normalized = key.replace('_', '-');
+        this.setToggleState(settings[key]);
+        this._handler_changed = settings.connect(`changed::${this._key_normalized}`, (settings, key) => {
+            this.setToggleState(settings.get_boolean(key));
+        });
+        this._handler_toggled = this.connect('toggled', () => {
+            this._settings[this._key] = this.state;
+        });
+    }
+
+    destroy() {
+        if (this._handler_changed) {
+            this._settings.disconnect(this._handler_changed);
+        }
+
+        if (this._handler_toggled) {
+            this._settings.disconnect(this._handler_toggled);
+        }
+
+        super.destroy();
+    }
+}
+);
