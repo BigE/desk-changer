@@ -17,14 +17,15 @@ class DeskChangerPanelMenuButton extends PanelMenu.Button {
 
         this._icon = new Icon(daemon, settings);
         this.add_child(this._icon);
-        this.menu.addMenuItem(new DeskChangerPopupMenu.ProfileDesktop(settings));
+        this.menu.addMenuItem(new DeskChangerPopupMenu.ProfileDesktopMenuItem(settings));
         this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
-        this.menu.addMenuItem(new DeskChangerPopupMenu.Switch(_('Change with profile'), 'auto_rotate', settings));
-        this.menu.addMenuItem(new DeskChangerPopupMenu.Switch(_('Notifications'), 'notifications', settings));
-        this.menu.addMenuItem(new DeskChangerPopupMenu.Switch(_('Remember profile state'), 'remember_profile_state', settings));
-        this.menu.addMenuItem(new DeskChangerPopupMenu.Switch(_('Update lock screen'), 'update_lockscreen', settings));
+        this.menu.addMenuItem(new DeskChangerPopupMenu.SwitchMenuItem(_('Change with profile'), 'auto_rotate', settings));
+        this.menu.addMenuItem(new DeskChangerPopupMenu.SwitchMenuItem(_('Notifications'), 'notifications', settings));
+        this.menu.addMenuItem(new DeskChangerPopupMenu.SwitchMenuItem(_('Remember profile state'), 'remember_profile_state', settings));
+        this.menu.addMenuItem(new DeskChangerPopupMenu.SwitchMenuItem(_('Update lock screen'), 'update_lockscreen', settings));
         this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
         this.menu.addMenuItem(new DeskChangerPopupMenu.PreviewMenuItem(daemon));
+        this.menu.addMenuItem(new DeskChangerPopupMenu.OpenCurrentMenuItem());
 
         if (settings.update_lockscreen) {
             this.menu.addMenuItem(new DeskChangerPopupMenu.ProfileLockScreen(settings), 1);

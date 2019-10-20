@@ -3,11 +3,33 @@ const Gettext = imports.gettext.domain(Me.metadata.uuid);
 const Utils = Me.imports.utils;
 const DeskChangerPreview = Me.imports.ui.preview.Preview;
 
+const Gio = imports.gi.Gio;
 const GObject = imports.gi.GObject;
 const PopupMenu = imports.ui.popupMenu;
 const St = imports.gi.St;
 const Util = imports.misc.util;
 const _ = Gettext.gettext;
+
+var OpenCurrentMenuItem = GObject.registerClass(
+class DeskChangerPopupMenuOpenCurrent extends PopupMenu.PopupMenuItem {
+    _init() {
+        super._init(_('Open current wallpaper'));
+        this._background = new Gio.Settings({'schema': 'org.gnome.desktop.background'});
+        this._activate_id = this.connect('activate', () => {
+            Utils.debug(`opening current wallpaper ${this._background.get_string('picture-uri')}`);
+            Util.spawn(['xdg-open', this._background.get_string('picture-uri')]);
+        });
+        Utils.debug(`connect active (${this._activate_id})`);
+    }
+
+    destroy() {
+        Utils.debug(`disconnect active (${this._activate_id})`);
+        this.disconnect(this._activate_id);
+
+        super.destroy();
+    }
+}
+);
 
 let PopupMenuItem = GObject.registerClass(
 class DeskChangerPopupMenuItem extends PopupMenu.PopupMenuItem {
@@ -113,7 +135,7 @@ class DeskChangerPopupMenuPreviewMenuItem extends PopupMenu.PopupBaseMenuItem {
 }
 );
 
-let Profile = GObject.registerClass({
+let ProfileMenuItem = GObject.registerClass({
     Abstract: true,
 },
 class DeskChangerPopupSubMenuMenuItemProfile extends PopupSubMenuMenuItem {
@@ -133,16 +155,16 @@ class DeskChangerPopupSubMenuMenuItemProfile extends PopupSubMenuMenuItem {
 }
 );
 
-var ProfileDesktop = GObject.registerClass(
-class DeskChangerPopupSubMenuMenuItemProfileDesktop extends Profile {
+var ProfileDesktopMenuItem = GObject.registerClass(
+class DeskChangerPopupSubMenuMenuItemProfileDesktop extends ProfileMenuItem {
     _init(settings, sensitive = true) {
         super._init(_('Desktop Profile'), 'current_profile', settings, sensitive);
     }
 }
 );
 
-var ProfileLockScreen = GObject.registerClass(
-class DeskChangerPopupSubMenuMenuItemProfileLockScreen extends Profile {
+var ProfileLockScreenMenuItem = GObject.registerClass(
+class DeskChangerPopupSubMenuMenuItemProfileLockScreen extends ProfileMenuItem {
     _init(settings, sensitive=true) {
         super._init(_('Lock Screen Profile'), 'lockscreen_profile', settings, sensitive);
     }
@@ -166,7 +188,7 @@ class DeskChangerPopupSubMenuMenuItemProfileLockScreen extends Profile {
 }
 );
 
-var Switch = GObject.registerClass(
+var SwitchMenuItem = GObject.registerClass(
 class DeskChangerPopupSwitchMenuItem extends PopupMenu.PopupSwitchMenuItem {
     _init(label, key, settings) {
         super._init(label);
