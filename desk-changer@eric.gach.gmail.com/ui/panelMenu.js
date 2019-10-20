@@ -20,7 +20,6 @@ class DeskChangerPanelMenuButton extends PanelMenu.Button {
         this.add_child(this._icon);
         this.menu.addMenuItem(new DeskChangerPopupMenu.ProfileDesktopMenuItem(settings));
         this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
-        this.menu.addMenuItem(new DeskChangerPopupMenu.SwitchMenuItem(_('Change with profile'), 'auto_rotate', settings));
         this.menu.addMenuItem(new DeskChangerPopupMenu.SwitchMenuItem(_('Notifications'), 'notifications', settings));
         this.menu.addMenuItem(new DeskChangerPopupMenu.SwitchMenuItem(_('Remember profile state'), 'remember_profile_state', settings));
         this.menu.addMenuItem(new DeskChangerPopupMenu.SwitchMenuItem(_('Update lock screen'), 'update_lockscreen', settings));

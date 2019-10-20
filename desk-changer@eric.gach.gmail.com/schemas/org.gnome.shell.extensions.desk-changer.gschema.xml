@@ -7,14 +7,6 @@
 			</description>
 			<summary>Allowed mime types for loading backgrounds</summary>
 		</key>
-		<key name="auto-rotate" type="b">
-			<default>true</default>
-			<description>
-				When enabled, this will cause the daemon to automatically change the wallpaper whenever the
-				current profile is changed.
-			</description>
-			<summary>Auto rotate wallpaper when the profile is changed</summary>
-		</key>
 		<key name="auto-start" type="b">
 			<default>true</default>
 			<description>
