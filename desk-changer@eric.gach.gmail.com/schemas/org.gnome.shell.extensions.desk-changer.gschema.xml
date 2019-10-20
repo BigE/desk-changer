@@ -7,14 +7,6 @@
 			</description>
 			<summary>Allowed mime types for loading backgrounds</summary>
 		</key>
-		<key name="auto-rotate" type="b">
-			<default>true</default>
-			<description>
-				When enabled, this will cause the daemon to automatically change the wallpaper whenever the
-				current profile is changed.
-			</description>
-			<summary>Auto rotate wallpaper when the profile is changed</summary>
-		</key>
 		<key name="auto-start" type="b">
 			<default>true</default>
 			<description>
@@ -29,6 +21,12 @@
 				This is the current profile that the daemon will load.
 			</description>
 			<summary>Currently loaded profile</summary>
+		</key>
+		<key name="debug" type="b">
+			<default>false</default>
+			<description>When enabled, the entire extension will output a lot more debugging information. This should
+			only be used when needed as it can greatly increase log size.</description>
+			<summary>Enable debugging output of the extension</summary>
 		</key>
 		<key name="icon-preview" type="b">
 			<default>false</default>
