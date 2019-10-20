@@ -1,14 +1,116 @@
 const Me = imports.misc.extensionUtils.getCurrentExtension();
 const Gettext = imports.gettext.domain(Me.metadata.uuid);
 const Utils = Me.imports.utils;
-const DeskChangerPreview = Me.imports.ui.preview.Preview;
+const DeskChangerControl = Me.imports.ui.control;
 
 const Gio = imports.gi.Gio;
 const GObject = imports.gi.GObject;
+const Main = imports.ui.main;
+const Meta = imports.gi.Meta;
 const PopupMenu = imports.ui.popupMenu;
+const Shell = imports.gi.Shell;
 const St = imports.gi.St;
 const Util = imports.misc.util;
 const _ = Gettext.gettext;
+
+var ControlsMenuItem = GObject.registerClass(
+class DeskChangerPopupMenuControlsMenuItem extends PopupMenu.PopupBaseMenuItem {
+    _init(daemon, settings) {
+        super._init({'can_focus': false, 'reactive': false});
+        this._bindings = [];
+
+        this._addKeyBinding('next-wallpaper', () => {
+            this.next();
+        }, settings);
+        this._addKeyBinding('prev-wallpaper', () => {
+            this.prev();
+        }, settings);
+
+        this._next = new DeskChangerControl.ButtonControl('media-skip-forward', () => {
+            daemon.desktop_profile.next();
+        });
+        this._prev = new DeskChangerControl.ButtonControl('media-skip-backward', () => {
+            daemon.desktop_profile.prev();
+        });
+        this._random = new DeskChangerControl.StateButtonControl([
+            {
+                icon: 'media-playlist-shuffle',
+                name: 'random',
+            },
+            {
+                icon: 'media-playlist-repeat',
+                name: 'ordered',
+            },
+        ], (state) => {
+            Utils.debug(`setting order to ${state}`);
+            settings.random = (state === 'random');
+        });
+        this._random.set_state((settings.random)? 'random' : 'ordered');
+
+        this.add(this._prev, {expand: true, x_fill: false});
+        this.add(this._random, {expand: true, x_fill: false});
+        this.add(this._next, {expand: true, x_fill: false});
+    }
+
+    _addKeyBinding(key, handler, settings) {
+        let success = false;
+        success = Main.wm.addKeybinding(
+            key,
+            settings,
+            Meta.KeyBindingFlags.NONE,
+            Shell.ActionMode.NORMAL,
+            handler
+        );
+
+        this._bindings.push(key);
+        if (success) {
+            Utils.debug('added keybinding ' + key);
+        } else {
+            Utils.debug('failed to add keybinding ' + key);
+            Utils.debug(success);
+        }
+    }
+
+    _removeKeyBinding(key) {
+        if (this._bindings.indexOf(key)) {
+            this._bindings.splice(this._bindings.indexOf(key), 1);
+        }
+
+        Utils.debug('removing keybinding ' + key);
+        Main.wm.removeKeybinding(key);
+    }
+}
+);
+
+var DaemonMenuItem = GObject.registerClass(
+class DeskChangerPopupMenuDaemonMenuItem extends PopupMenu.PopupSwitchMenuItem {
+    _init(daemon) {
+        super._init(_('DeskChanger Daemon'));
+        this._daemon = daemon;
+        this.setToggleState(daemon.running);
+        this._toggled_id = this.connect('toggled', () => {
+            (daemon.running)? daemon.stop() : daemon.start();
+        });
+        this._daemon_id = daemon.connect('toggled', () => {
+            this.setToggleState(daemon.running);
+        });
+    }
+
+    destroy() {
+        if (this._toggled_id) {
+            this.disconnect(this._toggled_id);
+        }
+        this._toggled_id = null;
+
+        if (this._daemon_id) {
+            this._daemon.disconnect(this._daemon_id);
+        }
+        this._daemon_id = null;
+
+        super.destroy();
+    }
+}
+);
 
 var OpenCurrentMenuItem = GObject.registerClass(
 class DeskChangerPopupMenuOpenCurrent extends PopupMenu.PopupMenuItem {
@@ -73,9 +175,7 @@ class DeskChangerPopupMenuItem extends PopupMenu.PopupMenuItem {
 }
 );
 
-let PopupSubMenuMenuItem = GObject.registerClass({
-    Abstract: true,
-},
+let PopupSubMenuMenuItem = GObject.registerClass(
 class DeskChangerPopupSubMenuMenuItem extends PopupMenu.PopupSubMenuMenuItem {
     _init(prefix, key, settings, sensitive=true) {
         super._init('');
@@ -110,7 +210,7 @@ class DeskChangerPopupMenuPreviewMenuItem extends PopupMenu.PopupBaseMenuItem {
         this.add_actor(this._box, {align: St.Align.MIDDLE, span: -1});
         this._prefix = new St.Label({text: _('Open next wallpaper')});
         this._box.add(this._prefix);
-        this._preview = new DeskChangerPreview(220, daemon);
+        this._preview = new DeskChangerControl.PreviewControl(220, daemon);
         this._box.add(this._preview);
         this._activate_id = this.connect('activate', () => {
             if (this._preview.file) {
@@ -184,6 +284,17 @@ class DeskChangerPopupSubMenuMenuItemProfileLockScreen extends ProfileMenuItem {
 
         let inherit = new PopupMenuItem(_('(inherit from desktop)'), '', settings, this._key);
         this.menu.addMenuItem(inherit);
+    }
+}
+);
+
+var RotationMenuItem = GObject.registerClass(
+class DeskChangerPopupMenuRotationMenuItem extends PopupSubMenuMenuItem {
+    _init(settings, sensitive=true) {
+        super._init(_('Rotation mode'), 'rotation', settings, sensitive);
+        this.menu.addMenuItem(new PopupMenuItem(_('Interval timer'), 'interval', settings, 'rotation'));
+        this.menu.addMenuItem(new PopupMenuItem(_('Beginning of hour'), 'hourly', settings, 'rotation'));
+        this.menu.addMenuItem(new PopupMenuItem(_('Disabled'), 'disabled', settings, 'rotation'));
     }
 }
 );

@@ -1,6 +1,6 @@
 const Me = imports.misc.extensionUtils.getCurrentExtension();
 const DeskChangerPopupMenu = Me.imports.ui.popupMenu;
-const DeskChangerPreview = Me.imports.ui.preview.Preview;
+const DeskChangerControl = Me.imports.ui.control;
 
 const Gio = imports.gi.Gio;
 const GObject = imports.gi.GObject;
@@ -26,6 +26,11 @@ class DeskChangerPanelMenuButton extends PanelMenu.Button {
         this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
         this.menu.addMenuItem(new DeskChangerPopupMenu.PreviewMenuItem(daemon));
         this.menu.addMenuItem(new DeskChangerPopupMenu.OpenCurrentMenuItem());
+        this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
+        this.menu.addMenuItem(new DeskChangerPopupMenu.RotationMenuItem(settings));
+        this.menu.addMenuItem(new DeskChangerPopupMenu.ControlsMenuItem(daemon, settings));
+        this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
+        this.menu.addMenuItem(new DeskChangerPopupMenu.DaemonMenuItem(daemon));
 
         if (settings.update_lockscreen) {
             this.menu.addMenuItem(new DeskChangerPopupMenu.ProfileLockScreen(settings), 1);
@@ -102,7 +107,7 @@ class DeskChangerPanelMenuIcon extends St.Bin {
 
     _create_preview(file) {
         this._destroy_preview();
-        this._preview = new DeskChangerPreview(34, this._daemon, this.update_child.bind(this));
+        this._preview = new DeskChangerControl.PreviewControl(34, this._daemon, this.update_child.bind(this));
 
         if (!(this._preview.file)) {
             if (typeof file === 'string') {
