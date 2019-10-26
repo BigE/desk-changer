@@ -270,6 +270,15 @@ class DeskChangerSettings extends Gio.Settings {
 
         return super.disconnect(handler_id);
     }
+
+    getKeybinding(name) {
+        let array = this.get_strv(name);
+        return (typeof  array[0] === 'undefined')? null : array[0];
+    }
+
+    setKeybinding(name, value) {
+        this.set_strv(name, [value,]);
+    }
 }
 );
 

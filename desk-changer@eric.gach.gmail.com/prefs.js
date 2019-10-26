@@ -43,9 +43,85 @@ class DeskChangerPrefs extends GObject.Object {
 
 
         this._init_profiles(notebook, settings);
+        this._init_keyboard(notebook, settings);
 
         this.box.pack_start(notebook, true, true, 0);
         this.box.show_all();
+    }
+
+    _init_keyboard(notebook, settings) {
+        let vbox = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL}),
+            box = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL}),
+            model = new Gtk.ListStore(),
+            cellrend = new Gtk.CellRendererText(),
+            col = new Gtk.TreeViewColumn({title: _('Action'), expand: true}),
+            treeview, row, key, mods;
+
+        model.set_column_types([
+            GObject.TYPE_STRING,
+            GObject.TYPE_INT,
+            GObject.TYPE_INT,
+            GObject.TYPE_STRING,
+        ]);
+        treeview = new Gtk.TreeView({
+            expand: true,
+            model: model,
+            margin: 4,
+        });
+
+        // next keybinding
+        row = model.insert(-1);
+        [key, mods] = Gtk.accelerator_parse(settings.getKeybinding('next-wallpaper'));
+        model.set(row, [0, 1, 2, 3], [_('Next Wallpaper'), mods, key, 'next-wallpaper']);
+        // prev keybinding
+        row = model.insert(-1);
+        [key, mods] = Gtk.accelerator_parse(settings.getKeybinding('prev-wallpaper'));
+        model.set(row, [0, 1, 2, 3], [_('Previous Wallpaper'), mods, key, 'prev-wallpaper']);
+
+        col.pack_start(cellrend, true);
+        col.add_attribute(cellrend, 'text', 0);
+        treeview.append_column(col);
+
+        cellrend = new Gtk.CellRendererAccel({editable: true, 'accel-mode': Gtk.CellRendererAccelMode.GTK});
+        cellrend.connect('accel-edited', (rend, iter, key, mods) => {
+            let value = Gtk.accelrator_name(key, mods);
+            if (this._keybindingExists(value)) {
+                // keybinding exists error
+            }
+
+            let [success, iterator] = model.get_iter_from_string(iter);
+
+            if (!success) {
+                throw new Error(_('Failed to update keybinding'));
+            }
+
+            let name = model.get_value(iterator, 3);
+            Utils.debug(`updating keybinding ${name} to ${value}`);
+            model.set(iterator, [1, 2], [mods, key]);
+            settings.setKeybinding(name, value);
+        });
+        cellrend.connect('accel-cleared', (rend, iter) => {
+            let [success, iterator] = model.get_iter_from_string(iter);
+
+            if (!success) {
+                throw new Error(_('Failed to update keybinding'));
+            }
+
+            let name = model.get_value(iterator, 3);
+            Utils.debug(`clearing keybinding ${name}`);
+            model.set(iterator, [1, 2], [0, 0]);
+            settings.setKeybinding(name, '');
+        });
+
+        col = new Gtk.TreeViewColumn({title: _('Modify')});
+        col.pack_end(cellrend, false);
+        col.add_attribute(cellrend, 'accel-mods', 1);
+        col.add_attribute(cellrend, 'accel-key',  2);
+        treeview.append_column(col);
+
+        box.pack_start(treeview, true, true, 5);
+        vbox.pack_start(box, false, true, 10);
+        notebook.append_page(vbox, new Gtk.Label({label: _('Keyboard Shortcuts')}));
     }
 
     _init_profiles(notebook, settings) {
