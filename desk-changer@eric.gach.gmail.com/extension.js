@@ -78,11 +78,11 @@ function enable() {
     }
 
     changed_id = daemon.connect('changed', function (obj, file) {
-        notify(_(`Wallpaper changed: ${file}`));
+        notify(_('Wallpaper changed: %s'.format(file)));
     });
 
     current_profile_id = settings.connect('changed::current-profile', function () {
-        notify(_(`Profile changed to ${settings.current_profile}`));
+        notify(_('Profile changed to %s'.format(settings.current_profile)));
     });
 
     notifications_id = settings.connect('changed::notifications', function () {
@@ -104,7 +104,7 @@ function enable() {
 
         switch (settings.rotation) {
             case 'interval':
-                message = _(`Rotation will occur every ${settings.interval} seconds`);
+                message = _('Rotation will occur every %d seconds'.format(settings.interval));
                 break;
             case 'hourly':
                 message = _('Rotation will occur at the beginning of every hour');

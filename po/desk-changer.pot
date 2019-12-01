@@ -1,14 +1,14 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
-# This file is distributed under the same license as the PACKAGE package.
+# This file is distributed under the same license as the DeskChanger package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: PACKAGE VERSION\n"
+"Project-Id-Version: DeskChanger 27\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-08-27 02:43-0500\n"
+"POT-Creation-Date: 2019-12-01 19:12-0600\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,199 +17,133 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: extension.js:62
-msgid "Change with Profile"
+#: extension.js:81
+#, javascript-format
+msgid "Wallpaper changed: %s"
 msgstr ""
 
-#: extension.js:63
-msgid "Notifications"
-msgstr ""
-
-#: extension.js:64
-msgid "Remember Profile State"
-msgstr ""
-
-#: extension.js:65
-msgid "Update Lock Screen"
-msgstr ""
-
-#: extension.js:74 extension.js:116
-msgid "DeskChanger Settings"
-msgstr ""
-
-#: extension.js:197
+#: extension.js:85
 #, javascript-format
 msgid "Profile changed to %s"
 msgstr ""
 
-#: extension.js:201
+#: extension.js:90
 msgid "Notifications are now enabled"
 msgstr ""
 
-#: extension.js:201
+#: extension.js:91
 msgid "Notifications are now disabled"
 msgstr ""
 
-#: extension.js:206
+#: extension.js:97
+msgid "Wallpapers will be shown in a random order"
+msgstr ""
+
+#: extension.js:98
+msgid "Wallpapers will be shown in the order they were loaded"
+msgstr ""
+
+#: extension.js:107
 #, javascript-format
-msgid "Wallpaper Changed: %s"
+msgid "Rotation will occur every %d seconds"
 msgstr ""
 
-#: extension.js:210
-#, javascript-format
-msgid "Daemon Error: %s"
+#: extension.js:110
+msgid "Rotation will occur at the beginning of every hour"
 msgstr ""
 
-#: menu.js:184
-msgid "DeskChanger Daemon"
+#: extension.js:113
+msgid "Rotation has been disabled"
 msgstr ""
 
-#: menu.js:212
-msgid "Open Current Wallpaper"
-msgstr ""
-
-#: menu.js:240
-msgid "Open Next Wallpaper"
-msgstr ""
-
-#: menu.js:304 prefs.js:150
-msgid "Desktop Profile"
-msgstr ""
-
-#: menu.js:313 menu.js:323
-msgid "Lock Screen Profile"
-msgstr ""
-
-#: menu.js:320
-msgid "(inherited)"
-msgstr ""
-
-#: menu.js:328
-msgid "(inherit from desktop)"
-msgstr ""
-
-#: prefs.js:75
-msgid "DeskChanger Daemon Status"
+#: prefs.js:62
+msgid "DeskChanger Rotation Mode"
 msgstr ""
 
 #: prefs.js:94
+msgid "DeskChanger Daemon Status"
+msgstr ""
+
+#: prefs.js:114
 msgid "DeskChanger Autostart Daemon"
 msgstr ""
 
-#: prefs.js:107
+#: prefs.js:126
 msgid "Remember the profiles current/next wallpaper"
 msgstr ""
 
-#: prefs.js:120
+#: prefs.js:138
 msgid "Wallpaper Timer Interval (seconds)"
 msgstr ""
 
-#: prefs.js:142
+#: prefs.js:153
+msgid "Allowed Mime Types"
+msgstr ""
+
+#: prefs.js:170
 msgid "Daemon"
 msgstr ""
 
-#: prefs.js:147 prefs.js:323
+#: prefs.js:175
 msgid "Profile"
 msgstr ""
 
-#: prefs.js:163
+#: prefs.js:178
+msgid "Desktop Profile"
+msgstr ""
+
+#: prefs.js:199
 msgid "Update LockScreen Background"
 msgstr ""
 
-#: prefs.js:175
+#: prefs.js:210
 msgid "Lockscreen Profile"
 msgstr ""
 
-#: prefs.js:196
+#: prefs.js:233
 msgid "Show Preview as Icon"
 msgstr ""
 
-#: prefs.js:208
+#: prefs.js:245
 msgid "Show Notifications"
 msgstr ""
 
-#: prefs.js:221
-msgid "Integrate extension in system menu"
-msgstr ""
-
-#: prefs.js:249
-msgid "Next Wallpaper"
-msgstr ""
-
-#: prefs.js:252
-msgid "Previous Wallpaper"
+#: prefs.js:255
+msgid "Extension"
 msgstr ""
 
 #: prefs.js:263
 msgid "Action"
 msgstr ""
 
-#: prefs.js:277
-#, javascript-format
-msgid "The keybinding %s is already in use"
+#: prefs.js:281
+msgid "Next Wallpaper"
 msgstr ""
 
-#: prefs.js:287 prefs.js:299
+#: prefs.js:285
+msgid "Previous Wallpaper"
+msgstr ""
+
+#: prefs.js:301
 msgid "Failed to update keybinding"
 msgstr ""
 
-#: prefs.js:307
-msgid "Modify"
+#: ui/panelMenu.js:23
+msgid "Notifications"
 msgstr ""
 
-#: prefs.js:315
-msgid "Keyboard Shortcuts"
+#: ui/panelMenu.js:24
+msgid "Remember profile state"
 msgstr ""
 
-#: prefs.js:340
-msgid "Add"
+#: ui/panelMenu.js:25
+msgid "Update lock screen"
 msgstr ""
 
-#: prefs.js:347
-msgid "Profile Name"
+#: ui/panelMenu.js:35
+msgid "DeskChanger Settings"
 msgstr ""
 
-#: prefs.js:353
-msgid "OK"
-msgstr ""
-
-#: prefs.js:354
-msgid "Cancel"
-msgstr ""
-
-#: prefs.js:365 prefs.js:411
-msgid "Remove"
-msgstr ""
-
-#: prefs.js:371
-#, javascript-format
-msgid "Are you sure you want to delete the profile \"%s\"?"
-msgstr ""
-
-#: prefs.js:374
-msgid "Yes"
-msgstr ""
-
-#: prefs.js:375
-msgid "No"
-msgstr ""
-
-#: prefs.js:398
-msgid "Path"
-msgstr ""
-
-#: prefs.js:405
-msgid "Sub Folders"
-msgstr ""
-
-#: prefs.js:428 prefs.js:430
-msgid "Add Image"
-msgstr ""
-
-#: prefs.js:433 prefs.js:435
-msgid "Add Folder"
-msgstr ""
-
-#: prefs.js:441
-msgid "Profiles"
+#: ui/popupMenu.js:34
+msgid "No more wallpapers available in history"
 msgstr ""
