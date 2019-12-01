@@ -22,18 +22,23 @@
 
 const Me = imports.misc.extensionUtils.getCurrentExtension();
 const Convenience = Me.imports.convenience;
+const Interface = Me.imports.daemon.interface;
 const Utils = Me.imports.utils;
 
 const Gettext = imports.gettext.domain('desk-changer');
+const Gio = imports.gi.Gio;
 const GObject = imports.gi.GObject;
 const Gtk = imports.gi.Gtk;
 const _ = Gettext.gettext;
+
+const DaemonProxy = Gio.DBusProxy.makeProxyWrapper(Interface.DBusInterface);
 
 let DeskChangerPrefs = GObject.registerClass(
 class DeskChangerPrefs extends GObject.Object {
     _init() {
         let notebook = new Gtk.Notebook(),
-            settings = Convenience.getSettings();
+            settings = Convenience.getSettings(),
+            daemon = new DaemonProxy(Gio.DBus.session, Interface.DBusName, Interface.DBusPath);
 
         this.box = new Gtk.Box({
             border_width: 10,
@@ -41,13 +46,128 @@ class DeskChangerPrefs extends GObject.Object {
             spacing: 10,
         });
 
-
+        // init the pages
         this._init_profiles(notebook, settings);
         this._init_keyboard(notebook, settings);
         this._init_extension(notebook, settings);
+        this._init_daemon(notebook, settings, daemon);
 
         this.box.pack_start(notebook, true, true, 0);
         this.box.show_all();
+    }
+
+    _init_daemon(notebook, settings, daemon) {
+        let daemon_box = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL}),
+            box = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL}),
+            label = new Gtk.Label({label: _('DeskChanger Rotation Mode')}),
+            combo_box_rotation = new Gtk.ComboBoxText(),
+            spin_button_interval = new Gtk.SpinButton({
+                adjustment: new Gtk.Adjustment({
+                    lower: 0.0,
+                    upper: 84600.0,
+                    step_increment: 1.0,
+                    page_increment: 10.0,
+                    page_size: 0.0
+                })
+            }),
+            switch_auto_start = new Gtk.Switch(),
+            switch_daemon = new Gtk.Switch(),
+            switch_remember_profile_state = new Gtk.Switch(),
+            text_buffer_allowed_mime_types = new Gtk.TextBuffer({text: settings.allowed_mime_types.join("\n")});
+        box.pack_start(label, false, false, 5);
+        label = new Gtk.Label({label: ' '});
+        box.pack_start(label, true, true, 5);
+        combo_box_rotation.insert_text(0, 'interval');
+        combo_box_rotation.insert_text(1, 'hourly');
+        combo_box_rotation.insert_text(2, 'disabled');
+        this._update_rotation(settings, combo_box_rotation);
+        combo_box_rotation.connect('changed', (object) => {
+            settings.rotation = object.get_active_text();
+        });
+        settings.connect('changed::rotation', () => {
+            this._update_rotation(settings, combo_box_rotation);
+        });
+        box.pack_start(combo_box_rotation, false, false, 5);
+        daemon_box.pack_start(box, false, false, 10);
+        // Daemon Status
+        box = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL});
+        label = new Gtk.Label({label: _('DeskChanger Daemon Status')});
+        box.pack_start(label, false, false, 5);
+        label = new Gtk.Label({label: ' '});
+        box.pack_start(label, true, true, 5);
+        Utils.debug(daemon.running);
+        switch_daemon.set_active(daemon.running);
+        switch_daemon.connect('notify::active', () => {
+            if (switch_daemon.get_state() && !daemon.running) {
+                daemon.Start();
+            } else if (!switch_daemon.get_state() && daemon.running) {
+                daemon.Stop();
+            }
+        });
+        daemon.connectSignal('toggled', (running) => {
+            switch_daemon.set_state(running);
+        });
+        box.pack_start(switch_daemon, false, false, 5);
+        daemon_box.pack_start(box, false, false, 10);
+        // Autostart
+        box = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL});
+        label = new Gtk.Label({label: _('DeskChanger Autostart Daemon')});
+        box.pack_start(label, false, false, 5);
+        label = new Gtk.Label({label: ' '});
+        box.pack_start(label, true, true, 5);
+        switch_auto_start.set_active(settings.auto_start);
+        switch_auto_start.connect('notify::active', () => {
+            settings.auto_start = switch_auto_start.get_state();
+        });
+        box.pack_end(switch_auto_start, false, false, 5);
+        daemon_box.pack_start(box, false, false, 10);
+        // Remember profile state
+        box = new Gtk.Box();
+        label = new Gtk.Label({label: _('Remember the profiles current/next wallpaper')});
+        box.pack_start(label, false, false, 5);
+        label = new Gtk.Label({label: ' '});
+        box.pack_start(label, true, true, 5);
+        switch_remember_profile_state.set_active(settings.remember_profile_state);
+        switch_remember_profile_state.connect('notify::active', () => {
+            settings.remember_profile_state = switch_remember_profile_state.get_state();
+        });
+        box.pack_end(switch_remember_profile_state, false, false, 5);
+        daemon_box.pack_start(box, false, false, 5);
+        // Interval timer
+        box = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL});
+        label = new Gtk.Label({label: _('Wallpaper Timer Interval (seconds)')});
+        box.pack_start(label, false, true, 5);
+        label = new Gtk.Label({label: ' '});
+        box.pack_start(label, true, true, 5);
+        spin_button_interval.set_value(settings.interval);
+        spin_button_interval.update();
+        box.pack_start(spin_button_interval, false, true, 5);
+        let button = new Gtk.Button({label: 'Save'});
+        button.connect('clicked', () => {
+            settings.interval = spin_button_interval.get_value();
+        });
+        box.pack_end(button, false, false, 5);
+        daemon_box.pack_start(box, false, false, 5);
+        // Allowed Mime Types
+        box = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL});
+        label = new Gtk.Label({label: _('Allowed Mime Types')});
+        box.pack_start(label, false, true, 5);
+        label = new Gtk.Label({label: ' '});
+        box.pack_start(label, true, true, 5);
+        let textview = new Gtk.TextView({
+            buffer: text_buffer_allowed_mime_types,
+            justification: Gtk.Justification.RIGHT,
+        });
+        box.pack_end(textview, false, true, 5);
+        daemon_box.pack_start(box, false, false, 5);
+        box = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL});
+        button = new Gtk.Button({label: 'Save'});
+        button.connect('clicked', () => {
+            settings.allowed_mime_types = text_buffer_allowed_mime_types.text.split("\n");
+        });
+        box.pack_end(button, false, true, 5);
+        daemon_box.pack_start(box, false, false, 5);
+        notebook.append_page(daemon_box, new Gtk.Label({label: _('Daemon')}));
     }
 
     _init_extension(notebook, settings) {
@@ -65,6 +185,7 @@ class DeskChangerPrefs extends GObject.Object {
         box.pack_start(label, false, false, 5);
         label = new Gtk.Label({label: ' '});
         box.pack_start(label, true, true, 5);
+        this._load_profiles(current_profile, settings, settings.current_profile);
         current_profile.connect('changed', (object) => {
             if (this._is_init) {
                 return;
@@ -72,7 +193,6 @@ class DeskChangerPrefs extends GObject.Object {
 
             settings.current_profile = object.get_active_text();
         });
-        this._load_profiles(current_profile, settings, settings.current_profile);
         box.pack_start(current_profile, false, false, 5);
         frame_box.pack_start(box, false, false, 10);
         box = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL});
@@ -414,6 +534,20 @@ class DeskChangerPrefs extends GObject.Object {
 
         profiles[profile] = _profile;
         settings.profiles = profiles;
+    }
+
+    _update_rotation(settings, combo_box) {
+        switch (settings.rotation) { 
+            case 'interval':
+                combo_box.set_active(0);
+                break;
+            case 'hourly':
+                combo_box.set_active(1);
+                break;
+            default:
+                combo_box.set_active(2);
+                break;
+        }
     }
 }
 );
