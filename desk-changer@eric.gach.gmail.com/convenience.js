@@ -104,6 +104,14 @@ function debug(message, caller) {
 
 let Settings = GObject.registerClass(
 class DeskChangerSettings extends Gio.Settings {
+    get allowed_mime_types() {
+        return this.get_value('allowed-mime-types').deep_unpack();
+    }
+
+    set allowed_mime_types(value) {
+        this.set_value('allowed-mime-types', new GLib.Variant('as', value));
+    }
+
     get auto_start() {
         return this.get_boolean('auto-start');
     }
