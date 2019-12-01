@@ -44,9 +44,95 @@ class DeskChangerPrefs extends GObject.Object {
 
         this._init_profiles(notebook, settings);
         this._init_keyboard(notebook, settings);
+        this._init_extension(notebook, settings);
 
         this.box.pack_start(notebook, true, true, 0);
         this.box.show_all();
+    }
+
+    _init_extension(notebook, settings) {
+        let extension_box = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL}),
+            frame = new Gtk.Frame({label: _('Profile')}),
+            frame_box = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL}),
+            box = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL}),
+            label = new Gtk.Label({label: _('Desktop Profile')}),
+            current_profile = new Gtk.ComboBoxText(),
+            update_lockscreen = new Gtk.Switch(),
+            lockscreen_profile = new Gtk.ComboBoxText(),
+            switch_icon_preview = new Gtk.Switch(),
+            switch_notifications = new Gtk.Switch();
+        // Profiles
+        box.pack_start(label, false, false, 5);
+        label = new Gtk.Label({label: ' '});
+        box.pack_start(label, true, true, 5);
+        current_profile.connect('changed', (object) => {
+            if (this._is_init) {
+                return;
+            }
+
+            settings.current_profile = object.get_active_text();
+        });
+        this._load_profiles(current_profile, settings, settings.current_profile);
+        box.pack_start(current_profile, false, false, 5);
+        frame_box.pack_start(box, false, false, 10);
+        box = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL});
+        label = new Gtk.Label({label: _('Update LockScreen Background')});
+        box.pack_start(label, false, false, 5);
+        label = new Gtk.Label({label: ' '});
+        box.pack_start(label, true, true, 5);
+        update_lockscreen.set_active(settings.update_lockscreen);
+        update_lockscreen.connect('notify::active', () => {
+            settings.update_lockscreen = update_lockscreen.get_state();
+        });
+        box.pack_start(update_lockscreen, false, false, 5);
+        frame_box.pack_start(box, false, false, 10);
+        box = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL});
+        label = new Gtk.Label({label: _('Lockscreen Profile')});
+        box.pack_start(label, false, false, 5);
+        label = new Gtk.Label({label: ' '});
+        box.pack_start(label, true, true, 5);
+        lockscreen_profile.connect('key-press-event', (widget, event) => {
+            let keyval = event.get_keyval();
+            if (keyval[0] && keyval[1] === Gdk.KEY_BackSpace) {
+                lockscreen_profile.set_active(-1);
+            }
+        });
+        this._load_profiles(lockscreen_profile, settings, settings.lockscreen_profile);
+        if (!settings.lockscreen_profile) {
+            lockscreen_profile.set_active(-1);
+        }
+        lockscreen_profile.connect('changed', (object) => {
+            settings.lockscreen_profile = object.get_active_text();
+        });
+        box.pack_start(lockscreen_profile, false, false, 5);
+        frame_box.pack_start(box, false, false, 5);
+        frame.add(frame_box);
+        extension_box.pack_start(frame, false, false, 10);
+        // Preview as Icon
+        box = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL});
+        label = new Gtk.Label({label: _('Show Preview as Icon')});
+        box.pack_start(label, false, false, 5);
+        label = new Gtk.Label({label: ' '});
+        box.pack_start(label, true, true, 5);
+        switch_icon_preview.set_active(settings.icon_preview);
+        switch_icon_preview.connect('notify::active', () => {
+            settings.icon_preview = switch_icon_preview.get_state();
+        });
+        box.pack_start(switch_icon_preview, false, false, 5);
+        extension_box.pack_start(box, false, false, 5);
+        // Notifications
+        box = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL});
+        label = new Gtk.Label({label: _('Show Notifications')});
+        box.pack_start(label, false, false, 5);
+        label = new Gtk.Label({label: ' '});
+        box.pack_start(label, true, true, 5);
+        switch_notifications.set_active(settings.notifications);
+        switch_notifications.connect('notify::active', () => {
+            settings.notifications = switch_notifications.get_state();
+        });
+        box.pack_start(switch_notifications, false, false, 5);
+        extension_box.pack_start(box, false, false, 5);
+        notebook.append_page(extension_box, new Gtk.Label({label: _('Extension')}));
     }
 
     _init_keyboard(notebook, settings) {
