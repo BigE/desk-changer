@@ -100,7 +100,20 @@ let DaemonDBusServer = GObject.registerClass({
         }
     }
 
-    _dbus_handle_get() {
+    _dbus_handle_get(connection, sender, object_path, interface_name, property_name) {
+        Utils.debug(`dbus::getProperty(${property_name})`);
+        switch (property_name) {
+            case 'history':
+                return new GLib.Variant('as', this.desktop_profile.history.all());
+
+            case 'running':
+                return new GLib.Variant('b', this._running);
+
+            default:
+                // should error here?
+                Utils.error(`unknown dbus property ${property_name}`);
+                return null;
+        }
     }
 
     _dbus_handle_set() {
@@ -113,7 +126,7 @@ let DaemonDBusServer = GObject.registerClass({
         try {
             this._dbus_id = connection.register_object(
                 Interface.DBusPath,
-                Interface.DBusInterfaceObject,
+                DaemonDBusInterfaceObject,
                 this._dbus_handle_call.bind(this),
                 this._dbus_handle_get.bind(this),
                 this._dbus_handle_set.bind(this),

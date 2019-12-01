@@ -71,6 +71,10 @@ class DeskChangerProfile extends GObject.Object {
         super._init(params);
     }
 
+    get history() {
+        return this._history;
+    }
+
     get loaded() {
         return this._loaded;
     }
@@ -296,6 +300,10 @@ class DeskChangerProfileQueue extends GObject.Object {
 
     get preview() {
         return (this._queue.length > 0)? this._queue[this._queue.length - 1] : undefined;
+    }
+
+    all() {
+        return this._queue;
     }
 
     clear() {

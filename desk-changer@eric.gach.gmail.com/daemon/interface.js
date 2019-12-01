@@ -1,7 +1,7 @@
-const DBusName = 'org.gnome.Shell.Extensions.DeskChanger.Daemon';
-const DBusPath = '/org/gnome/Shell/Extensions/DeskChanger/Daemon';
-const DBusInterface = `<node>\
-    <interface name="${DaemonDBusName}">\
+var DBusName = 'org.gnome.Shell.Extensions.DeskChanger.Daemon';
+var DBusPath = '/org/gnome/Shell/Extensions/DeskChanger/Daemon';
+var DBusInterface = `<node>\
+    <interface name="${DBusName}">\
         <method name="LoadProfile">\
             <arg direction="in" name="profile" type="s" />\
             <arg direction="out" name="success" type="b" />\
@@ -19,8 +19,12 @@ const DBusInterface = `<node>\
             <arg direction="out" name="success" type="b" />\
         </method>\
         <property name="history" type="as" access="read" />\
+        <property name="running" type="b" access="read" />\
         <signal name="changed">\
             <arg direction="out" name="uri" type="s" />\
+        </signal>\
+        <signal name="toggled">\
+            <arg direction="out" name="running" type="b" />\
         </signal>\
     </interface>\
 </node>`;
