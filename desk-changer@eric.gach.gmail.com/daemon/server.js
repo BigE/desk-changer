@@ -54,6 +54,7 @@ let DaemonDBusServer = GObject.registerClass({
             });
         } catch (e) {
             Utils.error(e, `unable to own dbus name ${Interface.DBusName}`);
+            this._dbus = false;
         }
     }
 
@@ -65,6 +66,10 @@ let DaemonDBusServer = GObject.registerClass({
     }
 
     start() {
+        if (!this._dbus) {
+            Utils.debug('Unable to start daemon, dbus not connected');
+        }
+
         this._running = true;
         Utils.debug('daemon started');
         this.emit('toggled', this._running);
@@ -169,6 +174,10 @@ class DeskChangerDaemon extends DaemonDBusServer {
     }
 
     destroy() {
+        if (this._timer) {
+            this._timer.destroy();
+        }
+
         this.desktop_profile.disconnect(this._loaded_id);
         this.lockscreen_profile.disconnect(this._lockscreen_loaded_id);
         super.destroy();
@@ -195,12 +204,15 @@ class DeskChangerDaemon extends DaemonDBusServer {
     start() {
         this.desktop_profile.load();
         this.lockscreen_profile.load();
-        this._timer = new Timer.Timer(this._settings.get_int('interval'), this.next.bind(this));
         super.start();
+        this._timer = new Timer.Timer(this._settings.get_int('interval'), this.next.bind(this));
     }
 
     stop() {
-        this._timer.destroy();
+        if (this._timer) {
+            this._timer.destroy();
+        }
+
         this.desktop_profile.unload();
         this.lockscreen_profile.unload();
         super.stop();
