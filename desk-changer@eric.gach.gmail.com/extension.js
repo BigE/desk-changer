@@ -24,7 +24,7 @@ const Me = imports.misc.extensionUtils.getCurrentExtension();
 const Gettext = imports.gettext.domain(Me.metadata.uuid);
 const Utils = Me.imports.utils;
 const Convenience = Me.imports.convenience;
-const DeskChangerDaemon = Me.imports.daemon.Daemon;
+const DeskChangerDaemon = Me.imports.daemon.server.Daemon;
 const DeskChangerPanelMenuButton = Me.imports.ui.panelMenu.Button;
 
 const Main = imports.ui.main;

@@ -22,41 +22,15 @@
 
 const Me = imports.misc.extensionUtils.getCurrentExtension();
 const Utils = Me.imports.utils;
-const Profile = Me.imports.profile;
-const Timer = Me.imports.timer;
+const Profile = Me.imports.daemon.profile;
+const Timer = Me.imports.daemon.timer;
+const Interface = Me.imports.daemon.interface;
 
 const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
 const GObject = imports.gi.GObject;
 
-var DaemonDBusName = 'org.gnome.Shell.Extensions.DeskChanger.Daemon';
-var DaemonDBusPath = '/org/gnome/Shell/Extensions/DeskChanger/Daemon';
-var DaemonDBusInterface = `<node>\
-    <interface name="${DaemonDBusName}">\
-        <method name="LoadProfile">\
-            <arg direction="in" name="profile" type="s" />\
-            <arg direction="out" name="success" type="b" />\
-        </method>\
-        <method name="Next">\
-            <arg direction="out" name="uri" type="s" />\
-        </method>\
-        <method name="Prev">\
-            <arg direction="out" name="uri" type="s" />\
-        </method>\
-        <method name="Start">\
-            <arg direction="out" name="success" type="b" />\
-        </method>\
-        <method name="Stop">\
-            <arg direction="out" name="success" type="b" />\
-        </method>\
-        <property name="history" type="as" access="read" />\
-        <signal name="changed">\
-            <arg direction="out" name="uri" type="s" />\
-        </signal>\
-    </interface>\
-</node>`;
-
-let DaemonDBusInterfaceObject = Gio.DBusNodeInfo.new_for_xml(DaemonDBusInterface).interfaces[0];
+let DaemonDBusInterfaceObject = Gio.DBusNodeInfo.new_for_xml(Interface.DBusInterface).interfaces[0];
 
 let DaemonDBusServer = GObject.registerClass({
     Properties: {
@@ -75,11 +49,11 @@ let DaemonDBusServer = GObject.registerClass({
         this._running = false;
 
         try {
-            this._dbus = Gio.bus_own_name(Gio.BusType.SESSION, DaemonDBusName, Gio.BusNameOwnerFlags.NONE, this._on_bus_acquired.bind(this), null, function () {
-                Utils.debug(`unable to acquire bus name ${DaemonDBusName}`);
+            this._dbus = Gio.bus_own_name(Gio.BusType.SESSION, Interface.DBusName, Gio.BusNameOwnerFlags.NONE, this._on_bus_acquired.bind(this), null, function () {
+                Utils.debug(`unable to acquire bus name ${Interface.DBusName}`);
             });
         } catch (e) {
-            Utils.error(e, `unable to own dbus name ${DaemonDBusName}`);
+            Utils.error(e, `unable to own dbus name ${Interface.DBusName}`);
         }
     }
 
@@ -138,8 +112,8 @@ let DaemonDBusServer = GObject.registerClass({
 
         try {
             this._dbus_id = connection.register_object(
-                DaemonDBusPath,
-                DaemonDBusInterfaceObject,
+                Interface.DBusPath,
+                Interface.DBusInterfaceObject,
                 this._dbus_handle_call.bind(this),
                 this._dbus_handle_get.bind(this),
                 this._dbus_handle_set.bind(this),
