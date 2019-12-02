@@ -175,6 +175,7 @@ class DeskChangerProfile extends GObject.Object {
 
         if (current) {
             this._queue.enqueue(current);
+            this._emit_preview(this._queue.preview);
         }
 
         this._set_wallpaper(wallpaper);
@@ -352,6 +353,29 @@ class DeskChangerDesktopProfile extends Profile {
     _init(settings, params = {}) {
         this._background = Convenience.getSettings('org.gnome.desktop.background');
         super._init(settings, 'current-profile', params);
+    }
+
+    load() {
+        if (this._settings.remember_profile_state && this._settings.current_profile in this._settings.profile_state) {
+            Utils.debug(`restoring profile state for ${this._settings.current_profile}`);
+            this._queue.restore(this._settings.profile_state[this._settings.current_profile]);
+            let profile_state = this._settings.profile_state;
+            delete profile_state[this._settings.current_profile];
+            this._settings.profile_state = profile_state;
+        }
+
+        return super.load();
+    }
+
+    unload() {
+        if (this._settings.remember_profile_state) {
+            Utils.debug(`storing profile state for ${this._profile}`);
+            let profile_state = this._settings.profile_state;
+            profile_state[this._profile] = [this.preview, this._background.get_string('picture-uri')];
+            this._settings.profile_state = profile_state;
+        }
+
+        super.unload();
     }
 }
 );

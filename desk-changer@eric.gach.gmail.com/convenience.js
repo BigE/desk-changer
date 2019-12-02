@@ -196,6 +196,14 @@ class DeskChangerSettings extends Gio.Settings {
         }
     }
 
+    get profile_state() {
+        return this.get_value('profile-state').deep_unpack();
+    }
+
+    set profile_state(value) {
+        this.set_value('profile-state', new GLib.Variant('a{s(ss)}', value));
+    }
+
     get profiles() {
         return this.get_value('profiles').deep_unpack();
     }
