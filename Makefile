@@ -17,7 +17,7 @@ install: update-translation
 	echo done
 
 pot:
-	xgettext --package-name=DeskChanger --package-version=27 -k --keyword=_ -o ./po/desk-changer.pot -D ./$(UUID)/ extension.js prefs.js daemon/interface.js daemon/profile.js daemon/server.js daemon/timer.js ui/control.js ui/panelMenu.js ui/popupMenu.js
+	xgettext --package-name=DeskChanger --package-version=28 -k --keyword=_ -o ./po/desk-changer.pot -D ./$(UUID)/ extension.js prefs.js daemon/interface.js daemon/profile.js daemon/server.js daemon/timer.js ui/control.js ui/panelMenu.js ui/popupMenu.js
 
 update-translation: all
 	cd po; \
