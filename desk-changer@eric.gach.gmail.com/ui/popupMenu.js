@@ -20,17 +20,17 @@ class DeskChangerPopupMenuControlsMenuItem extends PopupMenu.PopupBaseMenuItem {
         this._bindings = [];
 
         this._addKeyBinding('next-wallpaper', () => {
-            this.next();
+            daemon.next();
         }, settings);
         this._addKeyBinding('prev-wallpaper', () => {
-            this.prev();
+            daemon.prev();
         }, settings);
 
         this._next = new DeskChangerControl.ButtonControl('media-skip-forward', () => {
-            daemon.desktop_profile.next();
+            daemon.next();
         });
         this._prev = new DeskChangerControl.ButtonControl('media-skip-backward', () => {
-            if (!daemon.desktop_profile.prev()) {
+            if (!daemon.prev()) {
                 Main.notifyError('DeskChanger', _('No more wallpapers available in history'));
             }
         });

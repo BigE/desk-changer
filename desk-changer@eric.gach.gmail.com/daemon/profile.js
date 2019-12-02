@@ -355,16 +355,18 @@ class DeskChangerDesktopProfile extends Profile {
         super._init(settings, 'current-profile', params);
     }
 
-    load() {
-        if (this._settings.remember_profile_state && this._settings.current_profile in this._settings.profile_state) {
-            Utils.debug(`restoring profile state for ${this._settings.current_profile}`);
-            this._queue.restore(this._settings.profile_state[this._settings.current_profile]);
+    load(profile=null) {
+        let _profile = profile || this._settings.current_profile;
+
+        if (this._settings.remember_profile_state && _profile in this._settings.profile_state) {
+            Utils.debug(`restoring profile state for ${_profile}`);
+            this._queue.restore(this._settings.profile_state[_profile]);
             let profile_state = this._settings.profile_state;
-            delete profile_state[this._settings.current_profile];
+            delete profile_state[_profile];
             this._settings.profile_state = profile_state;
         }
 
-        return super.load();
+        return super.load(profile);
     }
 
     unload() {
@@ -392,14 +394,14 @@ class DeskChangerLockScreenProfile extends Profile {
         return (!this._settings.lockscreen_profile);
     }
 
-    load() {
+    load(profile=null) {
         if (this.inherit) {
             Utils.debug('lockscreen profile inherits desktop - bailing');
             this._loaded = true;
             return;
         }
 
-        super.load();
+        super.load(profile);
     }
 }
 );
