@@ -230,9 +230,9 @@ class DeskChangerDaemon extends DaemonDBusServer {
         }
         
         if (settings.rotation == 'interval') {
-            this._timer = new Timer.Timer(settings.get_int('interval'), this.next.bind(this));
+            this._timer = new Timer.Interval(settings.get_int('interval'), this.next.bind(this));
         } else if (settings.rotation == 'hourly') {
-            this._timer = new Timer.TimerHourly(this.next.bind(this));
+            this._timer = new Timer.Hourly(this.next.bind(this));
         }
     }
 
