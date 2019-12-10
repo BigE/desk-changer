@@ -45,7 +45,7 @@ class DeskChangerTimer extends GObject.Object {
 
     destroy() {
         Utils.debug(`removing timer ${this._timer}`);
-        GLib.remove_source(this._timer);
+        GLib.source_remove(this._timer);
     }
 });
 

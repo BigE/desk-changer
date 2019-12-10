@@ -205,7 +205,11 @@ class DeskChangerDaemon extends DaemonDBusServer {
         this.desktop_profile.load();
         this.lockscreen_profile.load();
         super.start();
-        this._timer = new Timer.Timer(this._settings.get_int('interval'), this.next.bind(this));
+        this._check_timer(this._settings);
+
+        this._settings.connect('changed::rotation', (settings, key) => {
+            this._check_timer(settings);
+        });
     }
 
     stop() {
@@ -216,6 +220,20 @@ class DeskChangerDaemon extends DaemonDBusServer {
         this.desktop_profile.unload();
         this.lockscreen_profile.unload();
         super.stop();
+    }
+
+    _check_timer(settings) {
+        if (this._timer) {
+            // no matter the change, destroy the current timer
+            this._timer.destroy();
+            this._timer = null;
+        }
+        
+        if (settings.rotation == 'interval') {
+            this._timer = new Timer.Timer(settings.get_int('interval'), this.next.bind(this));
+        } else if (settings.rotation == 'hourly') {
+            this._timer = new Timer.TimerHourly(this.next.bind(this));
+        }
     }
 
     _dbus_handle_call(connection, sender, object_path, interface_name, method_name, parameters, invocation) {
