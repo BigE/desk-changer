@@ -54,6 +54,7 @@ class DeskChangerPrefs extends GObject.Object {
 
         this.box.pack_start(notebook, true, true, 0);
         this.box.show_all();
+        super._init();
     }
 
     _init_daemon(notebook, settings, daemon) {
