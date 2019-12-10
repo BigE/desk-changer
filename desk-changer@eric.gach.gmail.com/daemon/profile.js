@@ -279,8 +279,6 @@ class DeskChangerProfile extends GObject.Object {
 }
 );
 
-Signals.addSignalMethods(Profile.prototype);
-
 let ProfileQueue = GObject.registerClass({
     Properties: {
         'length': GObject.ParamSpec.uint('length', 'Length', 'The length of the current queue',
