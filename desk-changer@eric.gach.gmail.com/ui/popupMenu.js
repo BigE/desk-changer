@@ -87,9 +87,8 @@ class DeskChangerPopupMenuControlsMenuItem extends PopupMenu.PopupBaseMenuItem {
 var DaemonMenuItem = GObject.registerClass(
 class DeskChangerPopupMenuDaemonMenuItem extends PopupMenu.PopupSwitchMenuItem {
     _init(daemon) {
-        super._init(_('DeskChanger Daemon'));
+        super._init(_('DeskChanger Daemon'), daemon.running);
         this._daemon = daemon;
-        this.setToggleState(daemon.running);
         this._toggled_id = this.connect('toggled', () => {
             (daemon.running)? daemon.stop() : daemon.start();
         });
@@ -310,11 +309,10 @@ class DeskChangerPopupMenuRotationMenuItem extends PopupSubMenuMenuItem {
 var SwitchMenuItem = GObject.registerClass(
 class DeskChangerPopupSwitchMenuItem extends PopupMenu.PopupSwitchMenuItem {
     _init(label, key, settings) {
-        super._init(label);
+        super._init(label, settings[key]);
         this._settings = settings;
         this._key = key;
         this._key_normalized = key.replace('_', '-');
-        this.setToggleState(settings[key]);
         this._handler_changed = settings.connect(`changed::${this._key_normalized}`, (settings, key) => {
             this.setToggleState(settings.get_boolean(key));
         });
