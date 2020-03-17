@@ -12,7 +12,7 @@ var ButtonControl = GObject.registerClass(
 class DeskChangerControlButtonControl extends St.Button {
     _init(icon, callback) {
         this._icon = new St.Icon({icon_name: `${icon}-symbolic`, icon_size: 20});
-        super._init({child: this._icon, style_class: 'system-menu-action'});
+        super._init({child: this._icon, style_class: 'button'});
         this._clicked_id = this.connect('clicked', callback);
         Utils.debug(`connect clicked (${this._clicked_id})`);
     }

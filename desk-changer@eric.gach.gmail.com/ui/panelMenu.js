@@ -30,11 +30,10 @@ class DeskChangerPanelMenuButton extends PanelMenu.Button {
         }
         this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
         this.menu.addMenuItem(new DeskChangerPopupMenu.PreviewMenuItem(daemon));
+        this.menu.addMenuItem(new DeskChangerPopupMenu.ControlsMenuItem(daemon, settings));
         this.menu.addMenuItem(new DeskChangerPopupMenu.OpenCurrentMenuItem());
         this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
         this.menu.addMenuItem(new DeskChangerPopupMenu.RotationMenuItem(settings));
-        this.menu.addMenuItem(new DeskChangerPopupMenu.ControlsMenuItem(daemon, settings));
-        this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
         this.menu.addMenuItem(new DeskChangerPopupMenu.DaemonMenuItem(daemon));
 
         let menu_item = new PopupMenu.PopupMenuItem(_('DeskChanger Settings'));
