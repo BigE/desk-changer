@@ -1,4 +1,5 @@
 const Me = imports.misc.extensionUtils.getCurrentExtension();
+const Convenience = Me.imports.convenience;
 const DeskChangerPopupMenu = Me.imports.ui.popupMenu;
 const DeskChangerControl = Me.imports.ui.control;
 
@@ -15,6 +16,7 @@ class DeskChangerPanelMenuButton extends PanelMenu.Button {
         super._init(0.0, 'DeskChanger');
         this._daemon = daemon;
         this._settings = settings;
+        this._has_lockscreen = Convenience.checkShellVersion('3.35', '<');
 
         this._icon = new Icon(daemon, settings);
         this.add_child(this._icon);
@@ -22,7 +24,10 @@ class DeskChangerPanelMenuButton extends PanelMenu.Button {
         this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
         this.menu.addMenuItem(new DeskChangerPopupMenu.SwitchMenuItem(_('Notifications'), 'notifications', settings));
         this.menu.addMenuItem(new DeskChangerPopupMenu.SwitchMenuItem(_('Remember profile state'), 'remember_profile_state', settings));
-        this.menu.addMenuItem(new DeskChangerPopupMenu.SwitchMenuItem(_('Update lock screen'), 'update_lockscreen', settings));
+        // it looks like the lockscreen background is removed in 3.36
+        if (this._has_lockscreen) {
+            this.menu.addMenuItem(new DeskChangerPopupMenu.SwitchMenuItem(_('Update lock screen'), 'update_lockscreen', settings));
+        }
         this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
         this.menu.addMenuItem(new DeskChangerPopupMenu.PreviewMenuItem(daemon));
         this.menu.addMenuItem(new DeskChangerPopupMenu.OpenCurrentMenuItem());
@@ -38,26 +43,32 @@ class DeskChangerPanelMenuButton extends PanelMenu.Button {
         });
         this.menu.addMenuItem(menu_item);
 
-        if (settings.update_lockscreen) {
-            this.menu.addMenuItem(new DeskChangerPopupMenu.ProfileLockScreenMenuItem(settings), 1);
-        }
-
-        this._update_lockscreen_id = settings.connect('changed::update-lockscreen', (settings, key) => {
+        if (this._has_lockscreen) {
             if (settings.update_lockscreen) {
                 this.menu.addMenuItem(new DeskChangerPopupMenu.ProfileLockScreenMenuItem(settings), 1);
-            } else {
-                this.menu.box.get_children().map((actor) => {
-                    return actor._delegate;
-                }).filter((item) => {
-                    item instanceof DeskChangerPopupMenu.ProfileLockScreenMenuItem && item.destroy();
-                });
             }
-        });
+
+            this._update_lockscreen_id = settings.connect('changed::update-lockscreen', (settings, key) => {
+                if (settings.update_lockscreen) {
+                    this.menu.addMenuItem(new DeskChangerPopupMenu.ProfileLockScreenMenuItem(settings), 1);
+                } else {
+                    this.menu.box.get_children().map((actor) => {
+                        return actor._delegate;
+                    }).filter((item) => {
+                        item instanceof DeskChangerPopupMenu.ProfileLockScreenMenuItem && item.destroy();
+                    });
+                }
+            });
+        }
     }
 
     destroy() {
         this._icon.destroy();
-        this._settings.disconnect(this._update_lockscreen_id);
+
+        if (this._update_lockscreen_id) {
+            this._settings.disconnect(this._update_lockscreen_id);
+        }
+
         super.destroy();
     }
 }
