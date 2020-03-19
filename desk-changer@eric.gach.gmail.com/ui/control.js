@@ -27,6 +27,10 @@ class DeskChangerControlButtonControl extends St.Button {
         this._icon.destroy();
         super.destroy();
     }
+
+    set_icon(icon) {
+        this._icon.icon_name = `${icon}-symbolic`;
+    }
 }
 );
 
@@ -139,8 +143,9 @@ class DeskChangerControlStateButtonControl extends ButtonControl {
                 state = 0;
             }
 
-            state = this._states[state].name;
-            this.set_icon(this._states[state].icon);
+            this._state = state;
+            state = this._states[this._state].name;
+            this.set_icon(this._states[this._state].icon);
 
             if (typeof callback === 'function') {
                 callback(state);
