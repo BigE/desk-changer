@@ -6,13 +6,13 @@ const GObject = imports.gi.GObject;
 const Signals = imports.signals;
 
 
-var Timer = GObject.registerClass({
+var Interval = GObject.registerClass({
     Properties: {
-        'interval': GObject.ParamSpec.uint('interval', 'Interval', 'The interval that the callback is called.',
+        interval: GObject.ParamSpec.uint('interval', 'Interval', 'The interval that the callback is called.',
             GObject.ParamFlags.READABLE, 0, GLib.MAXUINT32, 300),
     },
 },
-class DeskChangerTimer extends GObject.Object {
+class DeskChangerTimerInterval extends GObject.Object {
     _init(interval = 300, callback = null, params = {}) {
         if (callback && typeof callback !== 'function') {
             throw 'callback must be function';
@@ -34,9 +34,8 @@ class DeskChangerTimer extends GObject.Object {
     }
 
     __callback__() {
-        this.emit('callback', this._callback, this._interval);
-
         if (this._callback) {
+            Utils.debug(`calling callback ${this._callback}`);
             return Boolean(this._callback());
         }
 
@@ -45,15 +44,12 @@ class DeskChangerTimer extends GObject.Object {
 
     destroy() {
         Utils.debug(`removing timer ${this._timer}`);
-        GLib.remove_source(this._timer);
+        GLib.source_remove(this._timer);
     }
 });
 
-Signals.addSignalMethods(Timer.prototype);
-
-
-var TimerHourly = GObject.registerClass(
-class DeskChangerTimerHourly extends Timer {
+var Hourly = GObject.registerClass(
+class DeskChangerTimerHourly extends Interval {
     _init(callback, params = {}) {
         this._done = false;
         super._init(5, callback, params);

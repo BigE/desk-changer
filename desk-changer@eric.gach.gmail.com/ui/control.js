@@ -12,7 +12,7 @@ var ButtonControl = GObject.registerClass(
 class DeskChangerControlButtonControl extends St.Button {
     _init(icon, callback) {
         this._icon = new St.Icon({icon_name: `${icon}-symbolic`, icon_size: 20});
-        super._init({child: this._icon, style_class: 'system-menu-action'});
+        super._init({child: this._icon, style_class: 'button'});
         this._clicked_id = this.connect('clicked', callback);
         Utils.debug(`connect clicked (${this._clicked_id})`);
     }
@@ -26,6 +26,10 @@ class DeskChangerControlButtonControl extends St.Button {
 
         this._icon.destroy();
         super.destroy();
+    }
+
+    set_icon(icon) {
+        this._icon.icon_name = `${icon}-symbolic`;
     }
 }
 );
@@ -139,8 +143,9 @@ class DeskChangerControlStateButtonControl extends ButtonControl {
                 state = 0;
             }
 
-            state = this._states[state].name;
-            this.set_icon(this._states[state].icon);
+            this._state = state;
+            state = this._states[this._state].name;
+            this.set_icon(this._states[this._state].icon);
 
             if (typeof callback === 'function') {
                 callback(state);
