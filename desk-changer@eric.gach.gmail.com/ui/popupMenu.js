@@ -179,13 +179,12 @@ class DeskChangerPopupMenuItem extends PopupMenu.PopupMenuItem {
 let PopupSubMenuMenuItem = GObject.registerClass(
 class DeskChangerPopupSubMenuMenuItem extends PopupMenu.PopupSubMenuMenuItem {
     _init(prefix, key, settings, sensitive=true) {
-        super._init('');
+        super._init(`${prefix}: ${settings[key]}`);
         this._prefix = prefix;
         this._settings = settings;
         this._changed_id = settings.connect(`changed::${key.replace('_', '-')}`, () => {
             this.setLabel(settings[key]);
         });
-        this.setLabel(settings[key]);
         this.setSensitive(sensitive);
     }
 
