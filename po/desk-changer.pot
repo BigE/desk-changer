@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: DeskChanger 28\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-12-01 20:05-0600\n"
+"POT-Creation-Date: 2020-03-19 09:57-0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -56,91 +56,91 @@ msgstr ""
 msgid "Rotation has been disabled"
 msgstr ""
 
-#: prefs.js:62
+#: prefs.js:63
 msgid "DeskChanger Rotation Mode"
 msgstr ""
 
-#: prefs.js:94
+#: prefs.js:95
 msgid "DeskChanger Daemon Status"
 msgstr ""
 
-#: prefs.js:114
+#: prefs.js:115
 msgid "DeskChanger Autostart Daemon"
 msgstr ""
 
-#: prefs.js:126
+#: prefs.js:127
 msgid "Remember the profiles current/next wallpaper"
 msgstr ""
 
-#: prefs.js:138
+#: prefs.js:139
 msgid "Wallpaper Timer Interval (seconds)"
 msgstr ""
 
-#: prefs.js:153
+#: prefs.js:154
 msgid "Allowed Mime Types"
 msgstr ""
 
-#: prefs.js:170
+#: prefs.js:171
 msgid "Daemon"
 msgstr ""
 
-#: prefs.js:175
+#: prefs.js:176
 msgid "Profile"
 msgstr ""
 
-#: prefs.js:178
+#: prefs.js:179
 msgid "Desktop Profile"
 msgstr ""
 
-#: prefs.js:199
+#: prefs.js:204
 msgid "Update LockScreen Background"
 msgstr ""
 
-#: prefs.js:210
+#: prefs.js:217
 msgid "Lockscreen Profile"
 msgstr ""
 
-#: prefs.js:233
+#: prefs.js:244
 msgid "Show Preview as Icon"
 msgstr ""
 
-#: prefs.js:245
+#: prefs.js:257
 msgid "Show Notifications"
 msgstr ""
 
-#: prefs.js:255
+#: prefs.js:267
 msgid "Extension"
 msgstr ""
 
-#: prefs.js:263
+#: prefs.js:275
 msgid "Action"
 msgstr ""
 
-#: prefs.js:281
+#: prefs.js:293
 msgid "Next Wallpaper"
 msgstr ""
 
-#: prefs.js:285
+#: prefs.js:297
 msgid "Previous Wallpaper"
 msgstr ""
 
-#: prefs.js:301
+#: prefs.js:313
 msgid "Failed to update keybinding"
 msgstr ""
 
-#: ui/panelMenu.js:23
+#: ui/panelMenu.js:25
 msgid "Notifications"
 msgstr ""
 
-#: ui/panelMenu.js:24
+#: ui/panelMenu.js:26
 msgid "Remember profile state"
 msgstr ""
 
-#: ui/panelMenu.js:25
+#: ui/panelMenu.js:29
 msgid "Update lock screen"
 msgstr ""
 
-#: ui/panelMenu.js:35
+#: ui/panelMenu.js:39
 msgid "DeskChanger Settings"
 msgstr ""
 
