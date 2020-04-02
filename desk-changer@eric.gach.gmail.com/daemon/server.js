@@ -185,19 +185,27 @@ class DeskChangerDaemon extends DaemonDBusServer {
 
     next() {
         let wallpaper = this.desktop_profile.next();
-        if (this._settings.update_lockscreen) {
-            (this.lockscreen_profile.inherit) ? this.lockscreen_profile.next(true, wallpaper) : this.lockscreen_profile.next();
+        
+        if (wallpaper) {
+            if (this._settings.update_lockscreen) {
+                (this.lockscreen_profile.inherit) ? this.lockscreen_profile.next(true, wallpaper) : this.lockscreen_profile.next();
+            }
+            this.emit('changed', wallpaper);
         }
-        this.emit('changed', wallpaper);
+
         return wallpaper;
     }
 
     prev() {
         let wallpaper = this.desktop_profile.prev();
-        if (this._settings.update_lockscreen) {
-            (this.lockscreen_profile.inherit) ? this.lockscreen_profile.prev(true, wallpaper) : this.lockscreen_profile.prev();
+
+        if (wallpaper) {
+            if (this._settings.update_lockscreen) {
+                (this.lockscreen_profile.inherit) ? this.lockscreen_profile.prev(true, wallpaper) : this.lockscreen_profile.prev();
+            }
+            this.emit('changed', wallpaper);
         }
-        this.emit('changed', wallpaper);
+
         return wallpaper;
     }
 
