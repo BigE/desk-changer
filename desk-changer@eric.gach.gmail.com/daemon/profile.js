@@ -208,8 +208,20 @@ class DeskChangerProfile extends GObject.Object {
         return true;
     }
 
-    _directory_changed(file, other_file, event_type) {
-        Utils.debug('_directory_changed');
+    _directory_changed(monitor, file, other_file, event_type) {
+        Utils.debug(`detected change of "${event_type}" for ${file.get_uri()}`);
+
+        if (event_type === Gio.FileMonitorEvent.CREATED || event_type === Gio.FileMonitorEvent.MOVED_IN) {
+            // simply try to load the file, the normal way
+            this._load_uri(file.get_uri(), false);
+        } else if (event_type === Gio.FileMonitorEvent.DELETED || event_type === Gio.FileMonitorEvent.MOVED_OUT) {
+            Utils.debug(`removing deleted file ${file.get_uri()} from the list`);
+
+            let index = this._wallpapers.indexOf(file.get_uri());
+            if (index >= 0) {
+                delete this._wallpapers[index];
+            }
+        }
     }
 
     _emit_preview(wallpaper) {
