@@ -92,7 +92,7 @@
 			</description>
 			<summary>All currently available profiles</summary>
 		</key>
-		<key name="profile-state" type="a{s(ss)}">
+		<key name="profile-state" type="a{sas}">
 			<default>[]</default>
 			<description>
 				This is the storage location of the profile's last state. By default, there are no states saved until

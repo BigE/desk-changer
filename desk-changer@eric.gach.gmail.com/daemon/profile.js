@@ -318,7 +318,8 @@ class DeskChangerStateProfile extends Profile {
     save_state() {
         Utils.debug(`storing profile state for ${this._profile}`);
         let profile_state = this._settings.profile_state;
-        profile_state[this._profile] = [this.preview, this._background.get_string('picture-uri')];
+        profile_state[this._profile] = this._queue.all();
+        profile_state[this._profile].push(this._background.get_string('picture-uri'));
         this._settings.profile_state = profile_state;
     }
 

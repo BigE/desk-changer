@@ -201,7 +201,7 @@ class DeskChangerSettings extends Gio.Settings {
     }
 
     set profile_state(value) {
-        this.set_value('profile-state', new GLib.Variant('a{s(ss)}', value));
+        this.set_value('profile-state', new GLib.Variant('a{sas}', value));
     }
 
     get profiles() {
