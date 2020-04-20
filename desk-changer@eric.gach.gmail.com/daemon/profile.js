@@ -51,10 +51,12 @@ var Profile = GObject.registerClass(
     },
 },
 class DeskChangerProfile extends GObject.Object {
-    _init(settings, profile_key, params={}) {
-        if (this._background === undefined)
+    _init(settings, profile_key, background_key, params={}) {
+        if (!background_key) {
             throw new ProfileError('no background setting is defined');
+        }
 
+        this._background = Convenience.getSettings(background_key);
         this._loaded = false;
         this._monitors = [];
         this._profile = null;
@@ -291,6 +293,45 @@ class DeskChangerProfile extends GObject.Object {
 }
 );
 
+let StateProfile = GObject.registerClass(
+class DeskChangerStateProfile extends Profile {
+    load(profile=null) {
+        let _profile = profile || this._settings.current_profile;
+
+        if (this._settings.remember_profile_state && _profile in this._settings.profile_state) {
+            this.load_state(profile);
+        }
+
+        return super.load(profile);
+    }
+
+    load_state(profile) {
+        let _profile = profile || this._settings.current_profile;
+
+        Utils.debug(`restoring profile state for ${_profile}`);
+        this._queue.restore(this._settings.profile_state[_profile]);
+        let profile_state = this._settings.profile_state;
+        delete profile_state[_profile];
+        this._settings.profile_state = profile_state;
+    }
+
+    save_state() {
+        Utils.debug(`storing profile state for ${this._profile}`);
+        let profile_state = this._settings.profile_state;
+        profile_state[this._profile] = [this.preview, this._background.get_string('picture-uri')];
+        this._settings.profile_state = profile_state;
+    }
+
+    unload() {
+        if (this._settings.remember_profile_state) {
+            this.save_state();
+        }
+
+        super.unload();
+    }
+}
+);
+
 let ProfileQueue = GObject.registerClass({
     Properties: {
         'length': GObject.ParamSpec.uint('length', 'Length', 'The length of the current queue',
@@ -359,35 +400,9 @@ class DeskChangerProfileQueue extends GObject.Object {
 );
 
 var DesktopProfile = GObject.registerClass(
-class DeskChangerDesktopProfile extends Profile {
+class DeskChangerDesktopProfile extends StateProfile {
     _init(settings, params = {}) {
-        this._background = Convenience.getSettings('org.gnome.desktop.background');
-        super._init(settings, 'current-profile', params);
-    }
-
-    load(profile=null) {
-        let _profile = profile || this._settings.current_profile;
-
-        if (this._settings.remember_profile_state && _profile in this._settings.profile_state) {
-            Utils.debug(`restoring profile state for ${_profile}`);
-            this._queue.restore(this._settings.profile_state[_profile]);
-            let profile_state = this._settings.profile_state;
-            delete profile_state[_profile];
-            this._settings.profile_state = profile_state;
-        }
-
-        return super.load(profile);
-    }
-
-    unload() {
-        if (this._settings.remember_profile_state) {
-            Utils.debug(`storing profile state for ${this._profile}`);
-            let profile_state = this._settings.profile_state;
-            profile_state[this._profile] = [this.preview, this._background.get_string('picture-uri')];
-            this._settings.profile_state = profile_state;
-        }
-
-        super.unload();
+        super._init(settings, 'current-profile', 'org.gnome.desktop.background', params);
     }
 }
 );
@@ -395,8 +410,7 @@ class DeskChangerDesktopProfile extends Profile {
 var LockScreenProfile = GObject.registerClass(
 class DeskChangerLockScreenProfile extends Profile {
     _init(settings, params={}) {
-        this._background = Convenience.getSettings('org.gnome.desktop.screensaver');
-        super._init(settings, 'lockscreen-profile', params);
+        super._init(settings, 'lockscreen-profile', 'org.gnome.desktop.screensaver', params);
     }
 
     get inherit()

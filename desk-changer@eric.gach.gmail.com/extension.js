@@ -38,6 +38,12 @@ let settings, daemon, button,
 function disable() {
     Utils.debug('disabling extension');
 
+    // This function is run no matter if we're locking the screen or logging
+    // out. We save the state here in case the latter is what's happening.
+    if (daemon.desktop_profile && settings.remember_profile_state) {
+        daemon.desktop_profile.save_state();
+    }
+
     // button go bye bye
     if (typeof button.destroy === 'function') {
         button.destroy();
