@@ -162,8 +162,8 @@ class DeskChangerProfile extends GObject.Object {
             this._history.enqueue(current);
         }
 
-        this.fill_queue();
         this._set_wallpaper(wallpaper);
+        this.fill_queue();
         return wallpaper;
     }
 
