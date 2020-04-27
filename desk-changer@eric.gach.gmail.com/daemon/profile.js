@@ -136,22 +136,27 @@ class DeskChangerProfile extends GObject.Object {
         Utils.debug(`loading profile ${this._profile}`);
         let profiles = this._settings.get_value('profiles').deep_unpack();
 
-        if (!this._profile in profiles) {
+        if (this._profile in profiles) {
+            profiles[this._profile].forEach((item) => {
+                let [uri, recursive] = item;
+                this._load_uri(uri, recursive, true);
+            });
+
+            if (this._wallpapers.length > 0) {
+                this._loaded = true;
+                this.fill_queue();
+                Utils.debug(`loaded profile ${this._profile} with ${this._wallpapers.length} wallpapers`);
+                this.emit('loaded', this._profile);
+                return true;
+            }
+        } else {
             Utils.debug(`unable to find profile ${this._profile}`);
-            this.unload();
-            return false;
         }
 
-        profiles[this._profile].forEach((item) => {
-            let [uri, recursive] = item;
-            this._load_uri(uri, recursive, true);
-        });
+        Utils.debug(`unable to load profile ${this._profile} because of previous errors`);
+        this.unload();
 
-        this._loaded = true;
-        this.fill_queue();
-        Utils.debug(`loaded profile ${this._profile} with ${this._wallpapers.length} wallpapers`);
-        this.emit('loaded', this._profile);
-        return true;
+        return false;
     }
 
     next(_current=true, _wallpaper=null) {
@@ -324,7 +329,7 @@ class DeskChangerStateProfile extends Profile {
     }
 
     unload() {
-        if (this._settings.remember_profile_state) {
+        if (this._settings.remember_profile_state && this._loaded) {
             this.save_state();
         }
 

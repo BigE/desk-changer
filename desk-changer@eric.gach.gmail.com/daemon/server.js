@@ -73,12 +73,14 @@ let DaemonDBusServer = GObject.registerClass({
         this._running = true;
         Utils.debug('daemon started');
         this.emit('toggled', this._running);
+        return true;
     }
 
     stop() {
         this._running = false;
         Utils.debug('daemon stopped');
         this.emit('toggled', this._running);
+        return true;
     }
 
     get running() {
@@ -88,13 +90,12 @@ let DaemonDBusServer = GObject.registerClass({
     _dbus_handle_call(connection, sender, object_path, interface_name, method_name, parameters, invocation) {
         switch (method_name.toLowerCase()) {
             case 'start':
-                this.start();
-                invocation.return_value(new GLib.Variant('(b)', [true,]));
+                invocation.return_value(new GLib.Variant('(b)', [this.start(),]));
                 break;
 
             case 'stop':
                 this.stop();
-                invocation.return_value(new GLib.Variant('(b)', [true,]));
+                invocation.return_value(new GLib.Variant('(b)', [this.stop(),]));
                 break;
 
             default:
@@ -210,14 +211,23 @@ class DeskChangerDaemon extends DaemonDBusServer {
     }
 
     start() {
-        this.desktop_profile.load();
-        this.lockscreen_profile.load();
-        super.start();
-        this._check_timer(this._settings);
+        let retval = this.desktop_profile.load();
 
-        this._settings.connect('changed::rotation', (settings, key) => {
-            this._check_timer(settings);
-        });
+        if (!retval) {
+            return retval;
+        }
+
+        this.lockscreen_profile.load();
+        retval = super.start();
+
+        if (retval) {
+            this._check_timer(this._settings);
+            this._settings.connect('changed::rotation', (settings, key) => {
+                this._check_timer(settings);
+            });
+        }
+
+        return retval;
     }
 
     stop() {
@@ -227,7 +237,7 @@ class DeskChangerDaemon extends DaemonDBusServer {
 
         this.desktop_profile.unload();
         this.lockscreen_profile.unload();
-        super.stop();
+        return super.stop();
     }
 
     _check_timer(settings) {
