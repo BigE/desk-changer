@@ -79,11 +79,18 @@ deskchanger.error = (exception, message=null) => {
  * @param caller
  */
 deskchanger.debug = (message, caller) => {
-    //if (!deskchanger.settings || deskchanger.settings.debug) {
-        let _caller = caller || deskchanger.getCaller();
+    if (deskchanger.settings.debug) {
+        let _caller = caller || deskchanger.getCaller(),
+            method = _caller.substr(0, _caller.indexOf('@')),
+            re = new RegExp(`^.*${deskchanger.metadata.uuid}/`);
 
-        log(`[${deskchanger.metadata.uuid}/${_caller.split('/').pop()}] ${message}`);
-    //}
+        // do some magic to make it neat
+        _caller = _caller.substr(_caller.indexOf('@')+1)
+            .replace(re, '')
+            .replace(/(:[0-9]+):[0-9]+$/gi, `@${method}$1`);
+
+        log(`[${deskchanger.metadata.uuid}/${_caller}] ${message}`);
+    }
 };
 
 function _findLibdir() {
@@ -120,10 +127,7 @@ deskchanger.gschema = Gio.SettingsSchemaSource.new_from_directory(
 // gettext
 imports.gettext.bindtextdomain(deskchanger.app_id, deskchanger.metadata.localedir);
 const Gettext = imports.gettext.domain(deskchanger.app_id);
-
-if (typeof _ !== "function") {
-    globalThis._ = Gettext.gettext;
-}
+deskchanger._ = Gettext.gettext;
 
 // settings
 var Settings = GObject.registerClass(
