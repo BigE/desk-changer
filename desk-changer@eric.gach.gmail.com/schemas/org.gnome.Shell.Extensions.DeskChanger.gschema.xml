@@ -1,8 +1,8 @@
 <schemalist>
-	<schema id="org.gnome.shell.extensions.desk-changer" path="/org/gnome/shell/extensions/desk-changer/">
+	<schema id="org.gnome.Shell.Extensions.DeskChanger" path="/org/gnome/shell/extensions/desk-changer/">
 		<key name="allowed-mime-types" type="as">
 			<default><![CDATA[['application/xml', 'image/jpeg', 'image/png']]]></default>
-            <description>
+			<description>
 				These are the mime types that the daemon will recognise as valid files to load and use for backgrounds.
 			</description>
 			<summary>Allowed mime types for loading backgrounds</summary>
@@ -118,9 +118,9 @@
 		</key>
 		<key name="rotation" type="s">
 			<choices>
-				<choice value="disabled"></choice>
-				<choice value="hourly"></choice>
-				<choice value="interval"></choice>
+				<choice value="disabled" />
+				<choice value="hourly" />
+				<choice value="interval" />
 			</choices>
 			<default>"interval"</default>
 			<description>
