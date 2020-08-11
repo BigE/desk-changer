@@ -12,6 +12,7 @@ globalThis.deskchanger = {
         let m = /@(.+):\d+/.exec((new Error()).stack.split('\n')[1]);
         return Gio.File.new_for_path(m[1]).get_parent().get_path();
     })(),
+    force_debug: false,
 
     /**
      * Implemented the two functions below using tweaked code from:
@@ -79,7 +80,7 @@ deskchanger.error = (exception, message=null) => {
  * @param caller
  */
 deskchanger.debug = (message, caller) => {
-    if (deskchanger.settings.debug) {
+    if (deskchanger.force_debug || deskchanger.settings.debug) {
         let _caller = caller || deskchanger.getCaller(),
             method = _caller.substr(0, _caller.indexOf('@')),
             re = new RegExp(`^.*${deskchanger.metadata.uuid}/`);

@@ -6,7 +6,10 @@ else
 	INSTALLBASE = $(DESTDIR)/usr/share/gnome-shell/extensions
 endif
 
-all: compile-schemas
+all: compile-resources, compile-schemas
+
+compile-resources:
+	glib-compile-resources --sourcedir=./$(UUID)/resources ./$(UUID)/resources/org.gnome.Shell.Extensions.DeskChanger.gresource.xml
 
 compile-schemas:
 	glib-compile-schemas ./$(UUID)/schemas/
