@@ -18,15 +18,17 @@ if (!globalThis.deskchanger) {
 }
 
 const Interface = imports.daemon.interface;
+const Profile = imports.daemon.profile;
+const Timer = imports.daemon.timer;
 const Utils = imports.common.utils;
 const _ = deskchanger._;
 
 var Server = GObject.registerClass({
-    GTypeName: 'DeskChangerDaemon',
+    GTypeName: 'DeskChangerDaemonServer',
     Properties: {
-        'next': GObject.ParamSpec.string(
-            'next',
-            'Next',
+        'preview': GObject.ParamSpec.string(
+            'preview',
+            'Preview',
             _('The next wallpaper in queue'),
             GObject.ParamFlags.READABLE,
             null
@@ -42,8 +44,18 @@ var Server = GObject.registerClass({
 },
 class Server extends Gio.Application {
     _init() {
-        this._running = false;
+        this._background = new Gio.Settings({'schema': 'org.gnome.desktop.background'});
+        this._current_profile_changed_id = null;
         this._dbus_id = null;
+        this._interval_changed_id = null;
+        this._profile = new Profile.Profile();
+        this._preview_id = this._profile.connect('preview', (object, uri) => {
+            deskchanger.debug(`DBUS::Preview(${uri})`)
+            this.emit_signal('Preview', new GLib.Variant('(s)', [uri]));
+        });
+        this._rotation_changed_id = null;
+        this._running = false;
+        this._timer = null;
 
         super._init({
             application_id: Interface.APP_ID,
@@ -56,8 +68,51 @@ class Server extends Gio.Application {
         this.add_main_option('version', 'v'.charCodeAt(0), GLib.OptionFlags.NONE, GLib.OptionArg.NONE, _('Show release version'), null);
     }
 
+    get preview() {
+        return this._profile.preview;
+    }
+
     get running() {
         return this._running;
+    }
+
+    emit_signal(signal, variant) {
+        let connection = this.get_dbus_connection();
+
+        if (connection) {
+            connection.emit_signal(null, Interface.APP_PATH, Interface.APP_ID, signal, variant);
+        }
+    }
+
+    loadprofile(profile=null) {
+        let _profile = this._profile.loaded;
+
+        if (_profile) {
+            this._profile.unload(this._background.get_string('picture-uri'));
+        }
+
+        if (this._profile.load(profile) === true) {
+            this._set_wallpaper(this._profile.next());
+            return true;
+        }
+
+        if (_profile) {
+            this._profile.load(_profile);
+        }
+
+        return false;
+    }
+
+    next() {
+        let wallpaper = this._profile.next(this._background.get_string('picture-uri'));
+        this._set_wallpaper(wallpaper);
+        return wallpaper;
+    }
+
+    prev() {
+        let wallpaper = this._profile.prev(this._background.get_string('picture-uri'));
+        this._set_wallpaper(wallpaper);
+        return wallpaper;
     }
 
     start() {
@@ -66,7 +121,21 @@ class Server extends Gio.Application {
             return false;
         }
 
+        this.loadprofile();
+        this._create_timer();
+        this._rotation_changed_id = deskchanger.settings.connect('changed::rotation', () => {
+            if (this._timer) {
+                this._timer.destroy();
+                this._timer = null;
+            }
+
+            this._create_timer();
+        });
+        this._current_profile_changed_id = deskchanger.settings.connect('changed::current-profile', () => {
+            this.loadprofile();
+        });
         this._running = true;
+        this.emit_signal('Toggled', new GLib.Variant('(b)', [true]));
         return true;
     }
 
@@ -76,7 +145,29 @@ class Server extends Gio.Application {
             return false;
         }
 
+        if (this._timer) {
+            this._timer.destroy();
+            this._timer = null;
+        }
+
+        if (this._current_profile_changed_id) {
+            deskchanger.settings.disconnect(this._current_profile_changed_id);
+            this._current_profile_changed_id = null;
+        }
+
+        if (this._interval_changed_id) {
+            deskchanger.settings.disconnect(this._interval_changed_id);
+            this._interval_changed_id = null;
+        }
+
+        if (this._rotation_changed_id) {
+            deskchanger.settings.disconnect(this._rotation_changed_id);
+            this._rotation_changed_id = null;
+        }
+
+        this._profile.unload(this._background.get_string('picture-uri'));
         this._running = false;
+        this.emit_signal('Toggled', new GLib.Variant('(b)', [false]));
         return true;
     }
 
@@ -88,9 +179,24 @@ class Server extends Gio.Application {
                 this._dbus_id = connection.register_object(
                     object_path,
                     deskchanger.dbusinfo.lookup_interface(Interface.APP_ID),
-                    this._handle_dbus_call.bind(this),
+                    (connection, sender, object_path, interface_name, method_name, parameters, invocation) => {
+                        parameters = parameters.unpack();
+                        deskchanger.debug(`[DBUS.call] ${interface_name}.${method_name}(${parameters})`)
+
+                        if (!this._running && ['quit', 'start'].indexOf(method_name.toLowerCase()) === -1) {
+                            invocation.return_dbus_error(`${interface_name}.${method_name}`, 'daemon must be started first');
+                            return;
+                        }
+
+                        try {
+                            this[`_dbus_call_${method_name.toLowerCase()}`](invocation, ...parameters);
+                        } catch (e) {
+                            deskchanger.error(e, `DBUS::call ${e.message}`);
+                            invocation.return_dbus_error(`${interface_name}.${method_name}`, e.message);
+                        }
+                    },
                     this._handle_dbus_get.bind(this),
-                    this._handle_dbus_set.bind(this)
+                    () => {},
                 );
 
                 deskchanger.debug(`successfully registered object on dbus: ${object_path}(${this._dbus_id})`);
@@ -131,6 +237,16 @@ class Server extends Gio.Application {
 
     vfunc_shutdown() {
         deskchanger.debug('vfunc_shutdown');
+        
+        if (this._running) {
+            this.stop();
+        }
+
+        if (this._preview_id) {
+            this._profile.disconnect(this._preview_id);
+        }
+
+        this._profile.destroy();
         super.vfunc_shutdown();
     }
 
@@ -140,70 +256,72 @@ class Server extends Gio.Application {
 
         // Keep us open and running... we are a daemon
         this.hold();
+
+        if (deskchanger.settings.auto_start) {
+            this.start();
+        }
     }
 
-    _handle_dbus_call(connection, sender, object_path, interface_name, method_name, parameters, invocation) {
-        deskchanger.debug(`[DBUS:call] ${interface_name}.${method_name}`);
-
-        if (['loadprofile', 'next', 'prev', 'stop'].includes(method_name.toLowerCase()) && !this.running) {
-            invocation.return_dbus_error(`${interface_name}.${method_name}`, `The daemon must be started first`);
-            return;
+    _create_timer() {
+        if (deskchanger.settings.rotation === 'interval') {
+            this._timer = new Timer.Interval(deskchanger.settings.interval, this.next.bind(this));
+            this._interval_changed_id = deskchanger.settings.connect('changed::interval', () => {
+                this._timer.destroy();
+                this._timer = new Timer.Interval(deskchanger.settings.interval, this.next.bind(this));
+            });
+        } else if (deskchanger.settings.rotation === 'hourly') {
+            this._timer = new Timer.Hourly(this.next.bind(this));
         }
+    }
 
-        switch (method_name.toLowerCase()) {
-            case 'loadprofile':
-                invocation.return_value(new GLib.Variant('(b)', [false, ]));
-                return;
+    _dbus_call_loadprofile(invocation, profile) {
+        invocation.return_value(new GLib.Variant('(b)', [this.loadprofile(profile.get_string()[0])]));
+    }
 
-            case 'next':
-                var wallpaper = '';
-                invocation.return_value(new GLib.Variant('(s)', [wallpaper, ]))
-                return;
+    _dbus_call_next(invocation) {
+        invocation.return_value(new GLib.Variant('(s)', [this.next(), ]));
+    }
 
-            case 'prev':
-                var wallpaper = '';
-                invocation.return_value(new GLib.Variant('(s)', [wallpaper, ]))
-                return;
+    _dbus_call_prev(invocation) {
+        invocation.return_value(new GLib.Variant('(s)', [this.prev(), ]))
+    }
 
-            case 'quit':
-                invocation.return_value(null);
-                this.quit();
-                return;
+    _dbus_call_quit(invocation) {
+        invocation.return_value(null);
+        this.quit();
+    }
 
-            case 'start':
-                invocation.return_value(new GLib.Variant('(b)', [false, ]));
-                return;
+    _dbus_call_start(invocation) {
+        invocation.return_value(new GLib.Variant('(b)', [this.start(), ]));
+    }
 
-            case 'stop':
-                invocation.return_value(new GLib.Variant('(b)', [false, ]));
-                return;
-        }
-
-        deskchanger.error(`[DBUS] invalid method ${method_name}`);
-        invocation.return_dbus_error(
-            `${interface_name}.${method_name}`,
-            `Method ${method_name} does not exist in ${interface_name}`
-        );
+    _dbus_call_stop(invocation) {
+        invocation.return_value(new GLib.Variant('(b)', [this.stop(), ]));
     }
 
     _handle_dbus_get(connection, sender, object_path, interface_name, property_name) {
         deskchanger.debug(`DBUS::getProperty(${property_name})`);
-        switch (property_name) {
+        switch (property_name.toLowerCase()) {
             case 'history':
                 return new GLib.Variant('as', []);
 
             case 'queue':
                 return new GLib.Variant('as', []);
 
+            case 'preview':
+                return new GLib.Variant('s', this.preview);
+
             case 'running':
                 return new GLib.Variant('b', this.running);
         }
 
-        deskchanger.error(`unknown property ${interface_name}.${property_name}`)
+        deskchanger.debug(`unknown property ${interface_name}.${property_name}`)
         return null;
     }
 
-    _handle_dbus_set() {
+    _set_wallpaper(uri) {
+        deskchanger.debug(`setting wallpaper to ${uri}`);
+        this._background.set_string('picture-uri', uri);
     }
 }
 );

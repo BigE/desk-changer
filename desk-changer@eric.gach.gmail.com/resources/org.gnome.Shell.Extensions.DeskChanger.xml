@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <node>
     <interface name="@APP_ID@.Daemon">
-        <method name="LoadProfile">
+        <method name="Load">
             <arg direction="in" name="profile" type="s" />
             <arg direction="out" name="success" type="b" />
         </method>
@@ -18,13 +18,17 @@
         <method name="Stop">
             <arg direction="out" name="success" type="b" />
         </method>
-        <property name="history" type="as" access="read" />
-        <property name="queue" type="as" access="read" />
-        <property name="running" type="b" access="read" />
-        <signal name="changed">
+        <property name="History" type="as" access="read" />
+        <property name="Queue" type="as" access="read" />
+        <property name="Preview" type="s" access="read" />
+        <property name="Running" type="b" access="read" />
+        <signal name="Changed">
             <arg direction="out" name="uri" type="s" />
         </signal>
-        <signal name="toggled">
+        <signal name="Preview">
+            <arg direction="out" name="uri" type="s" />
+        </signal>
+        <signal name="Toggled">
             <arg direction="out" name="running" type="b" />
         </signal>
     </interface>

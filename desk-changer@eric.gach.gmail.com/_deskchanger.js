@@ -311,9 +311,9 @@ deskchanger.get_resource = (path) => {
     return array;
 };
 
+deskchanger.dbusxml = deskchanger.get_resource(`${deskchanger.app_id}.xml`);
+
 // Initialize DBUS interfaces
-deskchanger.dbusinfo = Gio.DBusNodeInfo.new_for_xml(
-    deskchanger.get_resource(`${deskchanger.app_id}.xml`)
-);
+deskchanger.dbusinfo = Gio.DBusNodeInfo.new_for_xml(deskchanger.dbusxml);
 
 deskchanger.dbusinfo.nodes.forEach(info => info.cache_build());
