@@ -106,7 +106,7 @@ var PreviewControl = GObject.registerClass(
                 this._texture.set_content(image);
                 this.add_actor(this._texture);
             } catch (e) {
-                Utils.error(e, `Failed to set preview of ${file}`);
+                deskchanger.error(e, `Failed to set preview of ${file}`);
                 if (this._texture) {
                     this._texture.destroy();
                     this._texture = null;

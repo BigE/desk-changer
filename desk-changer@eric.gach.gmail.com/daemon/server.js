@@ -50,7 +50,6 @@ class Server extends Gio.Application {
         this._interval_changed_id = null;
         this._profile = new Profile.Profile();
         this._preview_id = this._profile.connect('preview', (object, uri) => {
-            deskchanger.debug(`DBUS::Preview(${uri})`)
             this.emit_signal('Preview', new GLib.Variant('(s)', [uri]));
         });
         this._rotation_changed_id = null;
@@ -80,6 +79,7 @@ class Server extends Gio.Application {
         let connection = this.get_dbus_connection();
 
         if (connection) {
+            deskchanger.debug(`DBUS::${signal}(${variant.deepUnpack()})`);
             connection.emit_signal(null, Interface.APP_PATH, Interface.APP_ID, signal, variant);
         }
     }
@@ -125,6 +125,11 @@ class Server extends Gio.Application {
         this._create_timer();
         this._rotation_changed_id = deskchanger.settings.connect('changed::rotation', () => {
             if (this._timer) {
+                if (this._interval_changed_id) {
+                    deskchanger.settings.disconnect(this._interval_changed_id);
+                    this._interval_changed_id = null;
+                }
+
                 this._timer.destroy();
                 this._timer = null;
             }
@@ -322,6 +327,7 @@ class Server extends Gio.Application {
     _set_wallpaper(uri) {
         deskchanger.debug(`setting wallpaper to ${uri}`);
         this._background.set_string('picture-uri', uri);
+        this.emit_signal('Changed', new GLib.Variant('(s)', [uri]));
     }
 }
 );

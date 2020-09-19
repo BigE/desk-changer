@@ -33,7 +33,7 @@ function disable() {
     button = null;
 
     if (changed_id) {
-        daemon.disconnect(changed_id);
+        daemon.disconnectSignal(changed_id);
     }
     changed_id = null;
 
@@ -65,9 +65,10 @@ function enable() {
         daemon.StartSync();
     }
 
-    //changed_id = daemon.connect('changed', function (obj, file) {
-    //    notify(_('Wallpaper changed: %s'.format(file)));
-    //});
+    changed_id = daemon.connectSignal('Changed', function (proxy, name, args) {
+        let uri = args[0];
+        notify(_('Wallpaper changed: %s'.format(uri)));
+    });
 
     current_profile_id = deskchanger.settings.connect('changed::current-profile', function () {
         notify(_('Profile changed to %s'.format(deskchanger.settings.current_profile)));
@@ -121,5 +122,6 @@ function init() {
     Utils.installService();
 
     daemon = new Service.makeProxyWrapper();
+    // if the daemon proccess is not running, this will run it
     daemon.init(null);
 }
