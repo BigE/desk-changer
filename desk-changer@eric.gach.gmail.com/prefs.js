@@ -20,25 +20,23 @@
  * THE SOFTWARE.
  */
 
-const Me = imports.misc.extensionUtils.getCurrentExtension();
-const Convenience = Me.imports.convenience;
-const Interface = Me.imports.daemon.interface;
-const Utils = Me.imports.utils;
-
 const Gettext = imports.gettext.domain('desk-changer');
 const Gio = imports.gi.Gio;
 const GObject = imports.gi.GObject;
 const Gtk = imports.gi.Gtk;
 const _ = Gettext.gettext;
 
-const DaemonProxy = Gio.DBusProxy.makeProxyWrapper(Interface.DBusInterface);
+const Me = imports.misc.extensionUtils.getCurrentExtension();
+Me.imports._deskchanger;
+const Convenience = Me.imports.convenience;
+const Service = Me.imports.service;
 
 let DeskChangerPrefs = GObject.registerClass(
 class DeskChangerPrefs extends GObject.Object {
     _init() {
         let notebook = new Gtk.Notebook(),
-            settings = Convenience.getSettings(),
-            daemon = new DaemonProxy(Gio.DBus.session, Interface.DBusName, Interface.DBusPath);
+            settings = deskchanger.settings,
+            daemon = Service.makeProxyWrapper();
 
         this.box = new Gtk.Box({
             border_width: 10,
@@ -96,7 +94,7 @@ class DeskChangerPrefs extends GObject.Object {
         box.pack_start(label, false, false, 5);
         label = new Gtk.Label({label: ' '});
         box.pack_start(label, true, true, 5);
-        Utils.debug(daemon.running);
+        deskchanger.debug(daemon.running);
         switch_daemon.set_active(daemon.running);
         switch_daemon.connect('notify::active', () => {
             if (switch_daemon.get_state() && !daemon.running) {
@@ -314,7 +312,7 @@ class DeskChangerPrefs extends GObject.Object {
             }
 
             let name = model.get_value(iterator, 3);
-            Utils.debug(`updating keybinding ${name} to ${value}`);
+            deskchanger.debug(`updating keybinding ${name} to ${value}`);
             model.set(iterator, [1, 2], [mods, key]);
             settings.setKeybinding(name, value);
         });
@@ -326,7 +324,7 @@ class DeskChangerPrefs extends GObject.Object {
             }
 
             let name = model.get_value(iterator, 3);
-            Utils.debug(`clearing keybinding ${name}`);
+            deskchanger.debug(`clearing keybinding ${name}`);
             model.set(iterator, [1, 2], [0, 0]);
             settings.setKeybinding(name, '');
         });
@@ -570,5 +568,5 @@ function buildPrefsWidget() {
 }
 
 function init() {
-    Utils.debug('init');
+    deskchanger.debug('init');
 }
