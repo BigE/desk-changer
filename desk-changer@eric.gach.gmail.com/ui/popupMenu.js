@@ -49,9 +49,9 @@ class DeskChangerPopupMenuControlsMenuItem extends PopupMenu.PopupBaseMenuItem {
         });
         this._random.set_state((settings.random)? 'random' : 'ordered');
 
-        this.add(this._prev, {expand: true, x_fill: false});
-        this.add(this._random, {expand: true, x_fill: false});
-        this.add(this._next, {expand: true, x_fill: false});
+        this.add_child(this._prev, {expand: true, x_fill: false});
+        this.add_child(this._random, {expand: true, x_fill: false});
+        this.add_child(this._next, {expand: true, x_fill: false});
     }
 
     _addKeyBinding(key, handler, settings) {
