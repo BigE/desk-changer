@@ -188,15 +188,6 @@ class DeskChangerSettings extends Gio.Settings {
         deskchanger.debug(`set interval: ${value}`,deskchanger.getCaller());
     }
 
-    get lockscreen_profile() {
-        return this.get_string('lockscreen-profile');
-    }
-
-    set lockscreen_profile(value) {
-        this.set_string('lockscreen-profile', value);
-        deskchanger.debug(`set lockscreen-profile: ${value}`,deskchanger.getCaller());
-    }
-
     get notifications() {
         return this.get_boolean('notifications');
     }
@@ -251,16 +242,6 @@ class DeskChangerSettings extends Gio.Settings {
     set rotation(value) {
         this.set_string('rotation', value);
         deskchanger.debug(`set rotation: ${value}`,deskchanger.getCaller());
-    }
-
-    get update_lockscreen() {
-        return this.get_boolean('update-lockscreen');
-    }
-
-    set update_lockscreen(value) {
-        value = Boolean(value);
-        this.set_boolean('update-lockscreen', value);
-        deskchanger.debug(`set update-lockscreen: ${value}`,deskchanger.getCaller());
     }
 
     connect(signal, callback) {

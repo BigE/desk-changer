@@ -156,8 +156,6 @@ class DeskChangerPrefs extends GObject.Object {
             box = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL}),
             label = new Gtk.Label({label: _('Desktop Profile')}),
             current_profile = new Gtk.ComboBoxText(),
-            update_lockscreen = new Gtk.Switch(),
-            lockscreen_profile = new Gtk.ComboBoxText(),
             switch_icon_preview = new Gtk.Switch(),
             switch_notifications = new Gtk.Switch();
 
@@ -175,44 +173,6 @@ class DeskChangerPrefs extends GObject.Object {
         });
         box.pack_start(current_profile, false, false, 5);
         frame_box.pack_start(box, false, false, 10);
-
-        if (Convenience.checkShellVersion('3.35', '<')) {
-            // Update Lockscreen Background
-            box = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL});
-            label = new Gtk.Label({label: _('Update LockScreen Background')});
-            box.pack_start(label, false, false, 5);
-            label = new Gtk.Label({label: ' '});
-            box.pack_start(label, true, true, 5);
-            update_lockscreen.set_active(settings.update_lockscreen);
-            update_lockscreen.connect('notify::active', () => {
-                settings.update_lockscreen = update_lockscreen.get_state();
-            });
-
-            // Lockscreen Profile
-            box.pack_start(update_lockscreen, false, false, 5);
-            frame_box.pack_start(box, false, false, 10);
-            box = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL});
-            label = new Gtk.Label({label: _('Lockscreen Profile')});
-            box.pack_start(label, false, false, 5);
-            label = new Gtk.Label({label: ' '});
-            box.pack_start(label, true, true, 5);
-            lockscreen_profile.connect('key-press-event', (widget, event) => {
-                let keyval = event.get_keyval();
-                if (keyval[0] && keyval[1] === Gdk.KEY_BackSpace) {
-                    lockscreen_profile.set_active(-1);
-                }
-            });
-
-            this._load_profiles(lockscreen_profile, settings, settings.lockscreen_profile);
-            if (!settings.lockscreen_profile) {
-                lockscreen_profile.set_active(-1);
-            }
-            lockscreen_profile.connect('changed', (object) => {
-                settings.lockscreen_profile = object.get_active_text();
-            });
-            box.pack_start(lockscreen_profile, false, false, 5);
-            frame_box.pack_start(box, false, false, 5);
-        }
 
         frame.add(frame_box);
         extension_box.pack_start(frame, false, false, 10);

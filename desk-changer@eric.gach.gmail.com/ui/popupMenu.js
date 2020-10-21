@@ -1,3 +1,5 @@
+'use strict';
+
 const Me = imports.misc.extensionUtils.getCurrentExtension();
 const Gettext = imports.gettext.domain(Me.metadata.uuid);
 const DeskChangerControl = Me.imports.ui.control;
@@ -272,29 +274,6 @@ var ProfileDesktopMenuItem = GObject.registerClass(
 class DeskChangerPopupSubMenuMenuItemProfileDesktop extends ProfileMenuItem {
     _init(sensitive = true) {
         super._init(_('Desktop Profile'), 'current_profile', sensitive);
-    }
-}
-);
-
-var ProfileLockScreenMenuItem = GObject.registerClass(
-class DeskChangerPopupSubMenuMenuItemProfileLockScreen extends ProfileMenuItem {
-    _init(sensitive=true) {
-        super._init(_('Lock Screen Profile'), 'lockscreen_profile', sensitive);
-    }
-
-    setLabel(label) {
-        if (!label) {
-            label = '(inherited)';
-        }
-
-        super.setLabel(label);
-    }
-
-    _populate_profiles(key) {
-        super._populate_profiles('lockscreen_profile', key);
-
-        let inherit = new PopupMenuItem(_('(inherit from desktop)'), '', key);
-        this.menu.addMenuItem(inherit);
     }
 }
 );
