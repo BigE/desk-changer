@@ -40,7 +40,10 @@ var Server = GObject.registerClass({
             GObject.ParamFlags.READABLE,
             false
         ),
-    }
+    },
+    Signals: {
+        'Running': { param_types: [GObject.TYPE_BOOLEAN] },
+    },
 },
 class Server extends Gio.Application {
     _init() {
@@ -50,6 +53,7 @@ class Server extends Gio.Application {
         this._interval_changed_id = null;
         this._profile = new Profile.Profile();
         this._preview_id = this._profile.connect('preview', (object, uri) => {
+            this.notify('preview');
             this.emit_signal('Preview', new GLib.Variant('(s)', [uri]));
         });
         this._rotation_changed_id = null;
@@ -93,6 +97,12 @@ class Server extends Gio.Application {
 
         if (this._profile.load(profile) === true) {
             this._set_wallpaper(this._profile.next());
+            // reset the interval timer - since the wallpaper was just changed
+            // it should start over.
+            if (this._timer && this._interval_changed_id) {
+                this._destroy_timer();
+                this._create_timer();
+            }
             return true;
         }
 
@@ -124,23 +134,15 @@ class Server extends Gio.Application {
         this.loadprofile();
         this._create_timer();
         this._rotation_changed_id = deskchanger.settings.connect('changed::rotation', () => {
-            if (this._timer) {
-                if (this._interval_changed_id) {
-                    deskchanger.settings.disconnect(this._interval_changed_id);
-                    this._interval_changed_id = null;
-                }
-
-                this._timer.destroy();
-                this._timer = null;
-            }
-
+            this._destroy_timer();
             this._create_timer();
         });
         this._current_profile_changed_id = deskchanger.settings.connect('changed::current-profile', () => {
             this.loadprofile();
         });
         this._running = true;
-        this.emit_signal('Toggled', new GLib.Variant('(b)', [true]));
+        this.notify('running');
+        this.emit_signal('Running', new GLib.Variant('(b)', [this.running]));
         return true;
     }
 
@@ -150,19 +152,11 @@ class Server extends Gio.Application {
             return false;
         }
 
-        if (this._timer) {
-            this._timer.destroy();
-            this._timer = null;
-        }
+        this._destroy_timer();
 
         if (this._current_profile_changed_id) {
             deskchanger.settings.disconnect(this._current_profile_changed_id);
             this._current_profile_changed_id = null;
-        }
-
-        if (this._interval_changed_id) {
-            deskchanger.settings.disconnect(this._interval_changed_id);
-            this._interval_changed_id = null;
         }
 
         if (this._rotation_changed_id) {
@@ -172,7 +166,8 @@ class Server extends Gio.Application {
 
         this._profile.unload(this._background.get_string('picture-uri'));
         this._running = false;
-        this.emit_signal('Toggled', new GLib.Variant('(b)', [false]));
+        this.notify('running');
+        this.emit_signal('Running', new GLib.Variant('(b)', [this.running]));
         return true;
     }
 
@@ -276,6 +271,18 @@ class Server extends Gio.Application {
             });
         } else if (deskchanger.settings.rotation === 'hourly') {
             this._timer = new Timer.Hourly(this.next.bind(this));
+        }
+    }
+
+    _destroy_timer() {
+        if (this._timer) {
+            if (this._interval_changed_id) {
+                deskchanger.settings.disconnect(this._interval_changed_id);
+                this._interval_changed_id = null;
+            }
+
+            this._timer.destroy();
+            this._timer = null;
         }
     }
 

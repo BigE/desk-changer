@@ -42,18 +42,17 @@ var PreviewControl = GObject.registerClass(
             this._daemon = daemon;
             this._texture = null;
             this._width = width;
-            this._next_file_id = this._daemon.connectSignal('Preview', (proxy, name, args) => {
-                let uri = args[0];
+            this._next_file_id = this._daemon.connectSignal('Preview', (proxy, name, [uri]) => {
                 deskchanger.debug(`DBUS::Preview(${uri})`);
                 this.set_wallpaper(uri);
             });
-            /*this._toggled_id = this._daemon.connect('toggled', (daemon) => {
-                if (!daemon.Running && this._texture) {
+            this._running_id = this._daemon.connectSignal('Running', (proxy, name, [running]) => {
+                if (running === false && this._texture) {
                     deskchanger.debug('clearing preview, daemon stopped');
                     this._texture.destroy();
                     this._texture = null;
                 }
-            });*/
+            });
 
             if (daemon.Preview) {
                 this.set_wallpaper(daemon.Preview);
@@ -64,14 +63,14 @@ var PreviewControl = GObject.registerClass(
 
         destroy() {
             if (this._next_file_id) {
-                this._daemon.desktop_profile.disconnect(this._next_file_id);
+                this._daemon.disconnectSignal(this._next_file_id);
             }
             this._next_file_id = null;
 
-            if (this._toggled_id) {
-                this._daemon.disconnect(this._toggled_id);
+            if (this._running_id) {
+                this._daemon.disconnect(this._running_id);
             }
-            this._toggled_id = null;
+            this._running_id = null;
 
             if (this._texture) {
                 this._texture.destroy();

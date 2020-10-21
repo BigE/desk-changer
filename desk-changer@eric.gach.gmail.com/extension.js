@@ -20,12 +20,6 @@ let daemon, button,
 function disable() {
     deskchanger.debug('disabling extension');
 
-    // This function is run no matter if we're locking the screen or logging
-    // out. We save the state here in case the latter is what's happening.
-    if (daemon && daemon.Running && deskchanger.settings.remember_profile_state) {
-        daemon.desktop_profile.save_state();
-    }
-
     // button go bye bye
     if (button && typeof button.destroy === 'function') {
         button.destroy();
@@ -61,12 +55,8 @@ function disable() {
 function enable() {
     deskchanger.debug('enabling extension');
 
-    if (deskchanger.settings.auto_start && !daemon.Running) {
-        daemon.StartSync();
-    }
 
-    changed_id = daemon.connectSignal('Changed', function (proxy, name, args) {
-        let uri = args[0];
+    changed_id = daemon.connectSignal('Changed', function (proxy, name, [uri]) {
         notify(_('Wallpaper changed: %s'.format(uri)));
     });
 
@@ -108,6 +98,10 @@ function enable() {
 
     button = new DeskChangerPanelMenuButton(daemon);
     Main.panel.addToStatusArea('DeskChanger', button);
+
+    if (deskchanger.settings.auto_start && !daemon.Running) {
+        daemon.StartSync();
+    }
 }
 
 function notify(message, force) {
@@ -121,7 +115,5 @@ function init() {
 
     Utils.installService();
 
-    daemon = new Service.makeProxyWrapper();
-    // if the daemon proccess is not running, this will run it
-    daemon.init(null);
+    daemon = Service.makeProxyWrapper();
 }

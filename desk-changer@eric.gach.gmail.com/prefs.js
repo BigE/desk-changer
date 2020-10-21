@@ -1,24 +1,4 @@
-/**
- * Copyright (c) 2014-2018 Eric Gach <eric.gach@gmail.com>
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- */
+'use strict';
 
 const Gettext = imports.gettext.domain('desk-changer');
 const Gio = imports.gi.Gio;
@@ -94,16 +74,16 @@ class DeskChangerPrefs extends GObject.Object {
         box.pack_start(label, false, false, 5);
         label = new Gtk.Label({label: ' '});
         box.pack_start(label, true, true, 5);
-        deskchanger.debug(daemon.running);
-        switch_daemon.set_active(daemon.running);
+        deskchanger.debug(daemon.Running);
+        switch_daemon.set_active(daemon.Running);
         switch_daemon.connect('notify::active', () => {
-            if (switch_daemon.get_state() && !daemon.running) {
-                daemon.Start();
-            } else if (!switch_daemon.get_state() && daemon.running) {
-                daemon.Stop();
+            if (switch_daemon.get_state() && !daemon.Running) {
+                daemon.StartSync();
+            } else if (!switch_daemon.get_state() && daemon.Running) {
+                daemon.StopSync();
             }
         });
-        daemon.connectSignal('toggled', (running) => {
+        daemon.connectSignal('Running', (proxy, name, [running]) => {
             switch_daemon.set_state(running);
         });
         box.pack_start(switch_daemon, false, false, 5);

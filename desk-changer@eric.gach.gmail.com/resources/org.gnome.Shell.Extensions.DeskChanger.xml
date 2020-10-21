@@ -28,7 +28,7 @@
         <signal name="Preview">
             <arg direction="out" name="uri" type="s" />
         </signal>
-        <signal name="Toggled">
+        <signal name="Running">
             <arg direction="out" name="running" type="b" />
         </signal>
     </interface>

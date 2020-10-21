@@ -88,11 +88,20 @@ class DeskChangerPopupMenuDaemonMenuItem extends PopupMenu.PopupSwitchMenuItem {
     _init(daemon) {
         super._init(_('DeskChanger Daemon'), daemon.Running);
         this._daemon = daemon;
-        this._toggled_id = this.connect('toggled', () => {
-            (daemon.Running)? daemon.StopSync() : daemon.StartSync();
+
+        this._toggled_id = this.connect('toggled', (object, state) => {
+            deskchanger.debug('toggling daemon state');
+
+            try {
+                (state === true)? this._daemon.StartSync() : this._daemon.StopSync();
+            } catch (e) {
+                deskchanger.error(e, 'Failed to toggle daemon');
+            }
         });
-        this._daemon_id = daemon.connectSignal('Toggled', () => {
-            this.setToggleState(daemon.Running);
+
+        this._running_id = this._daemon.connectSignal('Running', (proxy, name, [state]) => {
+            deskchanger.debug(`upating switch to ${(state === true)? '' : 'not '}toggled`);
+            this.setToggleState(state);
         });
     }
 
@@ -102,10 +111,10 @@ class DeskChangerPopupMenuDaemonMenuItem extends PopupMenu.PopupSwitchMenuItem {
         }
         this._toggled_id = null;
 
-        if (this._daemon_id) {
-            this._daemon.disconnectSignal(this._daemon_id);
+        if (this._running_id) {
+            this._daemon.disconnectSignal(this._running_id);
         }
-        this._daemon_id = null;
+        this._running_id = null;
 
         super.destroy();
     }
