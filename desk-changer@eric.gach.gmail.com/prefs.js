@@ -1,29 +1,4 @@
-/**
- * Copyright (c) 2014-2018 Eric Gach <eric.gach@gmail.com>
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- */
-
-const Me = imports.misc.extensionUtils.getCurrentExtension();
-const Convenience = Me.imports.convenience;
-const Interface = Me.imports.daemon.interface;
-const Utils = Me.imports.utils;
+'use strict';
 
 const Gettext = imports.gettext.domain('desk-changer');
 const Gio = imports.gi.Gio;
@@ -31,14 +6,17 @@ const GObject = imports.gi.GObject;
 const Gtk = imports.gi.Gtk;
 const _ = Gettext.gettext;
 
-const DaemonProxy = Gio.DBusProxy.makeProxyWrapper(Interface.DBusInterface);
+const Me = imports.misc.extensionUtils.getCurrentExtension();
+Me.imports._deskchanger;
+const Convenience = Me.imports.convenience;
+const Service = Me.imports.service;
 
 let DeskChangerPrefs = GObject.registerClass(
 class DeskChangerPrefs extends GObject.Object {
     _init() {
         let notebook = new Gtk.Notebook(),
-            settings = Convenience.getSettings(),
-            daemon = new DaemonProxy(Gio.DBus.session, Interface.DBusName, Interface.DBusPath);
+            settings = deskchanger.settings,
+            daemon = Service.makeProxyWrapper();
 
         this.box = new Gtk.Box({
             border_width: 10,
@@ -96,16 +74,16 @@ class DeskChangerPrefs extends GObject.Object {
         box.pack_start(label, false, false, 5);
         label = new Gtk.Label({label: ' '});
         box.pack_start(label, true, true, 5);
-        Utils.debug(daemon.running);
-        switch_daemon.set_active(daemon.running);
+        deskchanger.debug(daemon.Running);
+        switch_daemon.set_active(daemon.Running);
         switch_daemon.connect('notify::active', () => {
-            if (switch_daemon.get_state() && !daemon.running) {
-                daemon.Start();
-            } else if (!switch_daemon.get_state() && daemon.running) {
-                daemon.Stop();
+            if (switch_daemon.get_state() && !daemon.Running) {
+                daemon.StartSync();
+            } else if (!switch_daemon.get_state() && daemon.Running) {
+                daemon.StopSync();
             }
         });
-        daemon.connectSignal('toggled', (running) => {
+        daemon.connectSignal('Running', (proxy, name, [running]) => {
             switch_daemon.set_state(running);
         });
         box.pack_start(switch_daemon, false, false, 5);
@@ -178,8 +156,6 @@ class DeskChangerPrefs extends GObject.Object {
             box = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL}),
             label = new Gtk.Label({label: _('Desktop Profile')}),
             current_profile = new Gtk.ComboBoxText(),
-            update_lockscreen = new Gtk.Switch(),
-            lockscreen_profile = new Gtk.ComboBoxText(),
             switch_icon_preview = new Gtk.Switch(),
             switch_notifications = new Gtk.Switch();
 
@@ -197,44 +173,6 @@ class DeskChangerPrefs extends GObject.Object {
         });
         box.pack_start(current_profile, false, false, 5);
         frame_box.pack_start(box, false, false, 10);
-
-        if (Convenience.checkShellVersion('3.35', '<')) {
-            // Update Lockscreen Background
-            box = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL});
-            label = new Gtk.Label({label: _('Update LockScreen Background')});
-            box.pack_start(label, false, false, 5);
-            label = new Gtk.Label({label: ' '});
-            box.pack_start(label, true, true, 5);
-            update_lockscreen.set_active(settings.update_lockscreen);
-            update_lockscreen.connect('notify::active', () => {
-                settings.update_lockscreen = update_lockscreen.get_state();
-            });
-
-            // Lockscreen Profile
-            box.pack_start(update_lockscreen, false, false, 5);
-            frame_box.pack_start(box, false, false, 10);
-            box = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL});
-            label = new Gtk.Label({label: _('Lockscreen Profile')});
-            box.pack_start(label, false, false, 5);
-            label = new Gtk.Label({label: ' '});
-            box.pack_start(label, true, true, 5);
-            lockscreen_profile.connect('key-press-event', (widget, event) => {
-                let keyval = event.get_keyval();
-                if (keyval[0] && keyval[1] === Gdk.KEY_BackSpace) {
-                    lockscreen_profile.set_active(-1);
-                }
-            });
-
-            this._load_profiles(lockscreen_profile, settings, settings.lockscreen_profile);
-            if (!settings.lockscreen_profile) {
-                lockscreen_profile.set_active(-1);
-            }
-            lockscreen_profile.connect('changed', (object) => {
-                settings.lockscreen_profile = object.get_active_text();
-            });
-            box.pack_start(lockscreen_profile, false, false, 5);
-            frame_box.pack_start(box, false, false, 5);
-        }
 
         frame.add(frame_box);
         extension_box.pack_start(frame, false, false, 10);
@@ -314,7 +252,7 @@ class DeskChangerPrefs extends GObject.Object {
             }
 
             let name = model.get_value(iterator, 3);
-            Utils.debug(`updating keybinding ${name} to ${value}`);
+            deskchanger.debug(`updating keybinding ${name} to ${value}`);
             model.set(iterator, [1, 2], [mods, key]);
             settings.setKeybinding(name, value);
         });
@@ -326,7 +264,7 @@ class DeskChangerPrefs extends GObject.Object {
             }
 
             let name = model.get_value(iterator, 3);
-            Utils.debug(`clearing keybinding ${name}`);
+            deskchanger.debug(`clearing keybinding ${name}`);
             model.set(iterator, [1, 2], [0, 0]);
             settings.setKeybinding(name, '');
         });
@@ -570,5 +508,5 @@ function buildPrefsWidget() {
 }
 
 function init() {
-    Utils.debug('init');
+    deskchanger.debug('init');
 }

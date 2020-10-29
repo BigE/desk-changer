@@ -1,10 +1,8 @@
-const Me = imports.misc.extensionUtils.getCurrentExtension();
-const Utils = Me.imports.utils;
+'use strict';
 
 const GLib = imports.gi.GLib;
 const GObject = imports.gi.GObject;
 const Signals = imports.signals;
-
 
 var Interval = GObject.registerClass({
     Properties: {
@@ -22,7 +20,7 @@ class DeskChangerTimerInterval extends GObject.Object {
         this._interval = parseInt(interval);
         super._init(params);
         this._timer = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, this._interval, this.__callback__.bind(this));
-        Utils.debug(`added timer ${this._timer}`);
+        deskchanger.debug(`added timer ${this._timer}`);
     }
 
     get callback() {
@@ -35,7 +33,7 @@ class DeskChangerTimerInterval extends GObject.Object {
 
     __callback__() {
         if (this._callback) {
-            Utils.debug(`calling callback ${this._callback}`);
+            deskchanger.debug('calling interval callback');
             return Boolean(this._callback());
         }
 
@@ -43,7 +41,7 @@ class DeskChangerTimerInterval extends GObject.Object {
     }
 
     destroy() {
-        Utils.debug(`removing timer ${this._timer}`);
+        deskchanger.debug(`removing timer ${this._timer}`);
         GLib.source_remove(this._timer);
     }
 });
@@ -61,6 +59,7 @@ class DeskChangerTimerHourly extends Interval {
         if (date.getMinutes() === 0 && date.getSeconds() < 10) {
             if (!this._done) {
                 this._done = true;
+                deskchanger.debug('calling hourly callback');
                 return super.__callback__();
             }
 

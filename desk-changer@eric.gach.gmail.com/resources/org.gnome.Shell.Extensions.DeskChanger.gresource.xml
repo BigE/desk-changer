@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<gresources>
+    <gresource prefix="/org/gnome/Shell/Extensions/DeskChanger">
+        <file compressed="true">icons/wallpaper-icon.png</file>
+        <file compressed="true" preprocess="xml-stripblanks">org.gnome.Shell.Extensions.DeskChanger.xml</file>
+        <file compressed="true">org.gnome.Shell.Extensions.DeskChanger.Daemon.service.in</file>
+    </gresource>
+</gresources>
