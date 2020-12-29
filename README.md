@@ -25,6 +25,15 @@ or
 Then restart gnome-shell and enable the extension. Once it is enabled, you can use the extension to start the daemon
 with the built in toggle switch.
 
+## Install develop branch (gnome 3.38)
+
+```
+git clone -b develop git@github.com:BigE/desk-changer.git
+cd desk-changer
+make all
+make install
+```
+
 ## General Information
 ### Daemon
 
