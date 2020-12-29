@@ -1,8 +1,8 @@
 <schemalist>
-	<schema id="org.gnome.shell.extensions.desk-changer" path="/org/gnome/shell/extensions/desk-changer/">
+	<schema id="org.gnome.Shell.Extensions.DeskChanger" path="/org/gnome/shell/extensions/desk-changer/">
 		<key name="allowed-mime-types" type="as">
 			<default><![CDATA[['application/xml', 'image/jpeg', 'image/png']]]></default>
-            <description>
+			<description>
 				These are the mime types that the daemon will recognise as valid files to load and use for backgrounds.
 			</description>
 			<summary>Allowed mime types for loading backgrounds</summary>
@@ -54,14 +54,6 @@
 			<range min="1" max="84600" />
 			<summary>Number of seconds between wallpaper changes</summary>
 		</key>
-		<key name="lockscreen-profile" type="s">
-			<default>""</default>
-			<description>
-				This is the profile for the lock screen. Setting this to an empty string makes the lock screen simply
-				inherit the desktop profile. This is the default behavior.
-			</description>
-			<summary>Lock screen profile to set wallpapers from</summary>
-		</key>
 		<key name="next-wallpaper" type="as">
 			<default><![CDATA[['']]]></default>
 			<description>
@@ -92,7 +84,7 @@
 			</description>
 			<summary>All currently available profiles</summary>
 		</key>
-		<key name="profile-state" type="a{s(ss)}">
+		<key name="profile-state" type="a{sas}">
 			<default>[]</default>
 			<description>
 				This is the storage location of the profile's last state. By default, there are no states saved until
@@ -118,9 +110,9 @@
 		</key>
 		<key name="rotation" type="s">
 			<choices>
-				<choice value="disabled"></choice>
-				<choice value="hourly"></choice>
-				<choice value="interval"></choice>
+				<choice value="disabled" />
+				<choice value="hourly" />
+				<choice value="interval" />
 			</choices>
 			<default>"interval"</default>
 			<description>
@@ -130,15 +122,6 @@
 				daemon, but only by user interaction with the extension.
 			</description>
 			<summary>Different options to control when the wallpaper is changed</summary>
-		</key>
-		<key name="update-lockscreen" type="b">
-			<default>false</default>
-			<description>
-				Make the daemon update the lock screen wallpaper as well as the desktop wallpaper. Enabling this will
-				cause the daemon to update the lock screen wallpaper based on the same settings as the desktop wallpaper
-				is updated at.
-			</description>
-			<summary>Enable the lock screen wallpaper to change</summary>
 		</key>
 	</schema>
 </schemalist>

@@ -1,6 +1,7 @@
+'use strict';
+
 const Me = imports.misc.extensionUtils.getCurrentExtension();
 const Gettext = imports.gettext.domain(Me.metadata.uuid);
-const Utils = Me.imports.utils;
 const DeskChangerControl = Me.imports.ui.control;
 
 const Gio = imports.gi.Gio;
@@ -15,22 +16,22 @@ const _ = Gettext.gettext;
 
 var ControlsMenuItem = GObject.registerClass(
 class DeskChangerPopupMenuControlsMenuItem extends PopupMenu.PopupBaseMenuItem {
-    _init(daemon, settings) {
+    _init(daemon) {
         super._init({'can_focus': false, 'reactive': false});
         this._bindings = [];
 
         this._addKeyBinding('next-wallpaper', () => {
-            daemon.next();
-        }, settings);
+            daemon.NextSync();
+        });
         this._addKeyBinding('prev-wallpaper', () => {
-            daemon.prev();
-        }, settings);
+            daemon.PrevSync();
+        });
 
         this._next = new DeskChangerControl.ButtonControl('media-skip-forward', () => {
-            daemon.next();
+            daemon.NextSync();
         });
         this._prev = new DeskChangerControl.ButtonControl('media-skip-backward', () => {
-            if (!daemon.prev()) {
+            if (!daemon.PrevSync()) {
                 Main.notifyError('DeskChanger', _('No more wallpapers available in history'));
             }
         });
@@ -44,21 +45,21 @@ class DeskChangerPopupMenuControlsMenuItem extends PopupMenu.PopupBaseMenuItem {
                 name: 'ordered',
             },
         ], (state) => {
-            Utils.debug(`setting order to ${state}`);
-            settings.random = (state === 'random');
+            deskchanger.debug(`setting order to ${state}`);
+            deskchanger.settings.random = (state === 'random');
         });
-        this._random.set_state((settings.random)? 'random' : 'ordered');
+        this._random.set_state((deskchanger.settings.random)? 'random' : 'ordered');
 
-        this.add(this._prev, {expand: true, x_fill: false});
-        this.add(this._random, {expand: true, x_fill: false});
-        this.add(this._next, {expand: true, x_fill: false});
+        this.add_child(this._prev);
+        this.add_child(this._random);
+        this.add_child(this._next);
     }
 
-    _addKeyBinding(key, handler, settings) {
+    _addKeyBinding(key, handler) {
         let success = false;
         success = Main.wm.addKeybinding(
             key,
-            settings,
+            deskchanger.settings,
             Meta.KeyBindingFlags.NONE,
             Shell.ActionMode.NORMAL,
             handler
@@ -66,10 +67,10 @@ class DeskChangerPopupMenuControlsMenuItem extends PopupMenu.PopupBaseMenuItem {
 
         this._bindings.push(key);
         if (success) {
-            Utils.debug('added keybinding ' + key);
+            deskchanger.debug('added keybinding ' + key);
         } else {
-            Utils.debug('failed to add keybinding ' + key);
-            Utils.debug(success);
+            deskchanger.debug('failed to add keybinding ' + key);
+            deskchanger.debug(success);
         }
     }
 
@@ -78,7 +79,7 @@ class DeskChangerPopupMenuControlsMenuItem extends PopupMenu.PopupBaseMenuItem {
             this._bindings.splice(this._bindings.indexOf(key), 1);
         }
 
-        Utils.debug('removing keybinding ' + key);
+        deskchanger.debug('removing keybinding ' + key);
         Main.wm.removeKeybinding(key);
     }
 }
@@ -87,13 +88,22 @@ class DeskChangerPopupMenuControlsMenuItem extends PopupMenu.PopupBaseMenuItem {
 var DaemonMenuItem = GObject.registerClass(
 class DeskChangerPopupMenuDaemonMenuItem extends PopupMenu.PopupSwitchMenuItem {
     _init(daemon) {
-        super._init(_('DeskChanger Daemon'), daemon.running);
+        super._init(_('DeskChanger Daemon'), daemon.Running);
         this._daemon = daemon;
-        this._toggled_id = this.connect('toggled', () => {
-            (daemon.running)? daemon.stop() : daemon.start();
+
+        this._toggled_id = this.connect('toggled', (object, state) => {
+            deskchanger.debug('toggling daemon state');
+
+            try {
+                (state === true)? this._daemon.StartSync() : this._daemon.StopSync();
+            } catch (e) {
+                deskchanger.error(e, 'Failed to toggle daemon');
+            }
         });
-        this._daemon_id = daemon.connect('toggled', () => {
-            this.setToggleState(daemon.running);
+
+        this._running_id = this._daemon.connectSignal('Running', (proxy, name, [state]) => {
+            deskchanger.debug(`upating switch to ${(state === true)? '' : 'not '}toggled`);
+            this.setToggleState(state);
         });
     }
 
@@ -103,10 +113,10 @@ class DeskChangerPopupMenuDaemonMenuItem extends PopupMenu.PopupSwitchMenuItem {
         }
         this._toggled_id = null;
 
-        if (this._daemon_id) {
-            this._daemon.disconnect(this._daemon_id);
+        if (this._running_id) {
+            this._daemon.disconnectSignal(this._running_id);
         }
-        this._daemon_id = null;
+        this._running_id = null;
 
         super.destroy();
     }
@@ -119,14 +129,14 @@ class DeskChangerPopupMenuOpenCurrent extends PopupMenu.PopupMenuItem {
         super._init(_('Open current wallpaper'));
         this._background = new Gio.Settings({'schema': 'org.gnome.desktop.background'});
         this._activate_id = this.connect('activate', () => {
-            Utils.debug(`opening current wallpaper ${this._background.get_string('picture-uri')}`);
+            deskchanger.debug(`opening current wallpaper ${this._background.get_string('picture-uri')}`);
             Util.spawn(['xdg-open', this._background.get_string('picture-uri')]);
         });
-        Utils.debug(`connect active (${this._activate_id})`);
+        deskchanger.debug(`connect active (${this._activate_id})`);
     }
 
     destroy() {
-        Utils.debug(`disconnect active (${this._activate_id})`);
+        deskchanger.debug(`disconnect active (${this._activate_id})`);
         this.disconnect(this._activate_id);
 
         super.destroy();
@@ -136,19 +146,18 @@ class DeskChangerPopupMenuOpenCurrent extends PopupMenu.PopupMenuItem {
 
 let PopupMenuItem = GObject.registerClass(
 class DeskChangerPopupMenuItem extends PopupMenu.PopupMenuItem {
-    _init(label, value, settings, key) {
+    _init(label, value, key) {
         super._init(label);
         this._value = value;
         this._key = key;
         this._key_normalized = key.replace('_', '-');
-        this._settings = settings;
 
-        if (settings[this._key] === this._value) {
+        if (deskchanger.settings[this._key] === this._value) {
             this.setOrnament(PopupMenu.Ornament.DOT);
         }
 
-        this._handler_key_changed = settings.connect(`changed::${this._key_normalized}`, () => {
-            if (settings[key] === value) {
+        this._handler_key_changed = deskchanger.settings.connect(`changed::${this._key_normalized}`, () => {
+            if (deskchanger.settings[key] === value) {
                 this.setOrnament(PopupMenu.Ornament.DOT);
             } else {
                 this.setOrnament(PopupMenu.Ornament.NONE);
@@ -156,13 +165,13 @@ class DeskChangerPopupMenuItem extends PopupMenu.PopupMenuItem {
         });
 
         this._handler_id = this.connect('activate', () => {
-            settings[key] = value;
+            deskchanger.settings[key] = value;
         });
     }
 
     destroy() {
         if (this._handler_key_changed) {
-            this._settings.disconnect(this._handler_key_changed);
+            deskchanger.settings.disconnect(this._handler_key_changed);
             this._handler_key_changed = null;
         }
 
@@ -178,19 +187,18 @@ class DeskChangerPopupMenuItem extends PopupMenu.PopupMenuItem {
 
 let PopupSubMenuMenuItem = GObject.registerClass(
 class DeskChangerPopupSubMenuMenuItem extends PopupMenu.PopupSubMenuMenuItem {
-    _init(prefix, key, settings, sensitive=true) {
-        super._init(`${prefix}: ${settings[key]}`);
+    _init(prefix, key, sensitive=true) {
+        super._init(`${prefix}: ${deskchanger.settings[key]}`);
         this._prefix = prefix;
-        this._settings = settings;
-        this._changed_id = settings.connect(`changed::${key.replace('_', '-')}`, () => {
-            this.setLabel(settings[key]);
+        this._changed_id = deskchanger.settings.connect(`changed::${key.replace('_', '-')}`, () => {
+            this.setLabel(deskchanger.settings[key]);
         });
         this.setSensitive(sensitive);
     }
 
     destroy() {
         if (this._changed_id) {
-            this._settings.disconnect(this._changed_id);
+            deskchanger.settings.disconnect(this._changed_id);
         }
 
         super.destroy();
@@ -214,17 +222,17 @@ class DeskChangerPopupMenuPreviewMenuItem extends PopupMenu.PopupBaseMenuItem {
         this._box.add(this._preview);
         this._activate_id = this.connect('activate', () => {
             if (this._preview.file) {
-                Utils.debug(`opening file ${this._preview.file}`);
+                deskchanger.debug(`opening file ${this._preview.file}`);
                 Util.spawn(['xdg-open', this._preview.file]);
             } else {
                 Utils.error('no preview set');
             }
         });
-        Utils.debug(`connect activate ${this._activate_id}`);
+        deskchanger.debug(`connect activate ${this._activate_id}`);
     }
 
     destroy() {
-        Utils.debug(`disconnect activate ${this._activate_id}`);
+        deskchanger.debug(`disconnect activate ${this._activate_id}`);
         this.disconnect(this._activate_id);
 
         this._preview.destroy();
@@ -239,24 +247,23 @@ let ProfileMenuItem = GObject.registerClass({
     Abstract: true,
 },
 class DeskChangerPopupSubMenuMenuItemProfile extends PopupSubMenuMenuItem {
-    _init(label, key, settings, sensitive=true) {
-        super._init(label, key, settings, sensitive);
-        this._settings = settings;
-        this._profiles_changed_id = settings.connect('changed::profiles', () => {
-            this._populate_profiles(settings, key);
+    _init(label, key, sensitive=true) {
+        super._init(label, key, deskchanger.settings, sensitive);
+        this._profiles_changed_id = deskchanger.settings.connect('changed::profiles', () => {
+            this._populate_profiles(key);
         });
-        this._populate_profiles(settings, key);
+        this._populate_profiles(key);
     }
 
     destroy() {
-        this._settings.disconnect(this._profiles_changed_id);
+        deskchanger.settings.disconnect(this._profiles_changed_id);
         super.destroy();
     }
 
-    _populate_profiles(settings, key) {
+    _populate_profiles(key) {
         this.menu.removeAll();
-        for (let index in settings.profiles) {
-            let item = new PopupMenuItem(index, index, settings, key);
+        for (let index in deskchanger.settings.profiles) {
+            let item = new PopupMenuItem(index, index, key);
             this.menu.addMenuItem(item);
         }
     }
@@ -265,68 +272,44 @@ class DeskChangerPopupSubMenuMenuItemProfile extends PopupSubMenuMenuItem {
 
 var ProfileDesktopMenuItem = GObject.registerClass(
 class DeskChangerPopupSubMenuMenuItemProfileDesktop extends ProfileMenuItem {
-    _init(settings, sensitive = true) {
-        super._init(_('Desktop Profile'), 'current_profile', settings, sensitive);
-    }
-}
-);
-
-var ProfileLockScreenMenuItem = GObject.registerClass(
-class DeskChangerPopupSubMenuMenuItemProfileLockScreen extends ProfileMenuItem {
-    _init(settings, sensitive=true) {
-        super._init(_('Lock Screen Profile'), 'lockscreen_profile', settings, sensitive);
-    }
-
-    setLabel(label) {
-        if (!label) {
-            label = '(inherited)';
-        }
-
-        super.setLabel(label);
-    }
-
-    _populate_profiles(settings, key) {
-        super._populate_profiles(settings, 'lockscreen_profile', key);
-
-        let inherit = new PopupMenuItem(_('(inherit from desktop)'), '', settings, key);
-        this.menu.addMenuItem(inherit);
+    _init(sensitive = true) {
+        super._init(_('Desktop Profile'), 'current_profile', sensitive);
     }
 }
 );
 
 var RotationMenuItem = GObject.registerClass(
 class DeskChangerPopupMenuRotationMenuItem extends PopupSubMenuMenuItem {
-    _init(settings, sensitive=true) {
-        super._init(_('Rotation mode'), 'rotation', settings, sensitive);
-        this.menu.addMenuItem(new PopupMenuItem(_('Interval timer'), 'interval', settings, 'rotation'));
-        this.menu.addMenuItem(new PopupMenuItem(_('Beginning of hour'), 'hourly', settings, 'rotation'));
-        this.menu.addMenuItem(new PopupMenuItem(_('Disabled'), 'disabled', settings, 'rotation'));
+    _init(sensitive=true) {
+        super._init(_('Rotation mode'), 'rotation', sensitive);
+        this.menu.addMenuItem(new PopupMenuItem(_('Interval timer'), 'interval', 'rotation'));
+        this.menu.addMenuItem(new PopupMenuItem(_('Beginning of hour'), 'hourly', 'rotation'));
+        this.menu.addMenuItem(new PopupMenuItem(_('Disabled'), 'disabled', 'rotation'));
     }
 }
 );
 
 var SwitchMenuItem = GObject.registerClass(
 class DeskChangerPopupSwitchMenuItem extends PopupMenu.PopupSwitchMenuItem {
-    _init(label, key, settings) {
-        super._init(label, settings[key]);
-        this._settings = settings;
+    _init(label, key) {
+        super._init(label, deskchanger.settings[key]);
         this._key = key;
         this._key_normalized = key.replace('_', '-');
-        this._handler_changed = settings.connect(`changed::${this._key_normalized}`, (settings, key) => {
-            this.setToggleState(settings.get_boolean(key));
+        this._handler_changed = deskchanger.settings.connect(`changed::${this._key_normalized}`, (settings, key) => {
+            this.setToggleState(deskchanger.settings.get_boolean(key));
         });
         this._handler_toggled = this.connect('toggled', () => {
-            this._settings[this._key] = this.state;
+            deskchanger.settings[this._key] = this.state;
         });
     }
 
     destroy() {
         if (this._handler_changed) {
-            this._settings.disconnect(this._handler_changed);
+            deskchanger.settings.disconnect(this._handler_changed);
         }
 
         if (this._handler_toggled) {
-            this._settings.disconnect(this._handler_toggled);
+            deskchanger.settings.disconnect(this._handler_toggled);
         }
 
         super.destroy();

@@ -1,110 +1,89 @@
-/**
- * Copyright (c) 2014-2018 Eric Gach <eric.gach@gmail.com>
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- */
+'use strict';
 
 const Me = imports.misc.extensionUtils.getCurrentExtension();
-const Gettext = imports.gettext.domain(Me.metadata.uuid);
-const Utils = Me.imports.utils;
+// first init the common things
+Me.imports._deskchanger;
+
+const Utils = Me.imports.common.utils;
 const Convenience = Me.imports.convenience;
-const DeskChangerDaemon = Me.imports.daemon.server.Daemon;
+const Service = Me.imports.service;
 const DeskChangerPanelMenuButton = Me.imports.ui.panelMenu.Button;
 
 const Main = imports.ui.main;
-const _ = Gettext.gettext;
+const _ = deskchanger._;
 
     // general
-let settings, daemon, button,
+let daemon, button,
     // signals
     changed_id, current_profile_id, notifications_id, random_id, rotation_id;
 
 function disable() {
-    Utils.debug('disabling extension');
+    deskchanger.debug('disabling extension');
 
     // button go bye bye
-    if (typeof button.destroy === 'function') {
+    if (button && typeof button.destroy === 'function') {
         button.destroy();
     }
     button = null;
 
     if (changed_id) {
-        daemon.disconnect(changed_id);
+        daemon.disconnectSignal(changed_id);
     }
     changed_id = null;
 
     if (current_profile_id) {
-        settings.disconnect(current_profile_id);
+        deskchanger.settings.disconnect(current_profile_id);
     }
     current_profile_id = null;
 
     if (notifications_id) {
-        settings.disconnect(notifications_id);
+        deskchanger.settings.disconnect(notifications_id);
     }
     notifications_id = null;
 
     if (random_id) {
-        settings.disconnect(random_id);
+        deskchanger.settings.disconnect(random_id);
     }
     random_id = null;
 
     if (rotation_id) {
-        settings.disconnect(rotation_id);
+        deskchanger.settings.disconnect(rotation_id);
     }
     rotation_id = null;
 }
 
 function enable() {
-    Utils.debug('enabling extension');
+    deskchanger.debug('enabling extension');
 
-    if (settings.auto_start && !daemon.running) {
-        daemon.start();
-    }
 
-    changed_id = daemon.connect('changed', function (obj, file) {
-        notify(_('Wallpaper changed: %s'.format(file)));
+    changed_id = daemon.connectSignal('Changed', function (proxy, name, [uri]) {
+        notify(_('Wallpaper changed: %s'.format(uri)));
     });
 
-    current_profile_id = settings.connect('changed::current-profile', function () {
-        notify(_('Profile changed to %s'.format(settings.current_profile)));
+    current_profile_id = deskchanger.settings.connect('changed::current-profile', function () {
+        notify(_('Profile changed to %s'.format(deskchanger.settings.current_profile)));
     });
 
-    notifications_id = settings.connect('changed::notifications', function () {
-        notify(((settings.notifications) ?
+    notifications_id = deskchanger.settings.connect('changed::notifications', function () {
+        notify(((deskchanger.settings.notifications) ?
             _('Notifications are now enabled') :
             _('Notifications are now disabled')
         ), true);
     });
 
-    random_id = settings.connect('changed::random', function () {
-        notify(((settings.random)?
+    random_id = deskchanger.settings.connect('changed::random', function () {
+        notify(((deskchanger.settings.random)?
             _('Wallpapers will be shown in a random order') :
             _('Wallpapers will be shown in the order they were loaded')
         ));
     });
 
-    rotation_id = settings.connect('changed::rotation', function () {
+    rotation_id = deskchanger.settings.connect('changed::rotation', function () {
         let message;
 
-        switch (settings.rotation) {
+        switch (deskchanger.settings.rotation) {
             case 'interval':
-                message = _('Rotation will occur every %d seconds'.format(settings.interval));
+                message = _('Rotation will occur every %d seconds'.format(deskchanger.settings.interval));
                 break;
             case 'hourly':
                 message = _('Rotation will occur at the beginning of every hour');
@@ -117,18 +96,24 @@ function enable() {
         notify(message);
     });
 
-    button = new DeskChangerPanelMenuButton(daemon, settings);
+    button = new DeskChangerPanelMenuButton(daemon);
     Main.panel.addToStatusArea('DeskChanger', button);
+
+    if (deskchanger.settings.auto_start && !daemon.Running) {
+        daemon.StartSync();
+    }
 }
 
 function notify(message, force) {
-    if (settings.notifications || force === true) {
+    if (deskchanger.settings.notifications || force === true) {
         Main.notify('DeskChanger', message);
     }
 }
 
 function init() {
     log(`init ${Me.uuid} version ${Me.metadata.version}`);
-    settings = Convenience.getSettings();
-    daemon = new DeskChangerDaemon(settings);
+
+    Utils.installService();
+
+    daemon = Service.makeProxyWrapper();
 }

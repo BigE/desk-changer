@@ -1,5 +1,4 @@
 const Me = imports.misc.extensionUtils.getCurrentExtension();
-const Utils = Me.imports.utils;
 
 const Clutter = imports.gi.Clutter;
 const Cogl = imports.gi.Cogl;
@@ -14,12 +13,12 @@ class DeskChangerControlButtonControl extends St.Button {
         this._icon = new St.Icon({icon_name: `${icon}-symbolic`, icon_size: 20});
         super._init({child: this._icon, style_class: 'button'});
         this._clicked_id = this.connect('clicked', callback);
-        Utils.debug(`connect clicked (${this._clicked_id})`);
+        deskchanger.debug(`connect clicked (${this._clicked_id})`);
     }
 
     destroy() {
         if (this._clicked_id) {
-            Utils.debug(`disconnect clicked (${this._clicked_id})`);
+            deskchanger.debug(`disconnect clicked (${this._clicked_id})`);
             this.disconnect(this._clicked_id);
         }
         this._clicked_id = null;
@@ -43,19 +42,20 @@ var PreviewControl = GObject.registerClass(
             this._daemon = daemon;
             this._texture = null;
             this._width = width;
-            this._next_file_id = this._daemon.desktop_profile.connect('preview', (daemon, uri) => {
+            this._next_file_id = this._daemon.connectSignal('Preview', (proxy, name, [uri]) => {
+                deskchanger.debug(`DBUS::Preview(${uri})`);
                 this.set_wallpaper(uri);
             });
-            this._toggled_id = this._daemon.connect('toggled', (daemon) => {
-                if (!daemon.running && this._texture) {
-                    Utils.debug('clearing preview, daemon stopped');
+            this._running_id = this._daemon.connectSignal('Running', (proxy, name, [running]) => {
+                if (running === false && this._texture) {
+                    deskchanger.debug('clearing preview, daemon stopped');
                     this._texture.destroy();
                     this._texture = null;
                 }
             });
 
-            if (daemon.desktop_profile.preview) {
-                this.set_wallpaper(this._daemon.desktop_profile.preview);
+            if (daemon.Preview) {
+                this.set_wallpaper(daemon.Preview);
             }
 
             this.set_child(this._texture);
@@ -63,14 +63,14 @@ var PreviewControl = GObject.registerClass(
 
         destroy() {
             if (this._next_file_id) {
-                this._daemon.desktop_profile.disconnect(this._next_file_id);
+                this._daemon.disconnectSignal(this._next_file_id);
             }
             this._next_file_id = null;
 
-            if (this._toggled_id) {
-                this._daemon.disconnect(this._toggled_id);
+            if (this._running_id) {
+                this._daemon.disconnect(this._running_id);
             }
-            this._toggled_id = null;
+            this._running_id = null;
 
             if (this._texture) {
                 this._texture.destroy();
@@ -88,7 +88,7 @@ var PreviewControl = GObject.registerClass(
 
             this._file = file = GLib.uri_unescape_string(file, null);
             file = file.replace('file://', '');
-            Utils.debug('setting preview to %s'.format(file));
+            deskchanger.debug('setting preview to %s'.format(file));
             try{
                 let scale_factor = St.ThemeContext.get_for_stage(global.stage).scale_factor;
                 let pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale(file, this._width * scale_factor, -1, true);
@@ -105,7 +105,7 @@ var PreviewControl = GObject.registerClass(
                 this._texture.set_content(image);
                 this.add_actor(this._texture);
             } catch (e) {
-                Utils.error(e, `Failed to set preview of ${file}`);
+                deskchanger.error(e, `Failed to set preview of ${file}`);
                 if (this._texture) {
                     this._texture.destroy();
                     this._texture = null;

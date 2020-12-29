@@ -1,257 +1,342 @@
-/**
- * Copyright (c) 2018 Eric Gach <eric.gach@gmail.com>
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- */
+#!/usr/bin/env gjs
 
-const Me = imports.misc.extensionUtils.getCurrentExtension();
-const Utils = Me.imports.utils;
-const Profile = Me.imports.daemon.profile;
-const Timer = Me.imports.daemon.timer;
-const Interface = Me.imports.daemon.interface;
+'use strict';
 
 const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
 const GObject = imports.gi.GObject;
 
-let DaemonDBusInterfaceObject = Gio.DBusNodeInfo.new_for_xml(Interface.DBusInterface).interfaces[0];
+if (!globalThis.deskchanger) {
+// Find the root datadir of the extension
+    function get_datadir() {
+        let m = /@(.+):\d+/.exec((new Error()).stack.split('\n')[1]);
+        return Gio.File.new_for_path(m[1]).get_parent().get_parent().get_path();
+    }
 
-let DaemonDBusServer = GObject.registerClass({
+    imports.searchPath.unshift(get_datadir());
+    imports._deskchanger;
+}
+
+const Interface = imports.daemon.interface;
+const Profile = imports.daemon.profile;
+const Timer = imports.daemon.timer;
+const Utils = imports.common.utils;
+const _ = deskchanger._;
+
+var Server = GObject.registerClass({
+    GTypeName: 'DeskChangerDaemonServer',
     Properties: {
-        'running': GObject.ParamSpec.boolean('running', 'Running', 'Boolean value if the daemon is running',
-            GObject.ParamFlags.CONSTRUCT | GObject.ParamFlags.READABLE, false)
+        'preview': GObject.ParamSpec.string(
+            'preview',
+            'Preview',
+            _('The next wallpaper in queue'),
+            GObject.ParamFlags.READABLE,
+            null
+        ),
+        'running': GObject.ParamSpec.boolean(
+            'running',
+            'Running',
+            _('Check if the daemon is running'),
+            GObject.ParamFlags.READABLE,
+            false
+        ),
     },
     Signals: {
-        'toggled': { param_types: [GObject.TYPE_BOOLEAN] }
+        'Running': { param_types: [GObject.TYPE_BOOLEAN] },
     },
-}, class DeskChangerDaemonDBusServer extends GObject.Object {
-    _init(params={}) {
-        super._init(params);
-        this._dbus = null;
+},
+class Server extends Gio.Application {
+    _init() {
+        this._background = new Gio.Settings({'schema': 'org.gnome.desktop.background'});
+        this._current_profile_changed_id = null;
         this._dbus_id = null;
-        this._dbus_connection = null;
+        this._interval_changed_id = null;
+        this._profile = new Profile.Profile();
+        this._preview_id = this._profile.connect('preview', (object, uri) => {
+            this.notify('preview');
+            this.emit_signal('Preview', new GLib.Variant('(s)', [uri]));
+        });
+        this._rotation_changed_id = null;
         this._running = false;
+        this._timer = null;
 
-        try {
-            this._dbus = Gio.bus_own_name(Gio.BusType.SESSION, Interface.DBusName, Gio.BusNameOwnerFlags.NONE, this._on_bus_acquired.bind(this), null, function () {
-                Utils.debug(`unable to acquire bus name ${Interface.DBusName}`);
-            });
-        } catch (e) {
-            Utils.error(e, `unable to own dbus name ${Interface.DBusName}`);
-            this._dbus = false;
-        }
+        super._init({
+            application_id: Interface.APP_ID,
+            flags: Gio.ApplicationFlags.IS_SERVICE |
+                   Gio.ApplicationFlags.HANDLES_OPEN |
+                   Gio.ApplicationFlags.HANDLES_COMMAND_LINE,
+        });
+
+        this.add_main_option('debug', 'd'.charCodeAt(0), GLib.OptionFlags.NONE, GLib.OptionArg.NONE, _('Enable debugging'), null);
+        this.add_main_option('version', 'v'.charCodeAt(0), GLib.OptionFlags.NONE, GLib.OptionArg.NONE, _('Show release version'), null);
     }
 
-    destroy() {
-        this.stop();
-
-        if (this._dbus)
-            Gio.bus_unown_name(this._dbus);
-    }
-
-    start() {
-        if (!this._dbus) {
-            Utils.debug('Unable to start daemon, dbus not connected');
-        }
-
-        this._running = true;
-        Utils.debug('daemon started');
-        this.emit('toggled', this._running);
-    }
-
-    stop() {
-        this._running = false;
-        Utils.debug('daemon stopped');
-        this.emit('toggled', this._running);
+    get preview() {
+        return this._profile.preview;
     }
 
     get running() {
         return this._running;
     }
 
-    _dbus_handle_call(connection, sender, object_path, interface_name, method_name, parameters, invocation) {
-        switch (method_name.toLowerCase()) {
-            case 'start':
-                this.start();
-                invocation.return_value(new GLib.Variant('(b)', [true,]));
-                break;
+    emit_signal(signal, variant) {
+        let connection = this.get_dbus_connection();
 
-            case 'stop':
-                this.stop();
-                invocation.return_value(new GLib.Variant('(b)', [true,]));
-                break;
-
-            default:
-                invocation.return_dbus_error('org.freedesktop.DBus.Error.UnknownMethod',
-                                             'Method ' + method_name + ' in ' + interface_name + ' does not exist');
-                Utils.debug(`unknown dbus method ${method_name}`);
-                break;
+        if (connection) {
+            deskchanger.debug(`DBUS::${signal}(${variant.deepUnpack()})`);
+            connection.emit_signal(null, Interface.APP_PATH, Interface.APP_ID, signal, variant);
         }
     }
 
-    _dbus_handle_get(connection, sender, object_path, interface_name, property_name) {
-        Utils.debug(`dbus::getProperty(${property_name})`);
-        switch (property_name) {
-            case 'history':
-                return new GLib.Variant('as', this.desktop_profile.history.all());
+    loadprofile(profile=null) {
+        let _profile = this._profile.loaded;
 
-            case 'running':
-                return new GLib.Variant('b', this._running);
-
-            default:
-                // should error here?
-                Utils.error(`unknown dbus property ${property_name}`);
-                return null;
+        if (_profile) {
+            this._profile.unload(this._background.get_string('picture-uri'));
         }
-    }
 
-    _dbus_handle_set() {
-    }
-
-    _on_bus_acquired(connection) {
-        // cannot haz two
-        if (this._dbus_id !== null) return;
-
-        try {
-            this._dbus_id = connection.register_object(
-                Interface.DBusPath,
-                DaemonDBusInterfaceObject,
-                this._dbus_handle_call.bind(this),
-                this._dbus_handle_get.bind(this),
-                this._dbus_handle_set.bind(this),
-            );
-            this._dbus_connection = connection;
-            Utils.debug(`acquired dbus connection for ${DaemonDBusPath}`);
-        } catch (e) {
-            error(e, `failed to register dbus object: ${e}`);
-        } finally {
-            if (this._dbus_id === null || this._dbus_id === 0) {
-                Utils.debug('failed to register dbus object');
-                this._dbus_id = null;
-                this._dbus_connection = null;
+        if (this._profile.load(profile) === true) {
+            this._set_wallpaper(this._profile.next());
+            // reset the interval timer - since the wallpaper was just changed
+            // it should start over.
+            if (this._timer && this._interval_changed_id) {
+                this._destroy_timer();
+                this._create_timer();
             }
-        }
-    }
-});
-
-var Daemon = GObject.registerClass({
-    Signals: {
-        'changed': { param_types: [GObject.TYPE_STRING] },
-    },
-},
-class DeskChangerDaemon extends DaemonDBusServer {
-    _init(settings, params = {}) {
-        super._init(params);
-        this._settings = settings;
-        this.desktop_profile = new Profile.DesktopProfile(settings);
-        this.lockscreen_profile = new Profile.LockScreenProfile(settings);
-
-        this._loaded_id = this.desktop_profile.connect('loaded', () => {
-            let wallpaper = this.desktop_profile.next(false);
-            if (settings.update_lockscreen && this.lockscreen_profile.inherit) {
-                this.lockscreen_profile.next(false, wallpaper);
-            }
-        });
-        this._lockscreen_loaded_id = this.lockscreen_profile.connect('loaded', () => {
-            this.lockscreen_profile.next(false);
-        });
-    }
-
-    destroy() {
-        if (this._timer) {
-            this._timer.destroy();
+            return true;
         }
 
-        this.desktop_profile.disconnect(this._loaded_id);
-        this.lockscreen_profile.disconnect(this._lockscreen_loaded_id);
-        super.destroy();
+        if (_profile) {
+            this._profile.load(_profile);
+        }
+
+        return false;
     }
 
     next() {
-        let wallpaper = this.desktop_profile.next();
-        if (this._settings.update_lockscreen) {
-            (this.lockscreen_profile.inherit) ? this.lockscreen_profile.next(true, wallpaper) : this.lockscreen_profile.next();
-        }
-        this.emit('changed', wallpaper);
+        let wallpaper = this._profile.next(this._background.get_string('picture-uri'));
+        this._set_wallpaper(wallpaper);
         return wallpaper;
     }
 
     prev() {
-        let wallpaper = this.desktop_profile.prev();
-        if (this._settings.update_lockscreen) {
-            (this.lockscreen_profile.inherit) ? this.lockscreen_profile.prev(true, wallpaper) : this.lockscreen_profile.prev();
-        }
-        this.emit('changed', wallpaper);
+        let wallpaper = this._profile.prev(this._background.get_string('picture-uri'));
+        this._set_wallpaper(wallpaper);
         return wallpaper;
     }
 
     start() {
-        this.desktop_profile.load();
-        this.lockscreen_profile.load();
-        super.start();
-        this._check_timer(this._settings);
+        if (this._running) {
+            deskchanger.debug('daemon is already started');
+            return false;
+        }
 
-        this._settings.connect('changed::rotation', (settings, key) => {
-            this._check_timer(settings);
+        this.loadprofile();
+        this._create_timer();
+        this._rotation_changed_id = deskchanger.settings.connect('changed::rotation', () => {
+            this._destroy_timer();
+            this._create_timer();
         });
+        this._current_profile_changed_id = deskchanger.settings.connect('changed::current-profile', () => {
+            this.loadprofile();
+        });
+        this._running = true;
+        this.notify('running');
+        this.emit_signal('Running', new GLib.Variant('(b)', [this.running]));
+        return true;
     }
 
     stop() {
-        if (this._timer) {
-            this._timer.destroy();
+        if (!this._running) {
+            deskchanger.debug('cannot stop, daemon isn\'t running');
+            return false;
         }
 
-        this.desktop_profile.unload();
-        this.lockscreen_profile.unload();
-        super.stop();
+        this._destroy_timer();
+
+        if (this._current_profile_changed_id) {
+            deskchanger.settings.disconnect(this._current_profile_changed_id);
+            this._current_profile_changed_id = null;
+        }
+
+        if (this._rotation_changed_id) {
+            deskchanger.settings.disconnect(this._rotation_changed_id);
+            this._rotation_changed_id = null;
+        }
+
+        this._profile.unload(this._background.get_string('picture-uri'));
+        this._running = false;
+        this.notify('running');
+        this.emit_signal('Running', new GLib.Variant('(b)', [this.running]));
+        return true;
     }
 
-    _check_timer(settings) {
-        if (this._timer) {
-            // no matter the change, destroy the current timer
-            this._timer.destroy();
-            this._timer = null;
+    vfunc_dbus_register(connection, object_path) {
+        if (super.vfunc_dbus_register(connection, object_path)) {
+            deskchanger.debug(`attempting to register object on dbus: ${object_path}`);
+
+            try {
+                this._dbus_id = connection.register_object(
+                    object_path,
+                    deskchanger.dbusinfo.lookup_interface(Interface.APP_ID),
+                    (connection, sender, object_path, interface_name, method_name, parameters, invocation) => {
+                        parameters = parameters.unpack();
+                        deskchanger.debug(`[DBUS.call] ${interface_name}.${method_name}(${parameters})`)
+
+                        if (!this._running && ['quit', 'start'].indexOf(method_name.toLowerCase()) === -1) {
+                            invocation.return_dbus_error(`${interface_name}.${method_name}`, 'daemon must be started first');
+                            return;
+                        }
+
+                        try {
+                            this[`_dbus_call_${method_name.toLowerCase()}`](invocation, ...parameters);
+                        } catch (e) {
+                            deskchanger.error(e, `DBUS::call ${e.message}`);
+                            invocation.return_dbus_error(`${interface_name}.${method_name}`, e.message);
+                        }
+                    },
+                    this._handle_dbus_get.bind(this),
+                    () => {},
+                );
+
+                deskchanger.debug(`successfully registered object on dbus: ${object_path}(${this._dbus_id})`);
+                return true;
+            } catch (e) {
+                deskchanger.error(e, `failed to register object on dbus: ${object_path}`);
+            } finally {
+                if (this._dbus_id === 0) {
+                    this._dbus_id = null;
+                }
+            }
         }
+
+        return false;
+    }
+
+    vfunc_dbus_unregister(connection, object_path) {
+        if (this._dbus_id) {
+            deskchanger.debug(`unregistering object from dbus: ${object_path}(${this._dbus_id})`);
+            connection.unregister_object(this._dbus_id);
+        }
+
+        this._dbus_id = null;
+    }
+
+    vfunc_handle_local_options(options) {
+        if (options.contains('version')) {
+            print(`${deskchanger.app_id} ${deskchanger.metadata.version}`);
+            return 0;
+        }
+
+        if (options.contains('debug')) {
+            deskchanger.force_debug = true;
+        }
+
+        return -1;
+    }
+
+    vfunc_shutdown() {
+        deskchanger.debug('vfunc_shutdown');
         
-        if (settings.rotation == 'interval') {
-            this._timer = new Timer.Interval(settings.get_int('interval'), this.next.bind(this));
-        } else if (settings.rotation == 'hourly') {
+        if (this._running) {
+            this.stop();
+        }
+
+        if (this._preview_id) {
+            this._profile.disconnect(this._preview_id);
+        }
+
+        this._profile.destroy();
+        super.vfunc_shutdown();
+    }
+
+    vfunc_startup() {
+        deskchanger.debug('vfunc_startup');
+        super.vfunc_startup();
+
+        // Keep us open and running... we are a daemon
+        this.hold();
+
+        if (deskchanger.settings.auto_start) {
+            this.start();
+        }
+    }
+
+    _create_timer() {
+        if (deskchanger.settings.rotation === 'interval') {
+            this._timer = new Timer.Interval(deskchanger.settings.interval, this.next.bind(this));
+            this._interval_changed_id = deskchanger.settings.connect('changed::interval', () => {
+                this._timer.destroy();
+                this._timer = new Timer.Interval(deskchanger.settings.interval, this.next.bind(this));
+            });
+        } else if (deskchanger.settings.rotation === 'hourly') {
             this._timer = new Timer.Hourly(this.next.bind(this));
         }
     }
 
-    _dbus_handle_call(connection, sender, object_path, interface_name, method_name, parameters, invocation) {
-        switch (method_name.toLowerCase()) {
-            case 'loadprofile':
-                break;
+    _destroy_timer() {
+        if (this._timer) {
+            if (this._interval_changed_id) {
+                deskchanger.settings.disconnect(this._interval_changed_id);
+                this._interval_changed_id = null;
+            }
 
-            case 'next':
-                let uri = this.next();
-                invocation.return_value(new GLib.Variant('(s)', [uri, ]));
-                return;
+            this._timer.destroy();
+            this._timer = null;
+        }
+    }
 
-            case 'prev':
-                break;
+    _dbus_call_loadprofile(invocation, profile) {
+        invocation.return_value(new GLib.Variant('(b)', [this.loadprofile(profile.get_string()[0])]));
+    }
+
+    _dbus_call_next(invocation) {
+        invocation.return_value(new GLib.Variant('(s)', [this.next(), ]));
+    }
+
+    _dbus_call_prev(invocation) {
+        invocation.return_value(new GLib.Variant('(s)', [this.prev(), ]))
+    }
+
+    _dbus_call_quit(invocation) {
+        invocation.return_value(null);
+        this.quit();
+    }
+
+    _dbus_call_start(invocation) {
+        invocation.return_value(new GLib.Variant('(b)', [this.start(), ]));
+    }
+
+    _dbus_call_stop(invocation) {
+        invocation.return_value(new GLib.Variant('(b)', [this.stop(), ]));
+    }
+
+    _handle_dbus_get(connection, sender, object_path, interface_name, property_name) {
+        deskchanger.debug(`DBUS::getProperty(${property_name})`);
+        switch (property_name.toLowerCase()) {
+            case 'history':
+                return new GLib.Variant('as', []);
+
+            case 'queue':
+                return new GLib.Variant('as', []);
+
+            case 'preview':
+                return new GLib.Variant('s', this.preview);
+
+            case 'running':
+                return new GLib.Variant('b', this.running);
         }
 
-        super._dbus_handle_call(connection, sender, object_path, interface_name, method_name, parameters, invocation);
+        deskchanger.debug(`unknown property ${interface_name}.${property_name}`)
+        return null;
     }
-});
 
+    _set_wallpaper(uri) {
+        deskchanger.debug(`setting wallpaper to ${uri}`);
+        this._background.set_string('picture-uri', uri);
+        this.emit_signal('Changed', new GLib.Variant('(s)', [uri]));
+    }
+}
+);
 
+(new Server()).run([imports.system.programInvocationName].concat(ARGV));

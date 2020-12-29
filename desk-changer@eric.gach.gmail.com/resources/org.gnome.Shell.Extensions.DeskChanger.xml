@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<node>
+    <interface name="@APP_ID@.Daemon">
+        <method name="Load">
+            <arg direction="in" name="profile" type="s" />
+            <arg direction="out" name="success" type="b" />
+        </method>
+        <method name="Next">
+            <arg direction="out" name="uri" type="s" />
+        </method>
+        <method name="Prev">
+            <arg direction="out" name="uri" type="s" />
+        </method>
+        <method name="Quit" />
+        <method name="Start">
+            <arg direction="out" name="success" type="b" />
+        </method>
+        <method name="Stop">
+            <arg direction="out" name="success" type="b" />
+        </method>
+        <property name="History" type="as" access="read" />
+        <property name="Queue" type="as" access="read" />
+        <property name="Preview" type="s" access="read" />
+        <property name="Running" type="b" access="read" />
+        <signal name="Changed">
+            <arg direction="out" name="uri" type="s" />
+        </signal>
+        <signal name="Preview">
+            <arg direction="out" name="uri" type="s" />
+        </signal>
+        <signal name="Running">
+            <arg direction="out" name="running" type="b" />
+        </signal>
+    </interface>
+</node>
