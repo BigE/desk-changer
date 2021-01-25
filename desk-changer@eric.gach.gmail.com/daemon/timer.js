@@ -6,14 +6,19 @@ const Signals = imports.signals;
 
 var Interval = GObject.registerClass({
     Properties: {
-        interval: GObject.ParamSpec.uint('interval', 'Interval', 'The interval that the callback is called.',
-            GObject.ParamFlags.READABLE, 0, GLib.MAXUINT32, 300),
+        interval: GObject.ParamSpec.uint('interval', 'Interval',
+            'The interval at which the callback is triggered',
+            GObject.ParamFlags.READABLE, 1, GLib.MAXUINT32, 300),
     },
 },
 class DeskChangerTimerInterval extends GObject.Object {
     _init(interval = 300, callback = null, params = {}) {
         if (callback && typeof callback !== 'function') {
             throw 'callback must be function';
+        }
+
+        if (interval < 1)  {
+            throw 'invalid interval, must be 1 or higher';
         }
 
         this._callback = callback;
