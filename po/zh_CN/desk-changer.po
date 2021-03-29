@@ -115,11 +115,11 @@ msgstr "动作"
 
 #: prefs.js:231
 msgid "Next Wallpaper"
-msgstr "Prochain fond d’écran"
+msgstr "下一个壁纸"
 
 #: prefs.js:235
 msgid "Previous Wallpaper"
-msgstr "下一个壁纸"
+msgstr "上一个壁纸"
 
 #: prefs.js:251 prefs.js:263
 msgid "Failed to update keybinding"
