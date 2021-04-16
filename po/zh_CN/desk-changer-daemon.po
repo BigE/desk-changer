@@ -1,0 +1,31 @@
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+#
+# Jean-Baptiste Holcroft <jean-baptiste@holcroft.fr>, 2017.
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2017-08-27 02:43-0500\n"
+"PO-Revision-Date: 2021-02-09 17:13+0800\n"
+"Last-Translator: chaozhi_l <chaozhi_l@foxmail.com>\n"
+"Language-Team: \n"
+"Language: zh_CN\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"X-Generator: Poedit 2.4.1\n"
+
+#: deskchanger/application.py:42
+msgid "Show the current daemon version and exit"
+msgstr "显示当前进程版本并且退出"
+
+#: deskchanger/application.py:345
+msgid "No more wallpapers available in history"
+msgstr "历史中没有可用壁纸"
+
+#: deskchanger/wallpapers.py:268
+#, python-format
+msgid "no wallpapers were loaded for profile %s"
+msgstr "配置文件 %s 中没有壁纸"
