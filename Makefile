@@ -26,3 +26,7 @@ pot:
 update-translation: all
 	cd po; \
 	./compile.sh ../desk-changer@eric.gach.gmail.com/locale;
+
+zipfile: all
+	cd ./$(UUID)/; \
+	zip -r ../$(UUID)-$(VERSION).zip .
