@@ -7,7 +7,7 @@ const GObject = imports.gi.GObject;
 
 String.prototype.format = imports.format.format;
 
-globalThis.deskchanger = {
+let _deskchanger = {
     extdatadir: (() => {
         let m = /@(.+):\d+/.exec((new Error()).stack.split('\n')[1]);
         return Gio.File.new_for_path(m[1]).get_parent().get_path();
@@ -52,6 +52,12 @@ globalThis.deskchanger = {
         return stack
     },
 };
+
+if (typeof globalThis === 'undefined') {
+    window.deskchanger = _deskchanger;
+} else {
+    globalThis.deskchanger = _deskchanger;
+}
 
 deskchanger.app_id = 'org.gnome.Shell.Extensions.DeskChanger';
 deskchanger.app_path = '/org/gnome/Shell/Extensions/DeskChanger';
