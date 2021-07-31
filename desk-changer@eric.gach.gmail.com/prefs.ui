@@ -1,0 +1,436 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface domain="desk-changer">
+  <requires lib="gtk" version="4.0"/>
+  <object class="GtkAdjustment" id="adjustment_interval">
+    <property name="upper">86400</property>
+    <property name="step-increment">1</property>
+    <property name="page-increment">10</property>
+  </object>
+  <object class="GtkTextBuffer" id="buffer_allowed_mime_types">
+    <signal name="changed" handler="_on_buffer_allowed_mime_types_changed" swapped="no"/>
+  </object>
+  <object class="GtkListStore" id="keyboard">
+    <columns>
+      <column type="gchararray"/>
+      <column type="gint"/>
+      <column type="gint"/>
+      <column type="gchararray"/>
+    </columns>
+    <data>
+      <row>
+        <col id="0" translatable="yes">Next Wallpaper</col>
+        <col id="1">0</col>
+        <col id="2">0</col>
+        <col id="3" translatable="yes">next-wallpaper</col>
+      </row>
+      <row>
+        <col id="0" translatable="yes">Previous Wallpaper</col>
+        <col id="1">0</col>
+        <col id="2">0</col>
+        <col id="3" translatable="yes">prev-wallpaper</col>
+      </row>
+    </data>
+  </object>
+  <object class="GtkListStore" id="locations">
+    <columns>
+      <column type="gchararray"/>
+      <column type="gboolean"/>
+    </columns>
+  </object>
+  <template class="PrefsWidget" parent="GtkBox">
+    <property name="can-focus">0</property>
+    <property name="orientation">vertical</property>
+    <child>
+      <object class="GtkNotebook">
+        <child>
+          <object class="GtkNotebookPage">
+            <property name="child">
+              <object class="GtkBox">
+                <property name="can-focus">0</property>
+                <property name="orientation">vertical</property>
+                <child>
+                  <object class="GtkTreeView">
+                    <property name="vexpand">1</property>
+                    <property name="model">locations</property>
+                    <property name="enable-grid-lines">horizontal</property>
+                    <property name="enable-tree-lines">1</property>
+                    <child internal-child="selection">
+                      <object class="GtkTreeSelection"/>
+                    </child>
+                    <child>
+                      <object class="GtkTreeViewColumn">
+                        <property name="title" translatable="yes">Location URI</property>
+                        <property name="expand">1</property>
+                        <child>
+                          <object class="GtkCellRendererText">
+                            <property name="editable">1</property>
+                          </object>
+                          <attributes>
+                            <attribute name="text">0</attribute>
+                          </attributes>
+                        </child>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkTreeViewColumn">
+                        <property name="title" translatable="yes">Recursive</property>
+                        <child>
+                          <object class="GtkCellRendererToggle">
+                            <signal name="toggled" handler="_on_recursive_toggled" swapped="no"/>
+                          </object>
+                          <attributes>
+                            <attribute name="active">1</attribute>
+                          </attributes>
+                        </child>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkBox">
+                    <property name="can-focus">0</property>
+                    <property name="margin-start">10</property>
+                    <property name="margin-end">10</property>
+                    <property name="margin-top">10</property>
+                    <property name="margin-bottom">10</property>
+                    <child>
+                      <object class="GtkLabel">
+                        <property name="can-focus">0</property>
+                        <property name="halign">start</property>
+                        <property name="margin-end">5</property>
+                        <property name="label" translatable="yes">Editing Profile</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkComboBoxText" id="combo_profiles">
+                        <property name="hexpand">1</property>
+                        <property name="can-focus">0</property>
+                        <property name="margin-end">5</property>
+                        <signal name="changed" handler="_on_profile_changed" swapped="no"/>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkButton">
+                        <property name="label" translatable="yes">Add</property>
+                        <property name="receives-default">1</property>
+                        <signal name="clicked" handler="_on_add_profile" swapped="no"/>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkButton">
+                        <property name="label" translatable="yes">Remove</property>
+                        <property name="receives-default">1</property>
+                        <signal name="clicked" handler="_on_remove_profile" swapped="no"/>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+              </object>
+            </property>
+            <property name="tab">
+              <object class="GtkLabel">
+                <property name="can-focus">0</property>
+                <property name="label" translatable="yes">Profiles</property>
+              </object>
+            </property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkNotebookPage">
+            <property name="position">1</property>
+            <property name="child">
+              <object class="GtkBox">
+                <property name="can-focus">0</property>
+                <property name="orientation">vertical</property>
+                <child>
+                  <object class="GtkTreeView">
+                    <property name="model">keyboard</property>
+                    <child internal-child="selection">
+                      <object class="GtkTreeSelection"/>
+                    </child>
+                    <child>
+                      <object class="GtkTreeViewColumn">
+                        <property name="title" translatable="yes">Action</property>
+                        <property name="expand">1</property>
+                        <child>
+                          <object class="GtkCellRendererText"/>
+                          <attributes>
+                            <attribute name="text">0</attribute>
+                          </attributes>
+                        </child>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkTreeViewColumn">
+                        <property name="title" translatable="yes">Modify</property>
+                        <child>
+                          <object class="GtkCellRendererAccel"/>
+                          <attributes>
+                            <attribute name="accel-mods">1</attribute>
+                            <attribute name="keycode">2</attribute>
+                          </attributes>
+                        </child>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+              </object>
+            </property>
+            <property name="tab">
+              <object class="GtkLabel">
+                <property name="can-focus">0</property>
+                <property name="label" translatable="yes">Keyboard</property>
+              </object>
+            </property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkNotebookPage">
+            <property name="position">2</property>
+            <property name="child">
+              <object class="GtkBox">
+                <property name="can-focus">0</property>
+                <property name="orientation">vertical</property>
+                <child>
+                  <object class="GtkFrame">
+                    <property name="can-focus">0</property>
+                    <property name="margin-start">5</property>
+                    <property name="margin-end">5</property>
+                    <property name="margin-top">5</property>
+                    <property name="margin-bottom">5</property>
+                    <property name="child">
+                      <object class="GtkBox">
+                        <property name="can-focus">0</property>
+                        <property name="margin-start">5</property>
+                        <property name="margin-end">5</property>
+                        <property name="margin-top">5</property>
+                        <property name="margin-bottom">5</property>
+                        <child>
+                          <object class="GtkLabel">
+                            <property name="hexpand">1</property>
+                            <property name="can-focus">0</property>
+                            <property name="halign">start</property>
+                            <property name="label" translatable="yes">Current Profile</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkComboBoxText" id="combo_current_profile">
+                            <property name="can-focus">0</property>
+                            <signal name="changed" handler="_on_current_profile_changed" swapped="no"/>
+                          </object>
+                        </child>
+                      </object>
+                    </property>
+                    <child type="label">
+                      <object class="GtkLabel">
+                        <property name="can-focus">0</property>
+                        <property name="label" translatable="yes">Profile</property>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkBox">
+                    <property name="can-focus">0</property>
+                    <property name="margin-start">10</property>
+                    <property name="margin-end">10</property>
+                    <property name="margin-top">10</property>
+                    <property name="margin-bottom">10</property>
+                    <child>
+                      <object class="GtkLabel">
+                        <property name="hexpand">1</property>
+                        <property name="can-focus">0</property>
+                        <property name="halign">start</property>
+                        <property name="label" translatable="yes">Show Preview as Icon</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkSwitch" id="switch_icon_as_preview"/>
+                    </child>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkBox">
+                    <property name="can-focus">0</property>
+                    <property name="margin-start">10</property>
+                    <property name="margin-end">10</property>
+                    <property name="margin-top">10</property>
+                    <property name="margin-bottom">10</property>
+                    <child>
+                      <object class="GtkLabel">
+                        <property name="hexpand">1</property>
+                        <property name="can-focus">0</property>
+                        <property name="halign">start</property>
+                        <property name="label" translatable="yes">Notifications</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkSwitch" id="switch_notifications"/>
+                    </child>
+                  </object>
+                </child>
+              </object>
+            </property>
+            <property name="tab">
+              <object class="GtkLabel">
+                <property name="can-focus">0</property>
+                <property name="label" translatable="yes">Extension</property>
+              </object>
+            </property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkNotebookPage">
+            <property name="position">3</property>
+            <property name="child">
+              <object class="GtkBox">
+                <property name="can-focus">0</property>
+                <property name="orientation">vertical</property>
+                <child>
+                  <object class="GtkBox">
+                    <property name="can-focus">0</property>
+                    <property name="margin-start">10</property>
+                    <property name="margin-end">10</property>
+                    <property name="margin-top">10</property>
+                    <property name="margin-bottom">10</property>
+                    <child>
+                      <object class="GtkLabel">
+                        <property name="hexpand">1</property>
+                        <property name="can-focus">0</property>
+                        <property name="halign">start</property>
+                        <property name="label" translatable="yes">Rotation Mode</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkComboBoxText" id="combo_rotation">
+                        <property name="can-focus">0</property>
+                        <items>
+                          <item id="interval" translatable="yes">Interval TImer</item>
+                          <item id="hourly" translatable="yes">Hourly Timer</item>
+                          <item id="disable" translatable="yes">Disabled</item>
+                        </items>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkBox">
+                    <property name="can-focus">0</property>
+                    <property name="margin-start">10</property>
+                    <property name="margin-end">10</property>
+                    <property name="margin-top">10</property>
+                    <property name="margin-bottom">10</property>
+                    <child>
+                      <object class="GtkLabel">
+                        <property name="hexpand">1</property>
+                        <property name="can-focus">0</property>
+                        <property name="halign">start</property>
+                        <property name="label" translatable="yes">Daemon Status</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkSwitch" id="switch_daemon_status"/>
+                    </child>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkBox">
+                    <property name="can-focus">0</property>
+                    <property name="margin-start">10</property>
+                    <property name="margin-end">10</property>
+                    <property name="margin-top">10</property>
+                    <property name="margin-bottom">10</property>
+                    <child>
+                      <object class="GtkLabel">
+                        <property name="hexpand">1</property>
+                        <property name="can-focus">0</property>
+                        <property name="halign">start</property>
+                        <property name="label" translatable="yes">Autostart Daemon</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkSwitch" id="switch_auto_start_daemon"/>
+                    </child>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkBox">
+                    <property name="can-focus">0</property>
+                    <property name="margin-start">10</property>
+                    <property name="margin-end">10</property>
+                    <property name="margin-top">10</property>
+                    <property name="margin-bottom">10</property>
+                    <child>
+                      <object class="GtkLabel">
+                        <property name="hexpand">1</property>
+                        <property name="can-focus">0</property>
+                        <property name="halign">start</property>
+                        <property name="label" translatable="yes">Remember the profiles current/next wallpaper</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkSwitch" id="switch_remember_profile"/>
+                    </child>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkBox">
+                    <property name="can-focus">0</property>
+                    <property name="margin-start">10</property>
+                    <property name="margin-end">10</property>
+                    <property name="margin-top">10</property>
+                    <property name="margin-bottom">10</property>
+                    <child>
+                      <object class="GtkLabel">
+                        <property name="hexpand">1</property>
+                        <property name="can-focus">0</property>
+                        <property name="halign">start</property>
+                        <property name="label" translatable="yes">Timer Interval</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkSpinButton" id="spinner_interval">
+                        <property name="adjustment">adjustment_interval</property>
+                        <property name="numeric">1</property>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkBox">
+                    <property name="can-focus">0</property>
+                    <property name="margin-start">10</property>
+                    <property name="margin-end">10</property>
+                    <property name="margin-top">10</property>
+                    <property name="margin-bottom">10</property>
+                    <child>
+                      <object class="GtkLabel">
+                        <property name="hexpand">1</property>
+                        <property name="can-focus">0</property>
+                        <property name="halign">start</property>
+                        <property name="label" translatable="yes">Allowed Mime Types</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkTextView">
+                        <property name="hexpand">1</property>
+                        <property name="buffer">buffer_allowed_mime_types</property>
+                        <property name="monospace">1</property>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+              </object>
+            </property>
+            <property name="tab">
+              <object class="GtkLabel">
+                <property name="can-focus">0</property>
+                <property name="label" translatable="yes">Daemon</property>
+              </object>
+            </property>
+          </object>
+        </child>
+      </object>
+    </child>
+  </template>
+</interface>
