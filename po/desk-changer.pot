@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: DeskChanger 30\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-12-29 15:41-0600\n"
+"POT-Creation-Date: 2021-07-31 03:26-0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -56,129 +56,120 @@ msgstr ""
 msgid "Rotation has been disabled"
 msgstr ""
 
-#: prefs.js:41
-msgid "DeskChanger Rotation Mode"
-msgstr ""
-
-#: prefs.js:73
-msgid "DeskChanger Daemon Status"
-msgstr ""
-
-#: prefs.js:93
-msgid "DeskChanger Autostart Daemon"
-msgstr ""
-
-#: prefs.js:105
-msgid "Remember the profiles current/next wallpaper"
-msgstr ""
-
-#: prefs.js:117
-msgid "Wallpaper Timer Interval (seconds)"
-msgstr ""
-
-#: prefs.js:132
-msgid "Allowed Mime Types"
-msgstr ""
-
-#: prefs.js:149
-msgid "Daemon"
-msgstr ""
-
-#: prefs.js:154 prefs.js:287
-msgid "Profile"
-msgstr ""
-
-#: prefs.js:157 ui/popupMenu.js:276
-msgid "Desktop Profile"
-msgstr ""
-
-#: prefs.js:182
-msgid "Show Preview as Icon"
-msgstr ""
-
-#: prefs.js:195
-msgid "Show Notifications"
-msgstr ""
-
-#: prefs.js:205
-msgid "Extension"
-msgstr ""
-
-#: prefs.js:213
-msgid "Action"
-msgstr ""
-
-#: prefs.js:231
-msgid "Next Wallpaper"
-msgstr ""
-
-#: prefs.js:235
-msgid "Previous Wallpaper"
-msgstr ""
-
-#: prefs.js:251 prefs.js:263
-msgid "Failed to update keybinding"
-msgstr ""
-
-#: prefs.js:272
-msgid "Modify"
-msgstr ""
-
-#: prefs.js:280
-msgid "Keyboard Shortcuts"
-msgstr ""
-
-#: prefs.js:289
-msgid "Add"
-msgstr ""
-
-#: prefs.js:290 prefs.js:393
-msgid "Remove"
-msgstr ""
-
-#: prefs.js:297
+#: prefs.js:72
 msgid "Profile Name"
 msgstr ""
 
-#: prefs.js:303
+#: prefs.js:78
 msgid "OK"
 msgstr ""
 
-#: prefs.js:304
+#: prefs.js:79
 msgid "Cancel"
 msgstr ""
 
-#: prefs.js:320
-#, javascript-format
-msgid "Are you sure you want to delete the profile \"%s\"?"
+#: prefs.ui:21
+msgid "Next Wallpaper"
 msgstr ""
 
-#: prefs.js:323
-msgid "Yes"
+#: prefs.ui:27
+msgid "Previous Wallpaper"
 msgstr ""
 
-#: prefs.js:324
-msgid "No"
+#: prefs.ui:62
+msgid "Location URI"
 msgstr ""
 
-#: prefs.js:362
-msgid "Uri"
+#: prefs.ui:76
+msgid "Recursive"
 msgstr ""
 
-#: prefs.js:386
-msgid "Sub Folders"
+#: prefs.ui:101
+msgid "Editing Profile"
 msgstr ""
 
-#: prefs.js:394 prefs.js:407
-msgid "Add Image"
+#: prefs.ui:114
+msgid "Add"
 msgstr ""
 
-#: prefs.js:417 prefs.js:419
-msgid "Add Folder"
+#: prefs.ui:121
+msgid "Remove"
 msgstr ""
 
-#: prefs.js:427
+#: prefs.ui:133
 msgid "Profiles"
+msgstr ""
+
+#: prefs.ui:153
+msgid "Action"
+msgstr ""
+
+#: prefs.ui:165
+msgid "Modify"
+msgstr ""
+
+#: prefs.ui:182
+msgid "Keyboard"
+msgstr ""
+
+#: prefs.ui:213
+msgid "Current Profile"
+msgstr ""
+
+#: prefs.ui:227
+msgid "Profile"
+msgstr ""
+
+#: prefs.ui:244
+msgid "Show Preview as Icon"
+msgstr ""
+
+#: prefs.ui:264 ui/panelMenu.js:23
+msgid "Notifications"
+msgstr ""
+
+#: prefs.ui:277
+msgid "Extension"
+msgstr ""
+
+#: prefs.ui:301
+msgid "Rotation Mode"
+msgstr ""
+
+#: prefs.ui:308
+msgid "Interval TImer"
+msgstr ""
+
+#: prefs.ui:309
+msgid "Hourly Timer"
+msgstr ""
+
+#: prefs.ui:310 ui/popupMenu.js:287
+msgid "Disabled"
+msgstr ""
+
+#: prefs.ui:328
+msgid "Daemon Status"
+msgstr ""
+
+#: prefs.ui:348
+msgid "Autostart Daemon"
+msgstr ""
+
+#: prefs.ui:368
+msgid "Remember the profiles current/next wallpaper"
+msgstr ""
+
+#: prefs.ui:388
+msgid "Timer Interval"
+msgstr ""
+
+#: prefs.ui:411
+msgid "Allowed Mime Types"
+msgstr ""
+
+#: prefs.ui:428
+msgid "Daemon"
 msgstr ""
 
 #: daemon/server.js:32
@@ -195,10 +186,6 @@ msgstr ""
 
 #: daemon/server.js:71
 msgid "Show release version"
-msgstr ""
-
-#: ui/panelMenu.js:23
-msgid "Notifications"
 msgstr ""
 
 #: ui/panelMenu.js:24
@@ -225,6 +212,10 @@ msgstr ""
 msgid "Open next wallpaper"
 msgstr ""
 
+#: ui/popupMenu.js:276
+msgid "Desktop Profile"
+msgstr ""
+
 #: ui/popupMenu.js:284
 msgid "Rotation mode"
 msgstr ""
@@ -235,8 +226,4 @@ msgstr ""
 
 #: ui/popupMenu.js:286
 msgid "Beginning of hour"
-msgstr ""
-
-#: ui/popupMenu.js:287
-msgid "Disabled"
 msgstr ""

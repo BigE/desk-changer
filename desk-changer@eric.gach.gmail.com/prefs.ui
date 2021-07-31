@@ -21,13 +21,13 @@
         <col id="0" translatable="yes">Next Wallpaper</col>
         <col id="1">0</col>
         <col id="2">0</col>
-        <col id="3" translatable="yes">next-wallpaper</col>
+        <col id="3">next-wallpaper</col>
       </row>
       <row>
         <col id="0" translatable="yes">Previous Wallpaper</col>
         <col id="1">0</col>
         <col id="2">0</col>
-        <col id="3" translatable="yes">prev-wallpaper</col>
+        <col id="3">prev-wallpaper</col>
       </row>
     </data>
   </object>

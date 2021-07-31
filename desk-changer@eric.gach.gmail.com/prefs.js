@@ -40,7 +40,7 @@ class PrefsWidget extends Gtk.Box {
         deskchanger.settings.bind('rotation', this._combo_rotation, 'active-id', Gio.SettingsBindFlags.DEFAULT);
         deskchanger.settings.connect('changed::allowed-mime-types', () => {
             let mime_types = deskchanger.settings.allowed_mime_types.join("\n");
-            this._buffer_allowed_mime_types.set_tex(mime_types, mime_types.length);
+            this._buffer_allowed_mime_types.set_text(mime_types, mime_types.length);
         });
     }
 
