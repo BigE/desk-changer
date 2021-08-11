@@ -1,11 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface domain="desk-changer">
   <requires lib="gtk" version="4.0"/>
-  <object class="GtkAdjustment" id="adjustment_interval">
-    <property name="upper">86400</property>
-    <property name="step-increment">1</property>
-    <property name="page-increment">10</property>
-  </object>
   <object class="GtkTextBuffer" id="buffer_allowed_mime_types">
     <signal name="changed" handler="_on_buffer_allowed_mime_types_changed" swapped="no"/>
   </object>
@@ -21,17 +16,21 @@
         <col id="0" translatable="yes">Next Wallpaper</col>
         <col id="1">0</col>
         <col id="2">0</col>
-        <col id="3">next-wallpaper</col>
+        <col id="3" translatable="yes">next-wallpaper</col>
       </row>
       <row>
         <col id="0" translatable="yes">Previous Wallpaper</col>
         <col id="1">0</col>
         <col id="2">0</col>
-        <col id="3">prev-wallpaper</col>
+        <col id="3" translatable="yes">prev-wallpaper</col>
       </row>
     </data>
   </object>
   <object class="GtkListStore" id="locations">
+    <signal name="row-changed" handler="_on_locations_changed" swapped="no"/>
+    <signal name="row-deleted" handler="_on_locations_changed" swapped="no"/>
+    <signal name="row-has-child-toggled" handler="_on_locations_changed" swapped="no"/>
+    <signal name="row-inserted" handler="_on_locations_changed" swapped="no"/>
     <columns>
       <column type="gchararray"/>
       <column type="gboolean"/>
@@ -49,11 +48,12 @@
                 <property name="can-focus">0</property>
                 <property name="orientation">vertical</property>
                 <child>
-                  <object class="GtkTreeView">
+                  <object class="GtkTreeView" id="tree_profiles">
                     <property name="vexpand">1</property>
                     <property name="model">locations</property>
                     <property name="enable-grid-lines">horizontal</property>
                     <property name="enable-tree-lines">1</property>
+                    <signal name="cursor-changed" handler="_on_profiles_cursor_changed" swapped="no"/>
                     <child internal-child="selection">
                       <object class="GtkTreeSelection"/>
                     </child>
@@ -89,6 +89,31 @@
                 <child>
                   <object class="GtkBox">
                     <property name="can-focus">0</property>
+                    <property name="homogeneous">1</property>
+                    <child>
+                      <object class="GtkButton">
+                        <property name="label" translatable="yes">Add Image(s)</property>
+                        <signal name="clicked" handler="_on_add_images_clicked" swapped="no"/>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkButton">
+                        <property name="label" translatable="yes">Add Folder(s)</property>
+                        <signal name="clicked" handler="_on_add_folders_clicked" swapped="no"/>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkButton" id="btn_remove_item">
+                        <property name="label" translatable="yes">Remove Item</property>
+                        <property name="sensitive">false</property>
+                        <signal name="clicked" handler="_on_remove_item_clicked" swapped="no"/>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkBox">
+                    <property name="can-focus">0</property>
                     <property name="margin-start">10</property>
                     <property name="margin-end">10</property>
                     <property name="margin-top">10</property>
@@ -109,16 +134,22 @@
                         <signal name="changed" handler="_on_profile_changed" swapped="no"/>
                       </object>
                     </child>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkBox">
+                    <property name="can-focus">0</property>
+                    <property name="homogeneous">1</property>
                     <child>
                       <object class="GtkButton">
-                        <property name="label" translatable="yes">Add</property>
+                        <property name="label" translatable="yes">Add Profile</property>
                         <property name="receives-default">1</property>
                         <signal name="clicked" handler="_on_add_profile" swapped="no"/>
                       </object>
                     </child>
                     <child>
                       <object class="GtkButton">
-                        <property name="label" translatable="yes">Remove</property>
+                        <property name="label" translatable="yes">Remove Profile</property>
                         <property name="receives-default">1</property>
                         <signal name="clicked" handler="_on_remove_profile" swapped="no"/>
                       </object>
@@ -390,7 +421,6 @@
                     </child>
                     <child>
                       <object class="GtkSpinButton" id="spinner_interval">
-                        <property name="adjustment">adjustment_interval</property>
                         <property name="numeric">1</property>
                       </object>
                     </child>
