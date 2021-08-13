@@ -26,7 +26,7 @@ class AddItemsDialog extends Gtk.FileChooserDialog {
 
         super._init(params);
 
-        this.add_button(_('OK'), Gtk.ResponseType.OK);
+        this.add_button(_('Add'), Gtk.ResponseType.OK);
         this.add_button(_('Cancel'), Gtk.ResponseType.CANCEL);
     }
 });
@@ -39,6 +39,7 @@ const PrefsWidget = GObject.registerClass({
         'combo_profiles',
         'combo_current_profile',
         'combo_rotation',
+        'keyboard',
         'locations',
         'spinner_interval',
         'switch_auto_start_daemon',
@@ -46,21 +47,39 @@ const PrefsWidget = GObject.registerClass({
         'switch_icon_as_preview',
         'switch_notifications',
         'switch_remember_profile',
+        'tree_keyboard',
         'tree_profiles',
     ],
     Template: Me.dir.get_child('prefs.ui').get_uri(),
 },
 class PrefsWidget extends Gtk.Box {
     _init(params = {}) {
+        let mime_types = deskchanger.settings.allowed_mime_types.join("\n"),
+            iter = null,
+            success = null;
+        
         this._is_init = true;
         this._is_load_profiles = false;
         this._is_profile_changed = false;
+        // Set up us.
         super._init(params);
 
+        this._buffer_allowed_mime_types.set_text(mime_types, mime_types.length);
+        // load the profile combo boxes
         this._load_profiles(this._combo_profiles);
         this._load_profiles(this._combo_current_profile);
-        let mime_types = deskchanger.settings.allowed_mime_types.join("\n");
-        this._buffer_allowed_mime_types.set_text(mime_types, mime_types.length);
+        // load the keybindings
+        [success, iter] = this._tree_keyboard.model.get_iter_first();
+        while (success) {
+            let name = this._keyboard.get_value(iter, 3),
+                [ok, key, mods] = Gtk.accelerator_parse(deskchanger.settings.getKeybinding(name));
+            
+            if (ok) {
+                deskchanger.debug(`name: ${name}; mods: ${mods}; key: ${key}`);
+                this._keyboard.set(iter, [1, 2], [mods, key]);
+                success = this._tree_keyboard.model.iter_next(iter);
+            }
+        }
 
         deskchanger.settings.bind('auto-start', this._switch_auto_start_daemon, 'active', Gio.SettingsBindFlags.DEFAULT);
         deskchanger.settings.bind('icon-preview', this._switch_icon_as_preview, 'active', Gio.SettingsBindFlags.DEFAULT);
@@ -68,6 +87,7 @@ class PrefsWidget extends Gtk.Box {
         deskchanger.settings.bind('notifications', this._switch_notifications, 'active', Gio.SettingsBindFlags.DEFAULT);
         deskchanger.settings.bind('remember-profile-state', this._switch_remember_profile, 'active', Gio.SettingsBindFlags.DEFAULT);
         deskchanger.settings.bind('rotation', this._combo_rotation, 'active-id', Gio.SettingsBindFlags.DEFAULT);
+
         deskchanger.settings.connect('changed::allowed-mime-types', () => {
             let mime_types = deskchanger.settings.allowed_mime_types.join("\n");
             this._buffer_allowed_mime_types.set_text(mime_types, mime_types.length);
@@ -76,6 +96,7 @@ class PrefsWidget extends Gtk.Box {
             this._load_profiles(this._combo_profiles);
             this._load_profiles(this._combo_current_profile);
         });
+
         this._is_init = false;
     }
 
@@ -100,6 +121,17 @@ class PrefsWidget extends Gtk.Box {
             i++;
         }
         this._is_load_profiles = false;
+    }
+
+    _on_accel_cleared(_widget, path) {
+        deskchanger.debug(`_on_accel_cleared(_widget: ${_widget}, path: ${path}`);
+        this._update_keybindings(path, 0, 0, '');
+    }
+
+    _on_accel_edited(_widget, path, key, mods, keycode) {
+        deskchanger.debug(`_on_accel_edited(_widget: ${_widget}, path: ${path}, key: ${key}, mods: ${mods}, keycode: ${keycode})`);
+        let value = Gtk.accelerator_name(key, mods);
+        this._update_keybindings(path, key, mods, value);
     }
 
     _on_add_folders_clicked() {
@@ -158,24 +190,23 @@ class PrefsWidget extends Gtk.Box {
     _on_current_profile_changed(_combobox) {
         if (this._is_load_profiles) return;
 
-        let _profile = _combobox.get_active_text();
+        let profile = _combobox.get_active_text();
 
-        if (deskchanger.settings.current_profile !== _profile) {
-            deskchanger.settings.current_profile = _profile;
+        if (deskchanger.settings.current_profile !== profile) {
+            deskchanger.settings.current_profile = profile;
         }
     }
 
     _on_locations_changed(_list, position, removed, added) {
         if (this._is_init || this._is_profile_changed) return;
 
-        let profiles = deskchanger.settings.profiles, profile = this._combo_profiles.get_active_text();
+        let profiles = deskchanger.settings.profiles,
+            profile = this._combo_profiles.get_active_text();
 
         profiles[profile] = [];
-
         this._locations.foreach((_store, _path, _iter) => {
             profiles[profile].push([this._locations.get_value(_iter, 0), this._locations.get_value(_iter, 1)]);
         });
-
         deskchanger.settings.profiles = profiles;
     }
 
@@ -191,14 +222,11 @@ class PrefsWidget extends Gtk.Box {
                     this._locations.set_value(iter, 1, deskchanger.settings.profiles[profile][location][1]);
                 }
 
+                this._tree_profiles.get_selection().select_path(Gtk.TreePath.new_first());
                 break;
             }
         }
         this._is_profile_changed = false;
-    }
-
-    _on_profiles_cursor_changed() {
-        this._btn_remove_item.set_sensitive(true);
     }
 
     _on_recursive_toggled(_widget, _path) {
@@ -248,6 +276,18 @@ class PrefsWidget extends Gtk.Box {
     _on_buffer_allowed_mime_types_changed() {
         if (this._is_init) return;
         deskchanger.settings.allowed_mime_types = this._buffer_allowed_mime_types.get_text(this._buffer_allowed_mime_types.get_start_iter(), this._buffer_allowed_mime_types.get_end_iter(), false);
+    }
+
+    _update_keybindings(path, key, mods, value) {
+        let [success, iterator] = this._keyboard.get_iter_from_string(path);
+
+        if (!success) {
+            throw new Error(_('Failed to update keybinding'));
+        }
+
+        let name = this._keyboard.get_value(iterator, 3);
+        this._keyboard.set(iterator, [1, 2], [mods, key]);
+        deskchanger.settings.setKeybinding(name, value);
     }
 });
 
