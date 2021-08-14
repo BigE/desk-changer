@@ -32,7 +32,11 @@ class DeskChangerPanelMenuButton extends PanelMenu.Button {
 
         let menu_item = new PopupMenu.PopupMenuItem(_('DeskChanger Settings'));
         menu_item.connect('activate', function () {
-            Util.spawn(['gnome-shell-extension-prefs', Me.metadata.uuid]);
+            if ('openPrefs' in imports.misc.extensionUtils) {
+                imports.misc.extensionUtils.openPrefs();
+            } else {
+                Util.spawn(['gnome-shell-extension-prefs', Me.metadata.uuid]);
+            }
         });
         this.menu.addMenuItem(menu_item);
     }
@@ -58,12 +62,6 @@ class DeskChangerPanelMenuIcon extends St.Bin {
 
         this._preview_id = deskchanger.settings.connect('changed::icon-preview', (settings, key) => {
             this.update_child(this._daemon.Preview);
-        });
-
-        this._daemon.connectSignal('Preview', (proxy, name, [uri]) => {
-            if (this._preview) {
-                this.update_child(uri);
-            }
         });
     }
 
