@@ -43,7 +43,7 @@
     </columns>
   </object>
   <template class="PrefsWidget" parent="GtkBox">
-    <property name="can-focus">0</property>
+    <property name="can-focus">1</property>
     <property name="orientation">vertical</property>
     <child>
       <object class="GtkNotebook">
@@ -51,7 +51,7 @@
           <object class="GtkNotebookPage">
             <property name="child">
               <object class="GtkBox">
-                <property name="can-focus">0</property>
+                <property name="can-focus">1</property>
                 <property name="orientation">vertical</property>
                 <child>
                   <object class="GtkTreeView" id="tree_profiles">
@@ -67,7 +67,10 @@
                         <property name="title" translatable="yes">Location URI</property>
                         <property name="expand">1</property>
                         <child>
-                          <object class="GtkCellRendererText"/>
+                          <object class="GtkCellRendererText">
+                            <property name="editable">1</property>
+                            <signal name="edited" handler="_on_location_edited" swapped="no"/>
+                          </object>
                           <attributes>
                             <attribute name="text">0</attribute>
                           </attributes>
@@ -91,7 +94,7 @@
                 </child>
                 <child>
                   <object class="GtkBox">
-                    <property name="can-focus">0</property>
+                    <property name="can-focus">1</property>
                     <property name="homogeneous">1</property>
                     <child>
                       <object class="GtkButton">
@@ -115,7 +118,7 @@
                 </child>
                 <child>
                   <object class="GtkBox">
-                    <property name="can-focus">0</property>
+                    <property name="can-focus">1</property>
                     <property name="margin-start">10</property>
                     <property name="margin-end">10</property>
                     <property name="margin-top">10</property>
@@ -131,7 +134,7 @@
                     <child>
                       <object class="GtkComboBoxText" id="combo_profiles">
                         <property name="hexpand">1</property>
-                        <property name="can-focus">0</property>
+                        <property name="can-focus">1</property>
                         <property name="margin-end">5</property>
                         <signal name="changed" handler="_on_profile_changed" swapped="no"/>
                       </object>
@@ -140,7 +143,7 @@
                 </child>
                 <child>
                   <object class="GtkBox">
-                    <property name="can-focus">0</property>
+                    <property name="can-focus">1</property>
                     <property name="homogeneous">1</property>
                     <child>
                       <object class="GtkButton">
@@ -173,7 +176,7 @@
             <property name="position">1</property>
             <property name="child">
               <object class="GtkBox">
-                <property name="can-focus">0</property>
+                <property name="can-focus">1</property>
                 <property name="orientation">vertical</property>
                 <child>
                   <object class="GtkTreeView" id="tree_keyboard">
@@ -226,18 +229,18 @@
             <property name="position">2</property>
             <property name="child">
               <object class="GtkBox">
-                <property name="can-focus">0</property>
+                <property name="can-focus">1</property>
                 <property name="orientation">vertical</property>
                 <child>
                   <object class="GtkFrame">
-                    <property name="can-focus">0</property>
+                    <property name="can-focus">1</property>
                     <property name="margin-start">5</property>
                     <property name="margin-end">5</property>
                     <property name="margin-top">5</property>
                     <property name="margin-bottom">5</property>
                     <property name="child">
                       <object class="GtkBox">
-                        <property name="can-focus">0</property>
+                        <property name="can-focus">1</property>
                         <property name="margin-start">5</property>
                         <property name="margin-end">5</property>
                         <property name="margin-top">5</property>
@@ -252,7 +255,7 @@
                         </child>
                         <child>
                           <object class="GtkComboBoxText" id="combo_current_profile">
-                            <property name="can-focus">0</property>
+                            <property name="can-focus">1</property>
                             <signal name="changed" handler="_on_current_profile_changed" swapped="no"/>
                           </object>
                         </child>
@@ -268,7 +271,7 @@
                 </child>
                 <child>
                   <object class="GtkBox">
-                    <property name="can-focus">0</property>
+                    <property name="can-focus">1</property>
                     <property name="margin-start">10</property>
                     <property name="margin-end">10</property>
                     <property name="margin-top">10</property>
@@ -288,7 +291,7 @@
                 </child>
                 <child>
                   <object class="GtkBox">
-                    <property name="can-focus">0</property>
+                    <property name="can-focus">1</property>
                     <property name="margin-start">10</property>
                     <property name="margin-end">10</property>
                     <property name="margin-top">10</property>
@@ -321,11 +324,11 @@
             <property name="position">3</property>
             <property name="child">
               <object class="GtkBox">
-                <property name="can-focus">0</property>
+                <property name="can-focus">1</property>
                 <property name="orientation">vertical</property>
                 <child>
                   <object class="GtkBox">
-                    <property name="can-focus">0</property>
+                    <property name="can-focus">1</property>
                     <property name="margin-start">10</property>
                     <property name="margin-end">10</property>
                     <property name="margin-top">10</property>
@@ -340,7 +343,7 @@
                     </child>
                     <child>
                       <object class="GtkComboBoxText" id="combo_rotation">
-                        <property name="can-focus">0</property>
+                        <property name="can-focus">1</property>
                         <items>
                           <item id="interval" translatable="yes">Interval TImer</item>
                           <item id="hourly" translatable="yes">Hourly Timer</item>
@@ -352,7 +355,7 @@
                 </child>
                 <child>
                   <object class="GtkBox">
-                    <property name="can-focus">0</property>
+                    <property name="can-focus">1</property>
                     <property name="margin-start">10</property>
                     <property name="margin-end">10</property>
                     <property name="margin-top">10</property>
@@ -372,7 +375,7 @@
                 </child>
                 <child>
                   <object class="GtkBox">
-                    <property name="can-focus">0</property>
+                    <property name="can-focus">1</property>
                     <property name="margin-start">10</property>
                     <property name="margin-end">10</property>
                     <property name="margin-top">10</property>
@@ -392,7 +395,7 @@
                 </child>
                 <child>
                   <object class="GtkBox">
-                    <property name="can-focus">0</property>
+                    <property name="can-focus">1</property>
                     <property name="margin-start">10</property>
                     <property name="margin-end">10</property>
                     <property name="margin-top">10</property>
@@ -412,7 +415,7 @@
                 </child>
                 <child>
                   <object class="GtkBox">
-                    <property name="can-focus">0</property>
+                    <property name="can-focus">1</property>
                     <property name="margin-start">10</property>
                     <property name="margin-end">10</property>
                     <property name="margin-top">10</property>
@@ -436,7 +439,7 @@
                 </child>
                 <child>
                   <object class="GtkBox">
-                    <property name="can-focus">0</property>
+                    <property name="can-focus">1</property>
                     <property name="margin-start">10</property>
                     <property name="margin-end">10</property>
                     <property name="margin-top">10</property>

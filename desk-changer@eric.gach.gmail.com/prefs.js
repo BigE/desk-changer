@@ -25,7 +25,6 @@ class AddItemsDialog extends Gtk.FileChooserDialog {
 const PrefsWidget = GObject.registerClass({
     GTypeName: 'PrefsWidget',
     InternalChildren: [
-        'btn_remove_item',
         'buffer_allowed_mime_types',
         'combo_profiles',
         'combo_current_profile',
@@ -41,7 +40,7 @@ const PrefsWidget = GObject.registerClass({
         'tree_keyboard',
         'tree_profiles',
     ],
-    Template: Me.dir.get_child('prefs.ui').get_uri(),
+    Template: `resource://${deskchanger.app_path}/ui/prefs.ui`,
 },
 class PrefsWidget extends Gtk.Box {
     _init(params = {}) {
@@ -194,6 +193,14 @@ class PrefsWidget extends Gtk.Box {
         deskchanger.settings.profiles = profiles;
     }
 
+    _on_location_edited(_widget, path, new_text) {
+        deskchanger.debug(`_on_location_edited(${_widget}, ${path}, ${new_text})`);
+        let [success, iter] = this._tree_profiles.model.get_iter_from_string(path);
+        if (success) {
+            this._locations.set_value(iter, 0, new_text);
+        }
+    }
+
     _on_profile_changed(_combobox) {
         this._is_profile_changed = true;
         for (let profile in deskchanger.settings.profiles) {
@@ -222,7 +229,6 @@ class PrefsWidget extends Gtk.Box {
     _on_remove_item_clicked() {
         let [bool, list, iter] = this._tree_profiles.get_selection().get_selected();
         this._locations.remove(iter);
-        this._btn_remove_item.set_sensitive(false);
     }
 
     _on_remove_profile() {
@@ -278,9 +284,11 @@ class PrefsWidget extends Gtk.Box {
 });
 
 function init() {
+    deskchanger.debug('init()');
     ExtensionUtils.initTranslations('desk-changer');
 }
 
 function buildPrefsWidget() {
+    deskchanger.debug('buildPrefsWidget()');
     return new PrefsWidget();
 }
