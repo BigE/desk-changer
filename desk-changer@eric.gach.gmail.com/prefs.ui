@@ -1,6 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface domain="desk-changer">
   <requires lib="gtk" version="4.0"/>
+  <object class="GtkAdjustment" id="adjustment_interval">
+    <property name="lower">1</property>
+    <property name="upper">84600</property>
+    <property name="step-increment">1</property>
+    <property name="page-increment">10</property>
+  </object>
   <object class="GtkTextBuffer" id="buffer_allowed_mime_types">
     <signal name="changed" handler="_on_buffer_allowed_mime_types_changed" swapped="no"/>
   </object>
@@ -421,6 +427,8 @@
                     </child>
                     <child>
                       <object class="GtkSpinButton" id="spinner_interval">
+                        <property name="adjustment">adjustment_interval</property>
+                        <property name="editable">1</property>
                         <property name="numeric">1</property>
                       </object>
                     </child>
@@ -443,8 +451,8 @@
                     </child>
                     <child>
                       <object class="GtkTextView">
-                        <property name="hexpand">1</property>
                         <property name="buffer">buffer_allowed_mime_types</property>
+                        <property name="hexpand">1</property>
                         <property name="monospace">1</property>
                       </object>
                     </child>

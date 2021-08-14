@@ -11,15 +11,6 @@ const AddItemsDialog = GObject.registerClass({
 },
 class AddItemsDialog extends Gtk.FileChooserDialog {
     _init(params = {}) {
-        if (params['action'] === Gtk.FileChooserAction.OPEN) {
-            let filter = new Gtk.FileFilter();
-            filter.set_name(_("Allowed File Types"));
-            deskchanger.settings.allowed_mime_types.forEach(value => {
-                filter.add_mime_type(value);
-            });
-            params['filter'] = filter;
-        }
-
         if (!('select-multiple' in params)) {
             params['select-multiple'] = true;
         }
@@ -64,6 +55,7 @@ class PrefsWidget extends Gtk.Box {
         // Set up us.
         super._init(params);
 
+        // load allowed-mime-types
         this._buffer_allowed_mime_types.set_text(mime_types, mime_types.length);
         // load the profile combo boxes
         this._load_profiles(this._combo_profiles);
@@ -75,7 +67,6 @@ class PrefsWidget extends Gtk.Box {
                 [ok, key, mods] = Gtk.accelerator_parse(deskchanger.settings.getKeybinding(name));
             
             if (ok) {
-                deskchanger.debug(`name: ${name}; mods: ${mods}; key: ${key}`);
                 this._keyboard.set(iter, [1, 2], [mods, key]);
                 success = this._tree_keyboard.model.iter_next(iter);
             }
@@ -87,15 +78,6 @@ class PrefsWidget extends Gtk.Box {
         deskchanger.settings.bind('notifications', this._switch_notifications, 'active', Gio.SettingsBindFlags.DEFAULT);
         deskchanger.settings.bind('remember-profile-state', this._switch_remember_profile, 'active', Gio.SettingsBindFlags.DEFAULT);
         deskchanger.settings.bind('rotation', this._combo_rotation, 'active-id', Gio.SettingsBindFlags.DEFAULT);
-
-        deskchanger.settings.connect('changed::allowed-mime-types', () => {
-            let mime_types = deskchanger.settings.allowed_mime_types.join("\n");
-            this._buffer_allowed_mime_types.set_text(mime_types, mime_types.length);
-        });
-        deskchanger.settings.connect('changed::profiles', () => {
-            this._load_profiles(this._combo_profiles);
-            this._load_profiles(this._combo_current_profile);
-        });
 
         this._is_init = false;
     }
@@ -124,12 +106,10 @@ class PrefsWidget extends Gtk.Box {
     }
 
     _on_accel_cleared(_widget, path) {
-        deskchanger.debug(`_on_accel_cleared(_widget: ${_widget}, path: ${path}`);
         this._update_keybindings(path, 0, 0, '');
     }
 
     _on_accel_edited(_widget, path, key, mods, keycode) {
-        deskchanger.debug(`_on_accel_edited(_widget: ${_widget}, path: ${path}, key: ${key}, mods: ${mods}, keycode: ${keycode})`);
         let value = Gtk.accelerator_name(key, mods);
         this._update_keybindings(path, key, mods, value);
     }
@@ -142,8 +122,13 @@ class PrefsWidget extends Gtk.Box {
     }
 
     _on_add_images_clicked() {
-        let dialog = new AddItemsDialog({title: 'Add Images', action: Gtk.FileChooserAction.OPEN});
+        let dialog = new AddItemsDialog({title: 'Add Images', action: Gtk.FileChooserAction.OPEN}),
+            filter = new Gtk.FileFilter();
 
+        deskchanger.settings.allowed_mime_types.forEach(value => {
+            filter.add_mime_type(value);
+        });
+        dialog.set_filter(filter);
         dialog.show();
         dialog.connect('response', this._on_add_items_response.bind(this));
     }
@@ -173,14 +158,13 @@ class PrefsWidget extends Gtk.Box {
         dialog.add_button(_('OK'), Gtk.ResponseType.OK);
         dialog.add_button(_('Cancel'), Gtk.ResponseType.CANCEL);
         dialog.connect('response', (_dialog, result) => {
-            deskchanger.debug(result);
-            deskchanger.debug(Gtk.ResponseType.OK);
             if (result === Gtk.ResponseType.OK) {
                 let _profiles = deskchanger.settings.profiles,
                     profile = input.get_text();
                 _profiles[profile] = [];
                 deskchanger.settings.profiles = _profiles;
                 this._load_profiles(this._combo_profiles, profile);
+                this._load_profiles(this._combo_current_profile);
             }
             dialog.destroy();
         });
@@ -267,6 +251,8 @@ class PrefsWidget extends Gtk.Box {
                 this._combo_profiles.set_active(-1);
                 delete profiles[profile];
                 deskchanger.settings.profiles = profiles;
+                this._load_profiles(this._combo_current_profile);
+                this._load_profiles(this._combo_profiles);
             }
             
             dialog.destroy();
@@ -275,7 +261,7 @@ class PrefsWidget extends Gtk.Box {
 
     _on_buffer_allowed_mime_types_changed() {
         if (this._is_init) return;
-        deskchanger.settings.allowed_mime_types = this._buffer_allowed_mime_types.get_text(this._buffer_allowed_mime_types.get_start_iter(), this._buffer_allowed_mime_types.get_end_iter(), false);
+        deskchanger.settings.allowed_mime_types = this._buffer_allowed_mime_types.get_text(this._buffer_allowed_mime_types.get_start_iter(), this._buffer_allowed_mime_types.get_end_iter(), false).split("\n");
     }
 
     _update_keybindings(path, key, mods, value) {
