@@ -6,7 +6,7 @@ const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
 const GObject = imports.gi.GObject;
 
-if (!globalThis.deskchanger) {
+if ((typeof globalThis !== 'undefined' && !globalThis.deskchanger) || !window.deskchanger) {
 // Find the root datadir of the extension
     function get_datadir() {
         let m = /@(.+):\d+/.exec((new Error()).stack.split('\n')[1]);
@@ -83,7 +83,7 @@ class Server extends Gio.Application {
         let connection = this.get_dbus_connection();
 
         if (connection) {
-            deskchanger.debug(`DBUS::${signal}(${variant.deepUnpack()})`);
+            deskchanger.debug(`DBUS::${signal}(${variant.recursiveUnpack()})`);
             connection.emit_signal(null, Interface.APP_PATH, Interface.APP_ID, signal, variant);
         }
     }
@@ -271,6 +271,10 @@ class Server extends Gio.Application {
             });
         } else if (deskchanger.settings.rotation === 'hourly') {
             this._timer = new Timer.Hourly(this.next.bind(this));
+        } else if (deskchanger.settings.rotation === 'daily') {
+            this._timer = new Timer.Daily(this.next.bind(this));
+        } else if (deskchanger.settings.rotation === 'minute') {
+            this._timer = new Timer.Minute(this.next.bind(this));
         }
     }
 
@@ -307,8 +311,12 @@ class Server extends Gio.Application {
         invocation.return_value(new GLib.Variant('(b)', [this.start(), ]));
     }
 
-    _dbus_call_stop(invocation) {
+    _dbus_call_stop(invocation, quit) {
         invocation.return_value(new GLib.Variant('(b)', [this.stop(), ]));
+
+        if (quit) {
+            this.quit();
+        }
     }
 
     _handle_dbus_get(connection, sender, object_path, interface_name, property_name) {

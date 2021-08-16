@@ -140,7 +140,7 @@ deskchanger._ = Gettext.gettext;
 var Settings = GObject.registerClass(
 class DeskChangerSettings extends Gio.Settings {
     get allowed_mime_types() {
-        return this.get_value('allowed-mime-types').deep_unpack();
+        return this.get_value('allowed-mime-types').recursiveUnpack();
     }
 
     set allowed_mime_types(value) {
@@ -205,7 +205,7 @@ class DeskChangerSettings extends Gio.Settings {
     }
 
     get profile_state() {
-        return this.get_value('profile-state').deep_unpack();
+        return this.get_value('profile-state').recursiveUnpack();
     }
 
     set profile_state(value) {
@@ -213,7 +213,7 @@ class DeskChangerSettings extends Gio.Settings {
     }
 
     get profiles() {
-        return this.get_value('profiles').deep_unpack();
+        return this.get_value('profiles').recursiveUnpack();
     }
 
     set profiles(value) {
