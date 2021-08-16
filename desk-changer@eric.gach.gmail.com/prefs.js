@@ -166,9 +166,17 @@ class PrefsWidget extends Gtk.Box {
             label = new Gtk.Label({label: _('Profile Name')}),
             input = new Gtk.Entry();
 
-        box.append(label);
-        box.append(input);
-        mbox.append(box);
+        if (shellVersion < 40) {
+            box.pack_start(label, false, false, 0);
+            box.pack_start(input, true, true, 0);
+            mbox.pack_start(box, true, true, 0);
+            mbox.show_all();
+        } else {
+            box.append(label);
+            box.append(input);
+            mbox.append(box);
+        }
+
         dialog.add_button(_('OK'), Gtk.ResponseType.OK);
         dialog.add_button(_('Cancel'), Gtk.ResponseType.CANCEL);
         dialog.connect('response', (_dialog, result) => {
@@ -221,7 +229,7 @@ class PrefsWidget extends Gtk.Box {
         profile = this._profiles.get_value(iterator, 0);
 
         if (deskchanger.settings.current_profile === profile) {
-            dialog = new MessageDialog({
+            dialog = new Gtk.MessageDialog({
                 'buttons': Gtk.ButtonsType.CLOSE,
                 'message-type': Gtk.MessageType.ERROR,
                 'text': 'You cannot remove the current profile',
@@ -230,6 +238,7 @@ class PrefsWidget extends Gtk.Box {
             dialog.connect('response', (_dialog, response) => {
                 dialog.destroy();
             })
+            return;
         }
 
         dialog = new Gtk.MessageDialog({
@@ -306,13 +315,19 @@ class PrefsWidget extends Gtk.Box {
     {
         if (response === Gtk.ResponseType.OK) {
             let list = _dialog.get_files(),
+                length = (shellVersion < 40)? list.length : list.get_n_items(),
                 profiles = deskchanger.settings.profiles,
                 profile = this._get_location_profile();
+            deskchanger.debug(typeof list);
 
-            for (let i = 0; i < list.get_n_items(); i++) {
-                let item = list.get_item(i),
-                    values = [item.get_uri(), false, true];
-                this._locations.insert_with_values(-1, [0, 1, 2], values);
+            for (let i = 0; i < length; i++) {
+                let item, values;
+                item = (shellVersion < 40)? list[i] : list.get_item(i);
+                values = [item.get_uri(), false, true];
+                if (shellVersion < 40)
+                    this._locations.insert_with_valuesv(-1, [0, 1, 2], values);
+                else
+                    this._locations.insert_with_values(-1, [0, 1, 2], values);
                 profiles[profile].push(values);
             }
             deskchanger.settings.profiles = profiles;
