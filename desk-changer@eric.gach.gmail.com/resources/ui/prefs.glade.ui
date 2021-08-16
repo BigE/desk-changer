@@ -105,7 +105,7 @@
                     <property name="can-focus">True</property>
                     <property name="orientation">vertical</property>
                     <child>
-                      <object class="GtkTreeView">
+                      <object class="GtkTreeView" id="tree_locations">
                         <property name="visible">True</property>
                         <property name="can-focus">True</property>
                         <property name="model">locations</property>
@@ -135,7 +135,7 @@
                                 <signal name="toggled" handler="_on_cell_recursive_toggled" swapped="no"/>
                               </object>
                               <attributes>
-                                <attribute name="activatable">1</attribute>
+                                <attribute name="active">1</attribute>
                               </attributes>
                             </child>
                           </object>
@@ -241,6 +241,7 @@
                     <property name="can-focus">False</property>
                     <property name="halign">end</property>
                     <property name="model">profiles</property>
+                    <property name="id-column">0</property>
                     <signal name="changed" handler="_on_combo_location_profile_changed" swapped="no"/>
                     <child>
                       <object class="GtkCellRendererText"/>
@@ -563,7 +564,7 @@
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkComboBox">
+                          <object class="GtkComboBox" id="combo_rotation_mode">
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
                             <property name="halign">end</property>
@@ -599,7 +600,7 @@
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
                             <property name="tooltip-text" translatable="yes">This only applies to the Interval Timer option and sets the interval at which the timer will change the wallpaper.</property>
-                            <property name="label" translatable="yes">Timer Duration (in seconds)</property>
+                            <property name="label" translatable="yes">Interval Timer (in seconds)</property>
                           </object>
                           <packing>
                             <property name="expand">False</property>

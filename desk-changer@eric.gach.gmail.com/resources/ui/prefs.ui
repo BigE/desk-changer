@@ -87,7 +87,7 @@
                       <object class="GtkBox">
                         <property name="orientation">vertical</property>
                         <child>
-                          <object class="GtkTreeView">
+                          <object class="GtkTreeView" id="tree_locations">
                             <property name="vexpand">1</property>
                             <property name="model">locations</property>
                             <child internal-child="selection">
@@ -116,7 +116,7 @@
                                     <signal name="toggled" handler="_on_cell_recursive_toggled" swapped="no"/>
                                   </object>
                                   <attributes>
-                                    <attribute name="activatable">1</attribute>
+                                    <attribute name="active">1</attribute>
                                   </attributes>
                                 </child>
                               </object>
@@ -178,6 +178,7 @@
                         <property name="can-focus">0</property>
                         <property name="halign">end</property>
                         <property name="model">profiles</property>
+                        <property name="id-column">0</property>
                         <signal name="changed" handler="_on_combo_location_profile_changed" swapped="no"/>
                         <child>
                           <object class="GtkCellRendererText"/>
@@ -391,7 +392,7 @@
                               </object>
                             </child>
                             <child>
-                              <object class="GtkComboBox">
+                              <object class="GtkComboBox" id="combo_rotation_mode">
                                 <property name="hexpand">1</property>
                                 <property name="can-focus">0</property>
                                 <property name="halign">end</property>
@@ -415,7 +416,7 @@
                               <object class="GtkLabel">
                                 <property name="can-focus">0</property>
                                 <property name="tooltip-text" translatable="yes">This only applies to the Interval Timer option and sets the interval at which the timer will change the wallpaper.</property>
-                                <property name="label" translatable="yes">Timer Duration (in seconds)</property>
+                                <property name="label" translatable="yes">Interval Timer (in seconds)</property>
                               </object>
                             </child>
                             <child>
