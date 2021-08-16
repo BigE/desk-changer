@@ -45,17 +45,19 @@ interface. The only interface available to the daemon now is the DBus
 interface.
 
 #### DBUS Interface
-**Name**: org.gnome.Shell.Extensions.DeskChanger.Daemon
+**Name**: `org.gnome.Shell.Extensions.DeskChanger.Daemon`
 
-**Path**: /org/gnome/Shell/Extensions/DeskChanger/Daemon
+**Path**: `/org/gnome/Shell/Extensions/DeskChanger/Daemon`
 
 ##### Methods
-* Load(String profile) - Loads the specified profile
-* Next() - Moves to the next wallpaper, returns the uri
-* Prev() - Moves to the previous wallpaper, returns the uri
-* Quit() - Terminates the daemon process
-* Start() - Starts the daemon
-* Stop() - Stops the daemon
+* `Load(String profile)` Loads the specified profile and respective locations
+* `Next()` Switches to the next wallpaper, returns the uri
+* `Prev()` Switches to the previous wallpaper, returns the uri
+* `Quit()` Terminates the daemon process.
+* `Start()` Enables automatic rotation and makes the daemon available
+* `Stop([Boolean quit])` Disables automatic rotation and makes the daemon
+  unavaialble for use. If `quit` is `true` then the daemon process will be
+  terminated. 
 
 ##### Properties
 * History - Read only array of history
@@ -75,7 +77,7 @@ To view the settings in dconf-editor, just use the `GSETTINGS_SCHEMA_DIR=`
 environment variable to open dconf-editor with the extensions schema available
 to the editor.
 
->$ GSETTINGS_SCHEMA_DIR=~/.local/share/gnome-shell/extensions/desk-changer@eric.gach.gmail.com/schemas/ dconf-editor`
+>$ GSETTINGS_SCHEMA_DIR=~/.local/share/gnome-shell/extensions/desk-changer@eric.gach.gmail.com/schemas/ dconf-editor /org/gnome/shell/extensions/desk-changer
 
-Then navigate to `org.gnome.shell.extensions.desk-changer` and you will see
+Then navigate to `/org/gnome/shell/extensions/desk-changer` and you will see
 all of the available settings for the extension and daemon.
