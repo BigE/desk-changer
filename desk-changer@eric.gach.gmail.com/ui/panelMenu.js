@@ -20,15 +20,10 @@ class DeskChangerPanelMenuButton extends PanelMenu.Button {
         this.add_child(this._icon);
         this.menu.addMenuItem(new DeskChangerPopupMenu.ProfileDesktopMenuItem());
         this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
-        this.menu.addMenuItem(new DeskChangerPopupMenu.SwitchMenuItem(_('Notifications'), 'notifications'));
-        this.menu.addMenuItem(new DeskChangerPopupMenu.SwitchMenuItem(_('Remember profile state'), 'remember_profile_state'));
-        this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
         this.menu.addMenuItem(new DeskChangerPopupMenu.PreviewMenuItem(daemon));
         this.menu.addMenuItem(new DeskChangerPopupMenu.ControlsMenuItem(daemon));
         this.menu.addMenuItem(new DeskChangerPopupMenu.OpenCurrentMenuItem());
         this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
-        this.menu.addMenuItem(new DeskChangerPopupMenu.RotationMenuItem());
-        this.menu.addMenuItem(new DeskChangerPopupMenu.DaemonMenuItem(daemon));
 
         let menu_item = new PopupMenu.PopupMenuItem(_('DeskChanger Settings'));
         menu_item.connect('activate', function () {
