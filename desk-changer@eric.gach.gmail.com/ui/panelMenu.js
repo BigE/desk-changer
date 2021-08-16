@@ -52,7 +52,7 @@ let Icon = GObject.registerClass(
 class DeskChangerPanelMenuIcon extends St.Bin {
     _init(daemon) {
         this._daemon = daemon;
-        this._gicon = Gio.icon_new_for_string(Me.path + '/resources/icons/wallpaper-icon.png');
+        this._gicon = Gio.icon_new_for_string(`resource://${deskchanger.app_path}/icons/wallpaper-icon.svg`);
         super._init({
             style_class: 'panel-status-menu-box',
         });
