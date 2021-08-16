@@ -16,6 +16,7 @@
             <arg direction="out" name="success" type="b" />
         </method>
         <method name="Stop">
+            <arg direction="in" name="quit" type="b" />
             <arg direction="out" name="success" type="b" />
         </method>
         <property name="History" type="as" access="read" />

@@ -336,6 +336,16 @@ class PrefsWidget extends Gtk.Box {
         _dialog.destroy();
     }
 
+    _on_switch_daemon_running_state(_widget, state) {
+        if (this._is_init) return false;
+
+        if (state)
+            this._daemon.StartSync();
+        else
+            this._daemon.StopSync(false);
+        return false;
+    }
+
     _update_location_profile(path, column, value) {
         let profiles = deskchanger.settings.profiles,
             profile = this._get_location_profile();

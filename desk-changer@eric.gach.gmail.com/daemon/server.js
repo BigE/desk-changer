@@ -180,7 +180,7 @@ class Server extends Gio.Application {
                     object_path,
                     deskchanger.dbusinfo.lookup_interface(Interface.APP_ID),
                     (connection, sender, object_path, interface_name, method_name, parameters, invocation) => {
-                        parameters = parameters.unpack();
+                        parameters = parameters.recursiveUnpack();
                         deskchanger.debug(`[DBUS.call] ${interface_name}.${method_name}(${parameters})`)
 
                         if (!this._running && ['quit', 'start'].indexOf(method_name.toLowerCase()) === -1) {
@@ -271,10 +271,6 @@ class Server extends Gio.Application {
             });
         } else if (deskchanger.settings.rotation === 'hourly') {
             this._timer = new Timer.Hourly(this.next.bind(this));
-        } else if (deskchanger.settings.rotation === 'daily') {
-            this._timer = new Timer.Daily(this.next.bind(this));
-        } else if (deskchanger.settings.rotation === 'minute') {
-            this._timer = new Timer.Minute(this.next.bind(this));
         }
     }
 
@@ -290,8 +286,8 @@ class Server extends Gio.Application {
         }
     }
 
-    _dbus_call_loadprofile(invocation, profile) {
-        invocation.return_value(new GLib.Variant('(b)', [this.loadprofile(profile.get_string()[0])]));
+    _dbus_call_load(invocation, profile) {
+        invocation.return_value(new GLib.Variant('(b)', [this.loadprofile(profile)]));
     }
 
     _dbus_call_next(invocation) {

@@ -655,6 +655,7 @@
                 <child>
                   <object class="GtkSwitch" id="switch_daemon_state">
                     <property name="halign">end</property>
+                    <signal name="state-set" handler="_on_switch_daemon_running_state" swapped="no"/>
                   </object>
                   <packing>
                     <property name="expand">True</property>
