@@ -1,10 +1,14 @@
 'use strict';
 
 const {Gio, GObject, Gtk} = imports.gi;
+const Config = imports.misc.config;
+const shellVersion = Number.parseInt(Config.PACKAGE_VERSION.split('.')[0]);
 const ExtensionUtils = imports.misc.extensionUtils;
+
 const Me = ExtensionUtils.getCurrentExtension();
 Me.imports._deskchanger;
 const _ = deskchanger._;
+const Service = Me.imports.service;
 
 const AddItemsDialog = GObject.registerClass({
     GTypeName: 'AddItemsDialog',
@@ -25,261 +29,150 @@ class AddItemsDialog extends Gtk.FileChooserDialog {
 const PrefsWidget = GObject.registerClass({
     GTypeName: 'PrefsWidget',
     InternalChildren: [
-        'buffer_allowed_mime_types',
-        'combo_profiles',
+        'allowed_mime_types',
         'combo_current_profile',
-        'combo_rotation',
+        'combo_location_profile',
         'keyboard',
         'locations',
+        'profiles',
         'spinner_interval',
-        'switch_auto_start_daemon',
-        'switch_daemon_status',
-        'switch_icon_as_preview',
+        'switch_auto_start',
+        'switch_daemon_state',
+        'switch_icon_preview',
         'switch_notifications',
-        'switch_remember_profile',
-        'tree_keyboard',
-        'tree_profiles',
+        'switch_remember_profile_state',
     ],
-    Template: `resource://${deskchanger.app_path}/ui/prefs.ui`,
+    Template: `resource://${deskchanger.app_path}/ui/${(shellVersion < 40)? 'prefs.3.ui' : 'prefs.ui'}`,
 },
 class PrefsWidget extends Gtk.Box {
-    _init(params = {}) {
-        let mime_types = deskchanger.settings.allowed_mime_types.join("\n"),
-            iter = null,
-            success = null;
-        
-        this._is_init = true;
-        this._is_load_profiles = false;
-        this._is_profile_changed = false;
-        // Set up us.
+    _init(params={}) {
+        let success, iterator,
+            mime_types = deskchanger.settings.allowed_mime_types.join("\n");
+
+        this._daemon = Service.makeProxyWrapper();
+        // set up us the base
         super._init(params);
 
-        // load allowed-mime-types
-        this._buffer_allowed_mime_types.set_text(mime_types, mime_types.length);
-        // load the profile combo boxes
-        this._load_profiles(this._combo_profiles);
-        this._load_profiles(this._combo_current_profile);
-        // load the keybindings
-        [success, iter] = this._tree_keyboard.model.get_iter_first();
-        while (success) {
-            let name = this._keyboard.get_value(iter, 3),
-                [ok, key, mods] = Gtk.accelerator_parse(deskchanger.settings.getKeybinding(name));
-            
-            if (ok) {
-                this._keyboard.set(iter, [1, 2], [mods, key]);
-                success = this._tree_keyboard.model.iter_next(iter);
-            }
-        }
-
-        deskchanger.settings.bind('auto-start', this._switch_auto_start_daemon, 'active', Gio.SettingsBindFlags.DEFAULT);
-        deskchanger.settings.bind('icon-preview', this._switch_icon_as_preview, 'active', Gio.SettingsBindFlags.DEFAULT);
+        // bind our simple settings
+        deskchanger.settings.bind('auto-start', this._switch_auto_start, 'active', Gio.SettingsBindFlags.DEFAULT);
+        deskchanger.settings.bind('icon-preview', this._switch_icon_preview, 'active', Gio.SettingsBindFlags.DEFAULT);
         deskchanger.settings.bind('interval', this._spinner_interval, 'value', Gio.SettingsBindFlags.DEFAULT);
         deskchanger.settings.bind('notifications', this._switch_notifications, 'active', Gio.SettingsBindFlags.DEFAULT);
-        deskchanger.settings.bind('remember-profile-state', this._switch_remember_profile, 'active', Gio.SettingsBindFlags.DEFAULT);
-        deskchanger.settings.bind('rotation', this._combo_rotation, 'active-id', Gio.SettingsBindFlags.DEFAULT);
+        deskchanger.settings.bind('remember-profile-state', this._switch_remember_profile_state, 'active', Gio.SettingsBindFlags.DEFAULT);
 
-        this._is_init = false;
-    }
+        // keybindings
+        [success, iterator] = this._keyboard.get_iter_first();
+        while (success) {
+            let name = this._keyboard.get_value(iterator, 3),
+                [ok, key, mods] = Gtk.accelerator_parse(deskchanger.settings.getKeybinding(name));
 
-    _load_profiles(_combobox, text=null) {
-        let active = _combobox.get_active(),
-            i = 0;
-
-        this._is_load_profiles = true;
-        if (!text) {
-            text = _combobox.get_active_text();
-        }
-
-        _combobox.remove_all();
-
-        for (let profile in deskchanger.settings.profiles) {
-            _combobox.insert_text(i, profile);
-
-            if (text === profile || (active === -1 && profile === deskchanger.settings.current_profile)) {
-                _combobox.set_active(i);
-            }
-
-            i++;
-        }
-        this._is_load_profiles = false;
-    }
-
-    _on_accel_cleared(_widget, path) {
-        this._update_keybindings(path, 0, 0, '');
-    }
-
-    _on_accel_edited(_widget, path, key, mods, keycode) {
-        let value = Gtk.accelerator_name(key, mods);
-        this._update_keybindings(path, key, mods, value);
-    }
-
-    _on_add_folders_clicked() {
-        let dialog = new AddItemsDialog({title: 'Add Folders', action: Gtk.FileChooserAction.SELECT_FOLDER});
-
-        dialog.show();
-        dialog.connect('response', this._on_add_items_response.bind(this));
-    }
-
-    _on_add_images_clicked() {
-        let dialog = new AddItemsDialog({title: 'Add Images', action: Gtk.FileChooserAction.OPEN}),
-            filter = new Gtk.FileFilter();
-
-        deskchanger.settings.allowed_mime_types.forEach(value => {
-            filter.add_mime_type(value);
-        });
-        dialog.set_filter(filter);
-        dialog.show();
-        dialog.connect('response', this._on_add_items_response.bind(this));
-    }
-
-    _on_add_items_response(_dialog, response) {
-        if (response === Gtk.ResponseType.OK) {
-            let list = _dialog.get_files();
-            for (let i = 0; i < list.get_n_items(); i++) {
-                let item = list.get_item(i);
-                this._locations.insert_with_values(-1, [0, 1], [item.get_uri(), false]);
-            }
-        }
-
-        _dialog.destroy();
-    }
-
-    _on_add_profile() {
-        let dialog = new Gtk.Dialog(),
-            mbox = dialog.get_content_area(),
-            box = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL}),
-            label = new Gtk.Label({label: _('Profile Name')}),
-            input = new Gtk.Entry();
-
-        box.append(label);
-        box.append(input);
-        mbox.append(box);
-        dialog.add_button(_('OK'), Gtk.ResponseType.OK);
-        dialog.add_button(_('Cancel'), Gtk.ResponseType.CANCEL);
-        dialog.connect('response', (_dialog, result) => {
-            if (result === Gtk.ResponseType.OK) {
-                let _profiles = deskchanger.settings.profiles,
-                    profile = input.get_text();
-                _profiles[profile] = [];
-                deskchanger.settings.profiles = _profiles;
-                this._load_profiles(this._combo_profiles, profile);
-                this._load_profiles(this._combo_current_profile);
-            }
-            dialog.destroy();
-        });
-        dialog.show();
-    }
-
-    _on_current_profile_changed(_combobox) {
-        if (this._is_load_profiles) return;
-
-        let profile = _combobox.get_active_text();
-
-        if (deskchanger.settings.current_profile !== profile) {
-            deskchanger.settings.current_profile = profile;
-        }
-    }
-
-    _on_locations_changed(_list, position, removed, added) {
-        if (this._is_init || this._is_profile_changed) return;
-
-        let profiles = deskchanger.settings.profiles,
-            profile = this._combo_profiles.get_active_text();
-
-        profiles[profile] = [];
-        this._locations.foreach((_store, _path, _iter) => {
-            profiles[profile].push([this._locations.get_value(_iter, 0), this._locations.get_value(_iter, 1)]);
-        });
-        deskchanger.settings.profiles = profiles;
-    }
-
-    _on_location_edited(_widget, path, new_text) {
-        deskchanger.debug(`_on_location_edited(${_widget}, ${path}, ${new_text})`);
-        let [success, iter] = this._tree_profiles.model.get_iter_from_string(path);
-        if (success) {
-            this._locations.set_value(iter, 0, new_text);
-        }
-    }
-
-    _on_profile_changed(_combobox) {
-        this._is_profile_changed = true;
-        for (let profile in deskchanger.settings.profiles) {
-            if (profile === _combobox.get_active_text()) {
-                this._locations.clear();
-
-                for (let location in deskchanger.settings.profiles[profile]) {
-                    let iter = this._locations.append();
-                    this._locations.set_value(iter, 0, deskchanger.settings.profiles[profile][location][0]);
-                    this._locations.set_value(iter, 1, deskchanger.settings.profiles[profile][location][1]);
+            if (ok === true || mods === undefined) {
+                if (mods === undefined) {
+                    mods = key;
+                    key = ok;
                 }
 
-                this._tree_profiles.get_selection().select_path(Gtk.TreePath.new_first());
-                break;
+                this._keyboard.set(iterator, [1, 2], [mods, key]);
+                success = this._keyboard.iter_next(iterator);
             }
         }
-        this._is_profile_changed = false;
+        iterator.free();
+
+        // load everything else
+        this._allowed_mime_types.set_text(mime_types, mime_types.length);
+        this._load_profiles();
+        this._switch_daemon_state.set_active(this._daemon.Running);
+        this._daemon.connectSignal('Running', (proxy, name, [state]) => {
+            this._switch_daemon_state.set_active(state);
+        });
+
+
+        if (shellVersion < 40) {
+            // show it all
+            this.show_all();
+        }
     }
 
-    _on_recursive_toggled(_widget, _path) {
-        let _iter = this._locations.get_iter_from_string(_path)[1];
+    _load_profiles() {
+        this._profiles.clear();
 
-        this._locations.set_value(_iter, 1, !this._locations.get_value(_iter, 1));
-    }
-
-    _on_remove_item_clicked() {
-        let [bool, list, iter] = this._tree_profiles.get_selection().get_selected();
-        this._locations.remove(iter);
-    }
-
-    _on_remove_profile() {
-        if (deskchanger.settings.current_profile == this._combo_profiles.get_active_text()) {
-            let dialog = new Gtk.MessageDialog({
-                'buttons': Gtk.ButtonsType.CLOSE,
-                'message-type': Gtk.MessageType.ERROR,
-                'text': 'ERROR: You cannot remove the current profile',
-            });
-            dialog.show();
-            dialog.connect('response', () => {
-                dialog.destroy();
-            });
-            return;
+        for (let profile in deskchanger.settings.profiles) {
+            let iterator = this._profiles.append();
+            this._profiles.set_value(iterator, 0, profile);
+            if (deskchanger.settings.current_profile === profile) {
+                this._combo_current_profile.set_active_iter(iterator);
+            }
+            iterator.free();
         }
 
-        let profile = this._combo_profiles.get_active_text(), dialog = new Gtk.MessageDialog({
-            'buttons': Gtk.ButtonsType.YES_NO,
-            'message-type': Gtk.MessageType.QUESTION,
-            'text': 'Are you sure you want to delete the profile "' + profile + '"',
-        });
-        dialog.show();
-        dialog.connect('response', (_dialog, response) => {
-            if (response === Gtk.ResponseType.YES) {
-                let profiles = deskchanger.settings.profiles;
-                this._combo_profiles.set_active(-1);
-                delete profiles[profile];
-                deskchanger.settings.profiles = profiles;
-                this._load_profiles(this._combo_current_profile);
-                this._load_profiles(this._combo_profiles);
-            }
-            
-            dialog.destroy();
-        });
+        this._combo_location_profile.set_active(0);
     }
 
-    _on_buffer_allowed_mime_types_changed() {
-        if (this._is_init) return;
-        deskchanger.settings.allowed_mime_types = this._buffer_allowed_mime_types.get_text(this._buffer_allowed_mime_types.get_start_iter(), this._buffer_allowed_mime_types.get_end_iter(), false).split("\n");
-    }
-
-    _update_keybindings(path, key, mods, value) {
+    _on_accel_key(_widget, path, key=0, mods=0, keycode=0) {
+        deskchanger.debug(_widget);
         let [success, iterator] = this._keyboard.get_iter_from_string(path);
 
         if (!success) {
             throw new Error(_('Failed to update keybinding'));
         }
 
-        let name = this._keyboard.get_value(iterator, 3);
+        let name = this._keyboard.get_value(iterator, 3),
+            value = Gtk.accelerator_name(key, mods);
         this._keyboard.set(iterator, [1, 2], [mods, key]);
         deskchanger.settings.setKeybinding(name, value);
+    }
+
+    _on_buffer_allowed_mime_types_changed() {
+    }
+
+    _on_button_add_folders_clicked() {
+    }
+
+    _on_button_add_items_clicked() {
+    }
+
+    _on_button_add_profile_clicked() {
+    }
+
+    _on_button_remove_item_clicked() {
+    }
+
+    _on_button_remove_profile_clicked() {
+    }
+
+    _on_cell_recursive_toggled() {
+    }
+
+    _on_cell_location_edited() {
+    }
+
+    _on_combo_current_profile_changed() {
+        let [ok, iterator] = this._combo_current_profile.get_active_iter(),
+            profile;
+
+        if (!ok) return;
+        profile = this._profiles.get_value(iterator, 0);
+        deskchanger.settings.current_profile = profile;
+    }
+
+    _on_combo_location_profile_changed(_widget) {
+        let [ok, iterator] = this._combo_location_profile.get_active_iter(),
+            profile;
+
+        if (!ok) return;
+        profile = this._profiles.get_value(iterator, 0);
+        this._locations.clear();
+
+        deskchanger.settings.profiles[profile].forEach(item => {
+            let [uri, recursive] = item;
+
+            iterator = this._locations.append();
+            // TODO: fill in third parameter
+            this._locations.set(iterator, [0, 1, 2], [uri, recursive, true]);
+        });
+    }
+
+    _on_combo_rotation_mode_changed() {
     }
 });
 
