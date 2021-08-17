@@ -1,5 +1,5 @@
 UUID = desk-changer@eric.gach.gmail.com
-VERSION = 30
+VERSION = 31
 
 ifeq ($(strip $(DESTDIR)),)
 	INSTALLBASE = $(HOME)/.local/share/gnome-shell/extensions
@@ -29,4 +29,4 @@ update-translation: all
 
 zipfile: all
 	cd ./$(UUID)/; \
-	zip -r ../$(UUID)-$(VERSION).zip .
+	zip -r ../$(UUID)-$(VERSION).zip . -x 'resources/ui/*' -x 'resources/icons/*' -x 'resources/*.xml' -x 'resources/*.in'
