@@ -6,7 +6,7 @@ const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
 const GObject = imports.gi.GObject;
 
-if (!globalThis.deskchanger) {
+if ((typeof globalThis !== 'undefined' && !globalThis.deskchanger) || !window.deskchanger) {
 // Find the root datadir of the extension
     function get_datadir() {
         let m = /@(.+):\d+/.exec((new Error()).stack.split('\n')[1]);
@@ -83,7 +83,7 @@ class Server extends Gio.Application {
         let connection = this.get_dbus_connection();
 
         if (connection) {
-            deskchanger.debug(`DBUS::${signal}(${variant.deepUnpack()})`);
+            deskchanger.debug(`DBUS::${signal}(${variant.recursiveUnpack()})`);
             connection.emit_signal(null, Interface.APP_PATH, Interface.APP_ID, signal, variant);
         }
     }
@@ -180,7 +180,7 @@ class Server extends Gio.Application {
                     object_path,
                     deskchanger.dbusinfo.lookup_interface(Interface.APP_ID),
                     (connection, sender, object_path, interface_name, method_name, parameters, invocation) => {
-                        parameters = parameters.unpack();
+                        parameters = parameters.recursiveUnpack();
                         deskchanger.debug(`[DBUS.call] ${interface_name}.${method_name}(${parameters})`)
 
                         if (!this._running && ['quit', 'start'].indexOf(method_name.toLowerCase()) === -1) {
@@ -263,14 +263,32 @@ class Server extends Gio.Application {
     }
 
     _create_timer() {
-        if (deskchanger.settings.rotation === 'interval') {
-            this._timer = new Timer.Interval(deskchanger.settings.interval, this.next.bind(this));
-            this._interval_changed_id = deskchanger.settings.connect('changed::interval', () => {
-                this._timer.destroy();
-                this._timer = new Timer.Interval(deskchanger.settings.interval, this.next.bind(this));
-            });
+        let interval,
+            rotation = deskchanger.settings.rotation,
+            [success, iterator] = deskchanger.rotation.get_iter_first();
+
+        while (success) {
+            if (deskchanger.rotation.get_value(iterator, 0) === rotation) {
+                interval = (rotation === 'interval')? deskchanger.settings.interval : deskchanger.rotation.get_value(iterator, 3);
+                rotation = deskchanger.rotation.get_value(iterator, 1);
+                break;
+            }
+            
+            success = deskchanger.rotation.iter_next(iterator);
+        }
+
+        if (rotation === 'interval') {
+            this._timer = new Timer.Interval(interval, this.next.bind(this));
+            if (deskchanger.settings.rotation === 'interval') {
+                this._interval_changed_id = deskchanger.settings.connect('changed::interval', () => {
+                    this._timer.destroy();
+                    this._timer = new Timer.Interval(deskchanger.settings.interval, this.next.bind(this));
+                });
+            }
         } else if (deskchanger.settings.rotation === 'hourly') {
             this._timer = new Timer.Hourly(this.next.bind(this));
+        } else if (deskchanger.settings.rotation === 'daily') {
+            this._timer = new Timer.Daily(this.next.bind(this));
         }
     }
 
@@ -286,8 +304,8 @@ class Server extends Gio.Application {
         }
     }
 
-    _dbus_call_loadprofile(invocation, profile) {
-        invocation.return_value(new GLib.Variant('(b)', [this.loadprofile(profile.get_string()[0])]));
+    _dbus_call_load(invocation, profile) {
+        invocation.return_value(new GLib.Variant('(b)', [this.loadprofile(profile)]));
     }
 
     _dbus_call_next(invocation) {
@@ -307,8 +325,12 @@ class Server extends Gio.Application {
         invocation.return_value(new GLib.Variant('(b)', [this.start(), ]));
     }
 
-    _dbus_call_stop(invocation) {
+    _dbus_call_stop(invocation, quit) {
         invocation.return_value(new GLib.Variant('(b)', [this.stop(), ]));
+
+        if (quit) {
+            this.quit();
+        }
     }
 
     _handle_dbus_get(connection, sender, object_path, interface_name, property_name) {

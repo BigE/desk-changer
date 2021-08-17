@@ -85,44 +85,6 @@ class DeskChangerPopupMenuControlsMenuItem extends PopupMenu.PopupBaseMenuItem {
 }
 );
 
-var DaemonMenuItem = GObject.registerClass(
-class DeskChangerPopupMenuDaemonMenuItem extends PopupMenu.PopupSwitchMenuItem {
-    _init(daemon) {
-        super._init(_('DeskChanger Daemon'), daemon.Running);
-        this._daemon = daemon;
-
-        this._toggled_id = this.connect('toggled', (object, state) => {
-            deskchanger.debug('toggling daemon state');
-
-            try {
-                (state === true)? this._daemon.StartSync() : this._daemon.StopSync();
-            } catch (e) {
-                deskchanger.error(e, 'Failed to toggle daemon');
-            }
-        });
-
-        this._running_id = this._daemon.connectSignal('Running', (proxy, name, [state]) => {
-            deskchanger.debug(`upating switch to ${(state === true)? '' : 'not '}toggled`);
-            this.setToggleState(state);
-        });
-    }
-
-    destroy() {
-        if (this._toggled_id) {
-            this.disconnect(this._toggled_id);
-        }
-        this._toggled_id = null;
-
-        if (this._running_id) {
-            this._daemon.disconnectSignal(this._running_id);
-        }
-        this._running_id = null;
-
-        super.destroy();
-    }
-}
-);
-
 var OpenCurrentMenuItem = GObject.registerClass(
 class DeskChangerPopupMenuOpenCurrent extends PopupMenu.PopupMenuItem {
     _init() {
@@ -274,45 +236,6 @@ var ProfileDesktopMenuItem = GObject.registerClass(
 class DeskChangerPopupSubMenuMenuItemProfileDesktop extends ProfileMenuItem {
     _init(sensitive = true) {
         super._init(_('Desktop Profile'), 'current_profile', sensitive);
-    }
-}
-);
-
-var RotationMenuItem = GObject.registerClass(
-class DeskChangerPopupMenuRotationMenuItem extends PopupSubMenuMenuItem {
-    _init(sensitive=true) {
-        super._init(_('Rotation mode'), 'rotation', sensitive);
-        this.menu.addMenuItem(new PopupMenuItem(_('Interval timer'), 'interval', 'rotation'));
-        this.menu.addMenuItem(new PopupMenuItem(_('Beginning of hour'), 'hourly', 'rotation'));
-        this.menu.addMenuItem(new PopupMenuItem(_('Disabled'), 'disabled', 'rotation'));
-    }
-}
-);
-
-var SwitchMenuItem = GObject.registerClass(
-class DeskChangerPopupSwitchMenuItem extends PopupMenu.PopupSwitchMenuItem {
-    _init(label, key) {
-        super._init(label, deskchanger.settings[key]);
-        this._key = key;
-        this._key_normalized = key.replace('_', '-');
-        this._handler_changed = deskchanger.settings.connect(`changed::${this._key_normalized}`, (settings, key) => {
-            this.setToggleState(deskchanger.settings.get_boolean(key));
-        });
-        this._handler_toggled = this.connect('toggled', () => {
-            deskchanger.settings[this._key] = this.state;
-        });
-    }
-
-    destroy() {
-        if (this._handler_changed) {
-            deskchanger.settings.disconnect(this._handler_changed);
-        }
-
-        if (this._handler_toggled) {
-            deskchanger.settings.disconnect(this._handler_toggled);
-        }
-
-        super.destroy();
     }
 }
 );

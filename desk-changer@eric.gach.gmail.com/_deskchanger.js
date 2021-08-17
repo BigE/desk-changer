@@ -1,13 +1,10 @@
 'use strict';
 
-const Gio = imports.gi.Gio;
-const GIRepository = imports.gi.GIRepository;
-const GLib = imports.gi.GLib;
-const GObject = imports.gi.GObject;
+const {Gio, GIRepository, GLib, GObject, Gtk} = imports.gi;
 
 String.prototype.format = imports.format.format;
 
-globalThis.deskchanger = {
+let _deskchanger = {
     extdatadir: (() => {
         let m = /@(.+):\d+/.exec((new Error()).stack.split('\n')[1]);
         return Gio.File.new_for_path(m[1]).get_parent().get_path();
@@ -52,6 +49,12 @@ globalThis.deskchanger = {
         return stack
     },
 };
+
+if (typeof globalThis === 'undefined') {
+    window.deskchanger = _deskchanger;
+} else {
+    globalThis.deskchanger = _deskchanger;
+}
 
 deskchanger.app_id = 'org.gnome.Shell.Extensions.DeskChanger';
 deskchanger.app_path = '/org/gnome/Shell/Extensions/DeskChanger';
@@ -134,7 +137,7 @@ deskchanger._ = Gettext.gettext;
 var Settings = GObject.registerClass(
 class DeskChangerSettings extends Gio.Settings {
     get allowed_mime_types() {
-        return this.get_value('allowed-mime-types').deep_unpack();
+        return this.get_value('allowed-mime-types').recursiveUnpack();
     }
 
     set allowed_mime_types(value) {
@@ -199,7 +202,7 @@ class DeskChangerSettings extends Gio.Settings {
     }
 
     get profile_state() {
-        return this.get_value('profile-state').deep_unpack();
+        return this.get_value('profile-state').recursiveUnpack();
     }
 
     set profile_state(value) {
@@ -207,7 +210,7 @@ class DeskChangerSettings extends Gio.Settings {
     }
 
     get profiles() {
-        return this.get_value('profiles').deep_unpack();
+        return this.get_value('profiles').recursiveUnpack();
     }
 
     set profiles(value) {
@@ -298,3 +301,11 @@ deskchanger.dbusxml = deskchanger.get_resource(`${deskchanger.app_id}.xml`);
 deskchanger.dbusinfo = Gio.DBusNodeInfo.new_for_xml(deskchanger.dbusxml);
 
 deskchanger.dbusinfo.nodes.forEach(info => info.cache_build());
+
+
+let builder = new Gtk.Builder();
+
+builder.set_translation_domain('desk-changer');
+builder.add_from_resource(`${deskchanger.app_path}/ui/rotation.ui`);
+
+deskchanger.rotation = builder.get_object('rotation');
