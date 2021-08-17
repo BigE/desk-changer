@@ -10,7 +10,7 @@ endif
 all: compile-resources compile-schemas
 
 compile-resources:
-	glib-compile-resources --sourcedir=./$(UUID)/resources ./$(UUID)/resources/org.gnome.Shell.Extensions.DeskChanger.gresource.xml
+	glib-compile-resources --target=./$(UUID)/resources/org.gnome.Shell.Extensions.DeskChanger.gresource --sourcedir=./resources ./resources/org.gnome.Shell.Extensions.DeskChanger.gresource.xml
 
 compile-schemas:
 	glib-compile-schemas ./$(UUID)/schemas/
