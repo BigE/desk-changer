@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: DeskChanger 30\n"
+"Project-Id-Version: DeskChanger 31\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-08-16 03:43-0500\n"
+"POT-Creation-Date: 2021-08-16 23:48-0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -43,16 +43,15 @@ msgstr ""
 msgid "Wallpapers will be shown in the order they were loaded"
 msgstr ""
 
-#: extension.js:86
-#, javascript-format
-msgid "Rotation will occur every %d seconds"
-msgstr ""
-
-#: extension.js:89
+#: extension.js:106
 msgid "Rotation will occur at the beginning of every hour"
 msgstr ""
 
-#: extension.js:92
+#: extension.js:109
+msgid "Rotation will occur at the beginning of every day"
+msgstr ""
+
+#: extension.js:112
 msgid "Rotation has been disabled"
 msgstr ""
 
@@ -92,161 +91,141 @@ msgstr ""
 msgid "prev-wallpaper"
 msgstr ""
 
-#: resources/ui/prefs.ui:56
-msgid "Interval Timer"
-msgstr ""
-
-#: resources/ui/prefs.ui:59
-msgid "hourly"
-msgstr ""
-
-#: resources/ui/prefs.ui:60
-msgid "Hourly Timer"
-msgstr ""
-
-#: resources/ui/prefs.ui:63
-msgid "disabled"
-msgstr ""
-
-#: resources/ui/prefs.ui:64
-msgid "Disabled"
-msgstr ""
-
-#: resources/ui/prefs.ui:98
+#: resources/ui/prefs.ui:78
 msgid "Location URI"
 msgstr ""
 
-#: resources/ui/prefs.ui:113
+#: resources/ui/prefs.ui:93
 msgid "Recursive"
 msgstr ""
 
-#: resources/ui/prefs.ui:136
+#: resources/ui/prefs.ui:116
 msgid "Add Item(s)"
 msgstr ""
 
-#: resources/ui/prefs.ui:143
+#: resources/ui/prefs.ui:123
 msgid "Add Folder(s)"
 msgstr ""
 
-#: resources/ui/prefs.ui:150
+#: resources/ui/prefs.ui:130
 msgid "Remove Item"
 msgstr ""
 
-#: resources/ui/prefs.ui:167
+#: resources/ui/prefs.ui:147
 msgid "Edit the locations of the currently selected profile."
 msgstr ""
 
-#: resources/ui/prefs.ui:172
+#: resources/ui/prefs.ui:152
 msgid "Edit Profile"
 msgstr ""
 
-#: resources/ui/prefs.ui:200
+#: resources/ui/prefs.ui:180
 msgid "Add New Profile"
 msgstr ""
 
-#: resources/ui/prefs.ui:202
+#: resources/ui/prefs.ui:182
 msgid "Add a new profile"
 msgstr ""
 
-#: resources/ui/prefs.ui:208
+#: resources/ui/prefs.ui:188
 msgid "Remove Selected Profile"
 msgstr ""
 
-#: resources/ui/prefs.ui:210
+#: resources/ui/prefs.ui:190
 msgid "Remove the selected profile"
 msgstr ""
 
-#: resources/ui/prefs.ui:221
+#: resources/ui/prefs.ui:201
 msgid "Profiles"
 msgstr ""
 
-#: resources/ui/prefs.ui:241
+#: resources/ui/prefs.ui:221
 msgid "Shortcut"
 msgstr ""
 
-#: resources/ui/prefs.ui:253
+#: resources/ui/prefs.ui:233
 msgid "Key Combination"
 msgstr ""
 
-#: resources/ui/prefs.ui:274
+#: resources/ui/prefs.ui:254
 msgid "Keyboard"
 msgstr ""
 
-#: resources/ui/prefs.ui:297
+#: resources/ui/prefs.ui:277
 msgid "Current Profile"
 msgstr ""
 
-#: resources/ui/prefs.ui:323
+#: resources/ui/prefs.ui:303
 msgid "Show Icon as Preview"
 msgstr ""
 
-#: resources/ui/prefs.ui:340
+#: resources/ui/prefs.ui:320
 msgid "Notifications"
 msgstr ""
 
-#: resources/ui/prefs.ui:356
+#: resources/ui/prefs.ui:336
 msgid "Extension"
 msgstr ""
 
-#: resources/ui/prefs.ui:390
+#: resources/ui/prefs.ui:370
 msgid ""
 "The rotation mode of the damon. Interval will rotate at the specified timer "
 "interval. Hourly will rotate at the top of each hour. Disabled will disable "
 "automatic rotation."
 msgstr ""
 
-#: resources/ui/prefs.ui:391
+#: resources/ui/prefs.ui:371
 msgid "Mode"
 msgstr ""
 
-#: resources/ui/prefs.ui:418
+#: resources/ui/prefs.ui:397
 msgid ""
 "This only applies to the Interval Timer option and sets the interval at "
 "which the timer will change the wallpaper."
 msgstr ""
 
-#: resources/ui/prefs.ui:419
-msgid "Interval Timer (in seconds)"
+#: resources/ui/prefs.ui:398
+msgid "Custom Timer (in seconds)"
 msgstr ""
 
-#: resources/ui/prefs.ui:436
+#: resources/ui/prefs.ui:415
 msgid "Rotation Options"
 msgstr ""
 
-#: resources/ui/prefs.ui:444
+#: resources/ui/prefs.ui:423
 msgid "Ensure that the daemon process is running when the extension is loaded."
 msgstr ""
 
-#: resources/ui/prefs.ui:448
+#: resources/ui/prefs.ui:427
 msgid "Auto Start Daemon"
 msgstr ""
 
-#: resources/ui/prefs.ui:462
+#: resources/ui/prefs.ui:441
 msgid ""
 "If enabled the daemon will save the current and next wallpaper when it "
 "stops. When it starts, if the values are present, it will then use them to "
 "restore the current wallpaper and fill the queue."
 msgstr ""
 
-#: resources/ui/prefs.ui:466
+#: resources/ui/prefs.ui:445
 msgid "Remember Profile State"
 msgstr ""
 
-#: resources/ui/prefs.ui:480
+#: resources/ui/prefs.ui:459
 msgid ""
 "The current status of the daemon itself. Toggling this will swith the entire "
 "daemon process on/off respectively."
 msgstr ""
 
-#: resources/ui/prefs.ui:484
+#: resources/ui/prefs.ui:463
 msgid "Daemon Running"
 msgstr ""
 
-#: resources/ui/prefs.ui:503
+#: resources/ui/prefs.ui:483
 msgid "Allowed Mime Types"
 msgstr ""
 
-#: resources/ui/prefs.ui:529
+#: resources/ui/prefs.ui:509
 msgid "Daemon"
 msgstr ""
 
