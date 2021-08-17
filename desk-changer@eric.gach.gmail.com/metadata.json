@@ -4,7 +4,6 @@
   "name": "Desk Changer",
   "settings-schema": "org.gnome.shell.extensions.desk-changer",
   "shell-version": [
-    "3.30",
     "3.32",
     "3.34",
     "3.36",
