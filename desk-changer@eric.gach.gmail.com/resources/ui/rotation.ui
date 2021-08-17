@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <requires lib="gtk" version="4.0"/>
+  <object class="GtkListStore" id="rotation">
+    <columns>
+      <column type="gchararray"/>
+      <column type="gchararray"/>
+      <column type="gchararray"/>
+      <column type="guint"/>
+    </columns>
+    <data>
+      <row>
+        <col id="0">oneminute</col>
+        <col id="1">interval</col>
+        <col id="2" translatable="yes">1 Minute Interval</col>
+        <col id="3">60</col>
+      </row>
+      <row>
+        <col id="0">fiveminute</col>
+        <col id="1">interval</col>
+        <col id="2" translatable="yes">5 Minute Interval</col>
+        <col id="3">300</col>
+      </row>
+      <row>
+        <col id="0">thirtyminute</col>
+        <col id="1">interval</col>
+        <col id="2" translatable="yes">30 Minute Interval</col>
+        <col id="3">1800</col>
+      </row>
+      <row>
+        <col id="0">onehour</col>
+        <col id="1">interval</col>
+        <col id="2" translatable="yes">1 Hour Interval</col>
+        <col id="3">3600</col>
+      </row>
+      <row>
+        <col id="0">sixhour</col>
+        <col id="1">interval</col>
+        <col id="2" translatable="yes">6 Hour Interval</col>
+        <col id="3">21600</col>
+      </row>
+      <row>
+        <col id="0">twelvehour</col>
+        <col id="1">interval</col>
+        <col id="2" translatable="yes">12 Hour Interval</col>
+        <col id="3">43200</col>
+      </row>
+      <row>
+        <col id="0">twentyfourhour</col>
+        <col id="1">interval</col>
+        <col id="2" translatable="yes">24 Hour Interval</col>
+        <col id="3">86400</col>
+      </row>
+      <row>
+        <col id="0">interval</col>
+        <col id="1">interval</col>
+        <col id="2" translatable="yes">Custom Interval</col>
+        <col id="3">0</col>
+      </row>
+      <row>
+        <col id="0">hourly</col>
+        <col id="1">hourly</col>
+        <col id="2" translatable="yes">Hourly Timer</col>
+        <col id="3">0</col>
+      </row>
+      <row>
+        <col id="0">daily</col>
+        <col id="1">daily</col>
+        <col id="2" translatable="yes">Daily Timer</col>
+        <col id="3">0</col>
+      </row>
+      <row>
+        <col id="0">disabled</col>
+        <col id="1">disabled</col>
+        <col id="2" translatable="yes">Disabled</col>
+        <col id="3">0</col>
+      </row>
+    </data>
+  </object>
+</interface>

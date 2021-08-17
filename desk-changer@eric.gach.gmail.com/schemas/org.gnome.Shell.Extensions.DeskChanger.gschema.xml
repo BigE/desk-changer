@@ -1,3 +1,4 @@
+<!DOCTYPE schemalist SYSTEM "https://gitlab.gnome.org/GNOME/glib/-/raw/main/gio/gschema.dtd">
 <schemalist>
 	<schema id="org.gnome.Shell.Extensions.DeskChanger" path="/org/gnome/shell/extensions/desk-changer/">
 		<key name="allowed-mime-types" type="as">
@@ -112,14 +113,22 @@
 			<choices>
 				<choice value="disabled" />
 				<choice value="hourly" />
+				<choice value="daily" />
+				<choice value="oneminute" />
+				<choice value="fiveminute" />
+				<choice value="thirtyminute" />
+				<choice value="onehour" />
+				<choice value="sixhour" />
+				<choice value="twelvehour" />
+				<choice value="twentyfourhour" />
 				<choice value="interval" />
 			</choices>
-			<default>"interval"</default>
+			<default>"fiveminute"</default>
 			<description>
-				Choose how the rotation is handled by the daemon. The interval choice is the default. It enables a timer
-				that uses the interval value to change the wallpaper ever [interval] seconds. For hourly, the wallpaper
-				will be changed at the beginning of every hour of the day. When disabled, rotation is not done by the
-				daemon, but only by user interaction with the extension.
+				Choose how the rotation is handled by the daemon. The fiveminute choice is the default. It enables a 
+				timer that uses the interval value to change the wallpaper ever 300 seconds or 5 minutes. For hourly
+				and daily, the wallpaper will be changed at the beginning of every hour of the day. When disabled,
+				rotation is not done by the	daemon, but only by user interaction with the extension.
 			</description>
 			<summary>Different options to control when the wallpaper is changed</summary>
 		</key>

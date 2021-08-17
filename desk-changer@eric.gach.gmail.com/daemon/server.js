@@ -263,14 +263,32 @@ class Server extends Gio.Application {
     }
 
     _create_timer() {
-        if (deskchanger.settings.rotation === 'interval') {
-            this._timer = new Timer.Interval(deskchanger.settings.interval, this.next.bind(this));
-            this._interval_changed_id = deskchanger.settings.connect('changed::interval', () => {
-                this._timer.destroy();
-                this._timer = new Timer.Interval(deskchanger.settings.interval, this.next.bind(this));
-            });
+        let interval,
+            rotation = deskchanger.settings.rotation,
+            [success, iterator] = deskchanger.rotation.get_iter_first();
+
+        while (success) {
+            if (deskchanger.rotation.get_value(iterator, 0) === rotation) {
+                interval = (rotation === 'interval')? deskchanger.settings.interval : deskchanger.rotation.get_value(iterator, 3);
+                rotation = deskchanger.rotation.get_value(iterator, 1);
+                break;
+            }
+            
+            success = deskchanger.rotation.iter_next(iterator);
+        }
+
+        if (rotation === 'interval') {
+            this._timer = new Timer.Interval(interval, this.next.bind(this));
+            if (deskchanger.settings.rotation === 'interval') {
+                this._interval_changed_id = deskchanger.settings.connect('changed::interval', () => {
+                    this._timer.destroy();
+                    this._timer = new Timer.Interval(deskchanger.settings.interval, this.next.bind(this));
+                });
+            }
         } else if (deskchanger.settings.rotation === 'hourly') {
             this._timer = new Timer.Hourly(this.next.bind(this));
+        } else if (deskchanger.settings.rotation === 'daily') {
+            this._timer = new Timer.Daily(this.next.bind(this));
         }
     }
 

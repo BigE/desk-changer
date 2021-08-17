@@ -36,7 +36,6 @@ const PrefsWidget = GObject.registerClass({
         'keyboard',
         'locations',
         'profiles',
-        'rotation',
         'spinner_interval',
         'switch_auto_start',
         'switch_daemon_state',
@@ -83,6 +82,7 @@ class PrefsWidget extends Gtk.Box {
 
         // load everything else
         this._allowed_mime_types.set_text(mime_types, mime_types.length);
+        this._combo_rotation_mode.set_model(deskchanger.rotation);
         this._combo_rotation_mode.set_active_id(deskchanger.settings.rotation);
         this._load_profiles();
         this._switch_daemon_state.set_active(this._daemon.Running);
@@ -308,7 +308,7 @@ class PrefsWidget extends Gtk.Box {
         let [ok, iterator] = this._combo_rotation_mode.get_active_iter();
 
         if (this._is_init || !ok) return;
-        deskchanger.settings.rotation = this._rotation.get_value(iterator, 0);
+        deskchanger.settings.rotation = deskchanger.rotation.get_value(iterator, 0);
     }
 
     _on_response_add_items(_dialog, response)

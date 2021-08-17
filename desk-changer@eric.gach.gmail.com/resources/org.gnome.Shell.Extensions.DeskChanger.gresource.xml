@@ -6,5 +6,6 @@
         <file compressed="true">org.gnome.Shell.Extensions.DeskChanger.Daemon.service.in</file>
         <file compressed="true">ui/prefs.3.ui</file>
         <file compressed="true">ui/prefs.ui</file>
+        <file compressed="true">ui/rotation.ui</file>
     </gresource>
 </gresources>

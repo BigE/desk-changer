@@ -45,26 +45,6 @@
       <column type="gchararray"/>
     </columns>
   </object>
-  <object class="GtkListStore" id="rotation">
-    <columns>
-      <column type="gchararray"/>
-      <column type="gchararray"/>
-    </columns>
-    <data>
-      <row>
-        <col id="0">interval</col>
-        <col id="1" translatable="yes">Interval Timer</col>
-      </row>
-      <row>
-        <col id="0" translatable="yes">hourly</col>
-        <col id="1" translatable="yes">Hourly Timer</col>
-      </row>
-      <row>
-        <col id="0" translatable="yes">disabled</col>
-        <col id="1" translatable="yes">Disabled</col>
-      </row>
-    </data>
-  </object>
   <template class="PrefsWidget" parent="GtkBox">
     <property name="orientation">vertical</property>
     <child>
@@ -396,13 +376,12 @@
                                 <property name="hexpand">1</property>
                                 <property name="can-focus">0</property>
                                 <property name="halign">end</property>
-                                <property name="model">rotation</property>
                                 <property name="id-column">0</property>
                                 <signal name="changed" handler="_on_combo_rotation_mode_changed" swapped="no"/>
                                 <child>
                                   <object class="GtkCellRendererText"/>
                                   <attributes>
-                                    <attribute name="text">1</attribute>
+                                    <attribute name="text">2</attribute>
                                   </attributes>
                                 </child>
                               </object>
@@ -416,7 +395,7 @@
                               <object class="GtkLabel">
                                 <property name="can-focus">0</property>
                                 <property name="tooltip-text" translatable="yes">This only applies to the Interval Timer option and sets the interval at which the timer will change the wallpaper.</property>
-                                <property name="label" translatable="yes">Interval Timer (in seconds)</property>
+                                <property name="label" translatable="yes">Custom Timer (in seconds)</property>
                               </object>
                             </child>
                             <child>

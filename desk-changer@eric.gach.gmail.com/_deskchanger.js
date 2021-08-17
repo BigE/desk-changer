@@ -1,9 +1,6 @@
 'use strict';
 
-const Gio = imports.gi.Gio;
-const GIRepository = imports.gi.GIRepository;
-const GLib = imports.gi.GLib;
-const GObject = imports.gi.GObject;
+const {Gio, GIRepository, GLib, GObject, Gtk} = imports.gi;
 
 String.prototype.format = imports.format.format;
 
@@ -304,3 +301,11 @@ deskchanger.dbusxml = deskchanger.get_resource(`${deskchanger.app_id}.xml`);
 deskchanger.dbusinfo = Gio.DBusNodeInfo.new_for_xml(deskchanger.dbusxml);
 
 deskchanger.dbusinfo.nodes.forEach(info => info.cache_build());
+
+
+let builder = new Gtk.Builder();
+
+builder.set_translation_domain('desk-changer');
+builder.add_from_resource(`${deskchanger.app_path}/ui/rotation.ui`);
+
+deskchanger.rotation = builder.get_object('rotation');

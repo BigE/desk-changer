@@ -12,12 +12,12 @@ var Interval = GObject.registerClass({
     },
 },
 class DeskChangerTimerInterval extends GObject.Object {
-    _init(interval = 300, callback = null, params = {}) {
+    _init(interval, callback = null, params = {}) {
         if (callback && typeof callback !== 'function') {
             throw 'callback must be function';
         }
 
-        if (interval < 1)  {
+        if (!interval || interval < 1)  {
             throw 'invalid interval, must be 1 or higher';
         }
 
@@ -25,7 +25,7 @@ class DeskChangerTimerInterval extends GObject.Object {
         this._interval = parseInt(interval);
         super._init(params);
         this._timer = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, this._interval, this.__callback__.bind(this));
-        deskchanger.debug(`added timer ${this._timer}`);
+        deskchanger.debug(`added interval(${this._interval}) timer ${this._timer}`);
     }
 
     get callback() {
@@ -46,7 +46,7 @@ class DeskChangerTimerInterval extends GObject.Object {
     }
 
     destroy() {
-        deskchanger.debug(`removing timer ${this._timer}`);
+        deskchanger.debug(`removing interval timer ${this._timer}`);
         GLib.source_remove(this._timer);
     }
 });
@@ -58,10 +58,16 @@ class DeskChangerTimerHourly extends Interval {
         super._init(5, callback, params);
     }
 
-    __callback__() {
-        let date = new Date();
-
+    _timer_check(date) {
         if (date.getMinutes() === 0 && date.getSeconds() < 10) {
+            return true;
+        }
+
+        return false
+    }
+
+    __callback__() {
+        if (this._timer_check(new Date())) {
             if (!this._done) {
                 this._done = true;
                 deskchanger.debug('calling hourly callback');
@@ -73,5 +79,16 @@ class DeskChangerTimerHourly extends Interval {
 
         this._done = false;
         return true;
+    }
+});
+
+var Daily = GObject.registerClass(
+class DeskChangerTimerDaily extends Hourly {
+    _timer_check(date) {
+        if (super._timer_check(date) && date.getHours() === 0) {
+            return true;
+        }
+
+        return false;
     }
 });
