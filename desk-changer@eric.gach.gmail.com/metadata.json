@@ -1,5 +1,5 @@
 {
-  "description": "Simple wallpaper changer with multiple profile support. Supports integration into the system menu or its own panel icon. The daemon is written using gjs and runs independently of the extension.",
+  "description": "Simple wallpaper changer with multiple profile support. Integrates into the shell by providing it's own panel icon. The daemon is written using gjs and runs independently of the extension as a background process.",
   "gettext-domain": "desk-changer",
   "name": "Desk Changer",
   "settings-schema": "org.gnome.shell.extensions.desk-changer",
@@ -8,9 +8,9 @@
     "3.34",
     "3.36",
     "3.38",
-    "40.0"
+    "40"
   ],
   "url": "https://github.com/BigE/desk-changer/",
   "uuid": "desk-changer@eric.gach.gmail.com",
-  "version": "31"
+  "version": "32"
 }

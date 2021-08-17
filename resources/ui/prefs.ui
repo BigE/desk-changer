@@ -511,6 +511,82 @@
             </property>
           </object>
         </child>
+        <child>
+          <object class="GtkNotebookPage">
+            <property name="position">4</property>
+            <property name="child">
+              <object class="GtkBox">
+                <property name="can-focus">0</property>
+                <property name="margin-start">10</property>
+                <property name="margin-end">10</property>
+                <property name="margin-top">10</property>
+                <property name="margin-bottom">10</property>
+                <property name="orientation">vertical</property>
+                <property name="spacing">5</property>
+                <child>
+                  <object class="GtkImage" id="image_about_logo">
+                    <property name="vexpand">1</property>
+                    <property name="can-focus">0</property>
+                    <property name="margin-start">20</property>
+                    <property name="margin-end">20</property>
+                    <property name="margin-top">20</property>
+                    <property name="margin-bottom">20</property>
+                    <property name="resource">/org/gnome/Shell/Extensions/DeskChanger/icons/wallpaper-icon.svg</property>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkLabel" id="label_about_name">
+                    <property name="can-focus">0</property>
+                    <property name="label" translatable="yes">DeskChanger</property>
+                    <attributes>
+                      <attribute name="weight" value="bold"></attribute>
+                    </attributes>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkLabel" id="label_about_version">
+                    <property name="can-focus">0</property>
+                    <property name="label" translatable="yes">Version 31</property>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkLabel" id="label_about_description">
+                    <property name="can-focus">0</property>
+                    <property name="margin-start">10</property>
+                    <property name="margin-end">10</property>
+                    <property name="margin-top">10</property>
+                    <property name="margin-bottom">10</property>
+                    <property name="label" translatable="yes">Simple wallpaper changer with multiple profile support. Integrates into the shell by providing it&apos;s own panel icon. The daemon is written using gjs and runs independently of the extension as a background process.</property>
+                    <property name="justify">center</property>
+                    <property name="wrap">1</property>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkLabel" id="label_about_url">
+                    <property name="can-focus">0</property>
+                    <property name="label" translatable="yes">&lt;a href=&quot;https://github.com/BigE/desk-changer&quot;&gt;https://github.com/BigE/desk-changer&lt;/a&gt;</property>
+                    <property name="use-markup">1</property>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkLabel" id="label_about_license">
+                    <property name="can-focus">0</property>
+                    <property name="label" translatable="yes">&lt;span size=&quot;small&quot;&gt;This program comes with absolutely no warranty.
+See the &lt;a href=&quot;https://opensource.org/licenses/mit-license.php&quot;&gt;The MIT License (MIT)&lt;/a&gt; for details.&lt;/span&gt;</property>
+                    <property name="use-markup">1</property>
+                    <property name="justify">center</property>
+                  </object>
+                </child>
+              </object>
+            </property>
+            <property name="tab">
+              <object class="GtkLabel">
+                <property name="can-focus">0</property>
+                <property name="label" translatable="yes">About</property>
+              </object>
+            </property>
+          </object>
+        </child>
       </object>
     </child>
   </template>

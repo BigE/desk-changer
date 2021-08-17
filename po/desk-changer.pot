@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: DeskChanger 31\n"
+"Project-Id-Version: DeskChanger 32\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-08-16 23:48-0500\n"
+"POT-Creation-Date: 2021-08-17 17:55-0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,62 +17,99 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: extension.js:60
+#: desk-changer@eric.gach.gmail.com/extension.js:63
 #, javascript-format
 msgid "Wallpaper changed: %s"
 msgstr ""
 
-#: extension.js:64
+#: desk-changer@eric.gach.gmail.com/extension.js:67
 #, javascript-format
 msgid "Profile changed to %s"
 msgstr ""
 
-#: extension.js:69
+#: desk-changer@eric.gach.gmail.com/extension.js:72
 msgid "Notifications are now enabled"
 msgstr ""
 
-#: extension.js:70
+#: desk-changer@eric.gach.gmail.com/extension.js:73
 msgid "Notifications are now disabled"
 msgstr ""
 
-#: extension.js:76
+#: desk-changer@eric.gach.gmail.com/extension.js:79
 msgid "Wallpapers will be shown in a random order"
 msgstr ""
 
-#: extension.js:77
+#: desk-changer@eric.gach.gmail.com/extension.js:80
 msgid "Wallpapers will be shown in the order they were loaded"
 msgstr ""
 
-#: extension.js:106
+#: desk-changer@eric.gach.gmail.com/extension.js:109
 msgid "Rotation will occur at the beginning of every hour"
 msgstr ""
 
-#: extension.js:109
+#: desk-changer@eric.gach.gmail.com/extension.js:112
 msgid "Rotation will occur at the beginning of every day"
 msgstr ""
 
-#: extension.js:112
+#: desk-changer@eric.gach.gmail.com/extension.js:115
 msgid "Rotation has been disabled"
 msgstr ""
 
-#: prefs.js:24
+#: desk-changer@eric.gach.gmail.com/prefs.js:24
 msgid "Add"
 msgstr ""
 
-#: prefs.js:25 prefs.js:181
+#: desk-changer@eric.gach.gmail.com/prefs.js:25
+#: desk-changer@eric.gach.gmail.com/prefs.js:191
 msgid "Cancel"
 msgstr ""
 
-#: prefs.js:125
+#: desk-changer@eric.gach.gmail.com/prefs.js:135
 msgid "Failed to update keybinding"
 msgstr ""
 
-#: prefs.js:166
+#: desk-changer@eric.gach.gmail.com/prefs.js:176
 msgid "Profile Name"
 msgstr ""
 
-#: prefs.js:180
+#: desk-changer@eric.gach.gmail.com/prefs.js:190
 msgid "OK"
+msgstr ""
+
+#: desk-changer@eric.gach.gmail.com/daemon/server.js:32
+msgid "The next wallpaper in queue"
+msgstr ""
+
+#: desk-changer@eric.gach.gmail.com/daemon/server.js:39
+msgid "Check if the daemon is running"
+msgstr ""
+
+#: desk-changer@eric.gach.gmail.com/daemon/server.js:70
+msgid "Enable debugging"
+msgstr ""
+
+#: desk-changer@eric.gach.gmail.com/daemon/server.js:71
+msgid "Show release version"
+msgstr ""
+
+#: desk-changer@eric.gach.gmail.com/ui/panelMenu.js:28
+msgid "DeskChanger Settings"
+msgstr ""
+
+#: desk-changer@eric.gach.gmail.com/ui/popupMenu.js:35
+msgid "No more wallpapers available in history"
+msgstr ""
+
+#: desk-changer@eric.gach.gmail.com/ui/popupMenu.js:91
+msgid "Open current wallpaper"
+msgstr ""
+
+#: desk-changer@eric.gach.gmail.com/ui/popupMenu.js:181
+msgid "Open next wallpaper"
+msgstr ""
+
+#: desk-changer@eric.gach.gmail.com/ui/popupMenu.js:238
+msgid "Desktop Profile"
 msgstr ""
 
 #: resources/ui/prefs.ui:23
@@ -229,38 +266,78 @@ msgstr ""
 msgid "Daemon"
 msgstr ""
 
-#: daemon/server.js:32
-msgid "The next wallpaper in queue"
+#: resources/ui/prefs.ui:540
+msgid "DeskChanger"
 msgstr ""
 
-#: daemon/server.js:39
-msgid "Check if the daemon is running"
+#: resources/ui/prefs.ui:549
+msgid "Version 31"
 msgstr ""
 
-#: daemon/server.js:70
-msgid "Enable debugging"
+#: resources/ui/prefs.ui:559
+msgid ""
+"Simple wallpaper changer with multiple profile support. Integrates into the "
+"shell by providing it's own panel icon. The daemon is written using gjs and "
+"runs independently of the extension as a background process."
 msgstr ""
 
-#: daemon/server.js:71
-msgid "Show release version"
+#: resources/ui/prefs.ui:567
+msgid ""
+"<a href=\"https://github.com/BigE/desk-changer\">https://github.com/BigE/"
+"desk-changer</a>"
 msgstr ""
 
-#: ui/panelMenu.js:28
-msgid "DeskChanger Settings"
+#: resources/ui/prefs.ui:574
+msgid ""
+"<span size=\"small\">This program comes with absolutely no warranty.\n"
+"See the <a href=\"https://opensource.org/licenses/mit-license.php\">The MIT "
+"License (MIT)</a> for details.</span>"
 msgstr ""
 
-#: ui/popupMenu.js:35
-msgid "No more wallpapers available in history"
+#: resources/ui/prefs.ui:585
+msgid "About"
 msgstr ""
 
-#: ui/popupMenu.js:91
-msgid "Open current wallpaper"
+#: resources/ui/rotation.ui:15
+msgid "1 Minute Interval"
 msgstr ""
 
-#: ui/popupMenu.js:181
-msgid "Open next wallpaper"
+#: resources/ui/rotation.ui:21
+msgid "5 Minute Interval"
 msgstr ""
 
-#: ui/popupMenu.js:238
-msgid "Desktop Profile"
+#: resources/ui/rotation.ui:27
+msgid "30 Minute Interval"
+msgstr ""
+
+#: resources/ui/rotation.ui:33
+msgid "1 Hour Interval"
+msgstr ""
+
+#: resources/ui/rotation.ui:39
+msgid "6 Hour Interval"
+msgstr ""
+
+#: resources/ui/rotation.ui:45
+msgid "12 Hour Interval"
+msgstr ""
+
+#: resources/ui/rotation.ui:51
+msgid "24 Hour Interval"
+msgstr ""
+
+#: resources/ui/rotation.ui:57
+msgid "Custom Interval"
+msgstr ""
+
+#: resources/ui/rotation.ui:63
+msgid "Hourly Timer"
+msgstr ""
+
+#: resources/ui/rotation.ui:69
+msgid "Daily Timer"
+msgstr ""
+
+#: resources/ui/rotation.ui:75
+msgid "Disabled"
 msgstr ""

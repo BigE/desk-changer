@@ -1,5 +1,5 @@
 UUID = desk-changer@eric.gach.gmail.com
-VERSION = 31
+VERSION = 32
 
 ifeq ($(strip $(DESTDIR)),)
 	INSTALLBASE = $(HOME)/.local/share/gnome-shell/extensions
@@ -10,7 +10,7 @@ endif
 all: compile-resources compile-schemas
 
 compile-resources:
-	glib-compile-resources --sourcedir=./$(UUID)/resources ./$(UUID)/resources/org.gnome.Shell.Extensions.DeskChanger.gresource.xml
+	glib-compile-resources --target=./$(UUID)/resources/org.gnome.Shell.Extensions.DeskChanger.gresource --sourcedir=./resources ./resources/org.gnome.Shell.Extensions.DeskChanger.gresource.xml
 
 compile-schemas:
 	glib-compile-schemas ./$(UUID)/schemas/
@@ -21,7 +21,7 @@ install: update-translation
 	echo done
 
 pot:
-	xgettext --package-name=DeskChanger --package-version=$(VERSION) -k --keyword=_ -o ./po/desk-changer.pot -D ./$(UUID)/ _deskchanger.js convenience.js extension.js prefs.js resources/ui/prefs.ui service.js common/utils.js daemon/interface.js daemon/profile.js daemon/server.js daemon/timer.js ui/control.js ui/panelMenu.js ui/popupMenu.js
+	xgettext --package-name=DeskChanger --package-version=$(VERSION) -k --keyword=_ -o ./po/desk-changer.pot -D ./ $(UUID)/_deskchanger.js $(UUID)/convenience.js $(UUID)/extension.js $(UUID)/prefs.js $(UUID)/service.js $(UUID)/common/utils.js $(UUID)/daemon/interface.js $(UUID)/daemon/profile.js $(UUID)/daemon/server.js $(UUID)/daemon/timer.js $(UUID)/ui/control.js $(UUID)/ui/panelMenu.js $(UUID)/ui/popupMenu.js resources/ui/prefs.ui resources/ui/rotation.ui
 
 update-translation: all
 	cd po; \

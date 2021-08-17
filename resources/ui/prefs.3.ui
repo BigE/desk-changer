@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Generated with glade 3.38.2 -->
 <interface>
   <requires lib="gtk+" version="3.24"/>
   <object class="GtkTextBuffer" id="allowed_mime_types">
@@ -14,13 +13,9 @@
   </object>
   <object class="GtkListStore" id="keyboard">
     <columns>
-      <!-- column-name label -->
       <column type="gchararray"/>
-      <!-- column-name mods -->
       <column type="gint"/>
-      <!-- column-name key -->
       <column type="gint"/>
-      <!-- column-name settings-key -->
       <column type="gchararray"/>
     </columns>
     <data>
@@ -40,32 +35,22 @@
   </object>
   <object class="GtkListStore" id="locations">
     <columns>
-      <!-- column-name location -->
       <column type="gchararray"/>
-      <!-- column-name recursive -->
       <column type="gboolean"/>
-      <!-- column-name is_collection -->
       <column type="gboolean"/>
     </columns>
   </object>
   <object class="GtkListStore" id="profiles">
     <columns>
-      <!-- column-name profile -->
       <column type="gchararray"/>
     </columns>
   </object>
   <template class="PrefsWidget" parent="GtkBox">
-    <property name="visible">True</property>
-    <property name="can-focus">True</property>
     <property name="orientation">vertical</property>
     <child>
       <object class="GtkNotebook">
-        <property name="visible">True</property>
-        <property name="can-focus">True</property>
         <child>
           <object class="GtkBox">
-            <property name="visible">True</property>
-            <property name="can-focus">True</property>
             <property name="margin-start">5</property>
             <property name="margin-end">5</property>
             <property name="margin-top">5</property>
@@ -74,18 +59,11 @@
             <property name="spacing">5</property>
             <child>
               <object class="GtkFrame">
-                <property name="visible">True</property>
-                <property name="can-focus">True</property>
-                <property name="label-xalign">0</property>
                 <child>
                   <object class="GtkBox">
-                    <property name="visible">True</property>
-                    <property name="can-focus">True</property>
                     <property name="orientation">vertical</property>
                     <child>
                       <object class="GtkTreeView" id="tree_locations">
-                        <property name="visible">True</property>
-                        <property name="can-focus">True</property>
                         <property name="model">locations</property>
                         <child internal-child="selection">
                           <object class="GtkTreeSelection"/>
@@ -93,10 +71,10 @@
                         <child>
                           <object class="GtkTreeViewColumn">
                             <property name="title" translatable="yes">Location URI</property>
-                            <property name="expand">True</property>
+                            <property name="expand">1</property>
                             <child>
                               <object class="GtkCellRendererText">
-                                <property name="editable">True</property>
+                                <property name="editable">1</property>
                                 <signal name="edited" handler="_on_cell_location_edited" swapped="no"/>
                               </object>
                               <attributes>
@@ -127,8 +105,7 @@
                     </child>
                     <child>
                       <object class="GtkBox">
-                        <property name="visible">True</property>
-                        <property name="can-focus">False</property>
+                        <property name="can-focus">0</property>
                         <property name="margin-start">5</property>
                         <property name="margin-end">5</property>
                         <property name="margin-top">5</property>
@@ -137,9 +114,7 @@
                         <child>
                           <object class="GtkButton">
                             <property name="label" translatable="yes">Add Item(s)</property>
-                            <property name="visible">True</property>
-                            <property name="can-focus">True</property>
-                            <property name="receives-default">True</property>
+                            <property name="receives-default">1</property>
                             <signal name="clicked" handler="_on_button_add_items_clicked" swapped="no"/>
                           </object>
                           <packing>
@@ -151,9 +126,7 @@
                         <child>
                           <object class="GtkButton">
                             <property name="label" translatable="yes">Add Folder(s)</property>
-                            <property name="visible">True</property>
-                            <property name="can-focus">True</property>
-                            <property name="receives-default">True</property>
+                            <property name="receives-default">1</property>
                             <signal name="clicked" handler="_on_button_add_folders_clicked" swapped="no"/>
                           </object>
                           <packing>
@@ -165,9 +138,7 @@
                         <child>
                           <object class="GtkButton">
                             <property name="label" translatable="yes">Remove Item</property>
-                            <property name="visible">True</property>
-                            <property name="can-focus">True</property>
-                            <property name="receives-default">True</property>
+                            <property name="receives-default">1</property>
                             <signal name="clicked" handler="_on_button_remove_item_clicked" swapped="no"/>
                           </object>
                           <packing>
@@ -197,13 +168,11 @@
             </child>
             <child>
               <object class="GtkBox">
-                <property name="visible">True</property>
-                <property name="can-focus">False</property>
+                <property name="can-focus">0</property>
                 <property name="tooltip-text" translatable="yes">Edit the locations of the currently selected profile.</property>
                 <child>
                   <object class="GtkLabel">
-                    <property name="visible">True</property>
-                    <property name="can-focus">False</property>
+                    <property name="can-focus">0</property>
                     <property name="halign">start</property>
                     <property name="label" translatable="yes">Edit Profile</property>
                   </object>
@@ -215,8 +184,7 @@
                 </child>
                 <child>
                   <object class="GtkComboBox" id="combo_location_profile">
-                    <property name="visible">True</property>
-                    <property name="can-focus">False</property>
+                    <property name="can-focus">0</property>
                     <property name="halign">end</property>
                     <property name="model">profiles</property>
                     <property name="id-column">0</property>
@@ -243,16 +211,13 @@
             </child>
             <child>
               <object class="GtkBox">
-                <property name="visible">True</property>
-                <property name="can-focus">False</property>
+                <property name="can-focus">0</property>
                 <property name="halign">end</property>
                 <property name="spacing">5</property>
                 <child>
                   <object class="GtkButton">
                     <property name="label" translatable="yes">Add New Profile</property>
-                    <property name="visible">True</property>
-                    <property name="can-focus">True</property>
-                    <property name="receives-default">True</property>
+                    <property name="receives-default">1</property>
                     <property name="tooltip-text" translatable="yes">Add a new profile</property>
                     <signal name="clicked" handler="_on_button_add_profile_clicked" swapped="no"/>
                   </object>
@@ -265,9 +230,7 @@
                 <child>
                   <object class="GtkButton">
                     <property name="label" translatable="yes">Remove Selected Profile</property>
-                    <property name="visible">True</property>
-                    <property name="can-focus">True</property>
-                    <property name="receives-default">True</property>
+                    <property name="receives-default">1</property>
                     <property name="tooltip-text" translatable="yes">Remove the selected profile</property>
                     <signal name="clicked" handler="_on_button_remove_profile_clicked" swapped="no"/>
                   </object>
@@ -288,8 +251,7 @@
         </child>
         <child type="tab">
           <object class="GtkLabel">
-            <property name="visible">True</property>
-            <property name="can-focus">False</property>
+            <property name="can-focus">0</property>
             <property name="label" translatable="yes">Profiles</property>
           </object>
           <packing>
@@ -298,13 +260,9 @@
         </child>
         <child>
           <object class="GtkBox">
-            <property name="visible">True</property>
-            <property name="can-focus">True</property>
             <property name="orientation">vertical</property>
             <child>
               <object class="GtkTreeView">
-                <property name="visible">True</property>
-                <property name="can-focus">True</property>
                 <property name="model">keyboard</property>
                 <child internal-child="selection">
                   <object class="GtkTreeSelection"/>
@@ -312,7 +270,7 @@
                 <child>
                   <object class="GtkTreeViewColumn">
                     <property name="title" translatable="yes">Shortcut</property>
-                    <property name="expand">True</property>
+                    <property name="expand">1</property>
                     <child>
                       <object class="GtkCellRendererText"/>
                       <attributes>
@@ -326,7 +284,7 @@
                     <property name="title" translatable="yes">Key Combination</property>
                     <child>
                       <object class="GtkCellRendererAccel">
-                        <property name="editable">True</property>
+                        <property name="editable">1</property>
                         <signal name="accel-cleared" handler="_on_accel_key" swapped="no"/>
                         <signal name="accel-edited" handler="_on_accel_key" swapped="no"/>
                       </object>
@@ -351,8 +309,7 @@
         </child>
         <child type="tab">
           <object class="GtkLabel">
-            <property name="visible">True</property>
-            <property name="can-focus">False</property>
+            <property name="can-focus">0</property>
             <property name="label" translatable="yes">Keyboard</property>
           </object>
           <packing>
@@ -362,8 +319,7 @@
         </child>
         <child>
           <object class="GtkBox">
-            <property name="visible">True</property>
-            <property name="can-focus">False</property>
+            <property name="can-focus">0</property>
             <property name="margin-start">5</property>
             <property name="margin-end">5</property>
             <property name="margin-top">5</property>
@@ -372,12 +328,10 @@
             <property name="spacing">10</property>
             <child>
               <object class="GtkBox">
-                <property name="visible">True</property>
-                <property name="can-focus">False</property>
+                <property name="can-focus">0</property>
                 <child>
                   <object class="GtkLabel">
-                    <property name="visible">True</property>
-                    <property name="can-focus">False</property>
+                    <property name="can-focus">0</property>
                     <property name="label" translatable="yes">Current Profile</property>
                   </object>
                   <packing>
@@ -388,8 +342,7 @@
                 </child>
                 <child>
                   <object class="GtkComboBox" id="combo_current_profile">
-                    <property name="visible">True</property>
-                    <property name="can-focus">False</property>
+                    <property name="can-focus">0</property>
                     <property name="halign">end</property>
                     <property name="model">profiles</property>
                     <signal name="changed" handler="_on_combo_current_profile_changed" swapped="no"/>
@@ -415,12 +368,10 @@
             </child>
             <child>
               <object class="GtkBox">
-                <property name="visible">True</property>
-                <property name="can-focus">False</property>
+                <property name="can-focus">0</property>
                 <child>
                   <object class="GtkLabel">
-                    <property name="visible">True</property>
-                    <property name="can-focus">False</property>
+                    <property name="can-focus">0</property>
                     <property name="label" translatable="yes">Show Icon as Preview</property>
                   </object>
                   <packing>
@@ -431,8 +382,6 @@
                 </child>
                 <child>
                   <object class="GtkSwitch" id="switch_icon_preview">
-                    <property name="visible">True</property>
-                    <property name="can-focus">True</property>
                     <property name="halign">end</property>
                   </object>
                   <packing>
@@ -450,12 +399,10 @@
             </child>
             <child>
               <object class="GtkBox">
-                <property name="visible">True</property>
-                <property name="can-focus">False</property>
+                <property name="can-focus">0</property>
                 <child>
                   <object class="GtkLabel">
-                    <property name="visible">True</property>
-                    <property name="can-focus">False</property>
+                    <property name="can-focus">0</property>
                     <property name="label" translatable="yes">Notifications</property>
                   </object>
                   <packing>
@@ -466,8 +413,6 @@
                 </child>
                 <child>
                   <object class="GtkSwitch" id="switch_notifications">
-                    <property name="visible">True</property>
-                    <property name="can-focus">True</property>
                     <property name="halign">end</property>
                   </object>
                   <packing>
@@ -490,8 +435,7 @@
         </child>
         <child type="tab">
           <object class="GtkLabel">
-            <property name="visible">True</property>
-            <property name="can-focus">False</property>
+            <property name="can-focus">0</property>
             <property name="label" translatable="yes">Extension</property>
           </object>
           <packing>
@@ -501,8 +445,6 @@
         </child>
         <child>
           <object class="GtkBox">
-            <property name="visible">True</property>
-            <property name="can-focus">True</property>
             <property name="margin-start">5</property>
             <property name="margin-end">5</property>
             <property name="margin-top">5</property>
@@ -511,13 +453,10 @@
             <property name="spacing">10</property>
             <child>
               <object class="GtkFrame">
-                <property name="visible">True</property>
-                <property name="can-focus">False</property>
-                <property name="label-xalign">0</property>
+                <property name="can-focus">0</property>
                 <child>
                   <object class="GtkBox">
-                    <property name="visible">True</property>
-                    <property name="can-focus">False</property>
+                    <property name="can-focus">0</property>
                     <property name="margin-start">5</property>
                     <property name="margin-end">5</property>
                     <property name="margin-top">5</property>
@@ -526,12 +465,10 @@
                     <property name="spacing">5</property>
                     <child>
                       <object class="GtkBox">
-                        <property name="visible">True</property>
-                        <property name="can-focus">False</property>
+                        <property name="can-focus">0</property>
                         <child>
                           <object class="GtkLabel">
-                            <property name="visible">True</property>
-                            <property name="can-focus">False</property>
+                            <property name="can-focus">0</property>
                             <property name="tooltip-text" translatable="yes">The rotation mode of the damon. Interval will rotate at the specified timer interval. Hourly will rotate at the top of each hour. Disabled will disable automatic rotation.</property>
                             <property name="label" translatable="yes">Mode</property>
                           </object>
@@ -543,8 +480,7 @@
                         </child>
                         <child>
                           <object class="GtkComboBox" id="combo_rotation_mode">
-                            <property name="visible">True</property>
-                            <property name="can-focus">False</property>
+                            <property name="can-focus">0</property>
                             <property name="halign">end</property>
                             <property name="id-column">0</property>
                             <signal name="changed" handler="_on_combo_rotation_mode_changed" swapped="no"/>
@@ -570,12 +506,10 @@
                     </child>
                     <child>
                       <object class="GtkBox">
-                        <property name="visible">True</property>
-                        <property name="can-focus">False</property>
+                        <property name="can-focus">0</property>
                         <child>
                           <object class="GtkLabel">
-                            <property name="visible">True</property>
-                            <property name="can-focus">False</property>
+                            <property name="can-focus">0</property>
                             <property name="tooltip-text" translatable="yes">This only applies to the Interval Timer option and sets the interval at which the timer will change the wallpaper.</property>
                             <property name="label" translatable="yes">Custom Timer (in seconds)</property>
                           </object>
@@ -587,8 +521,6 @@
                         </child>
                         <child>
                           <object class="GtkSpinButton" id="spinner_interval">
-                            <property name="visible">True</property>
-                            <property name="can-focus">True</property>
                             <property name="halign">end</property>
                             <property name="adjustment">interval</property>
                           </object>
@@ -609,8 +541,7 @@
                 </child>
                 <child type="label">
                   <object class="GtkLabel">
-                    <property name="visible">True</property>
-                    <property name="can-focus">False</property>
+                    <property name="can-focus">0</property>
                     <property name="label" translatable="yes">Rotation Options</property>
                   </object>
                 </child>
@@ -623,13 +554,11 @@
             </child>
             <child>
               <object class="GtkBox">
-                <property name="visible">True</property>
-                <property name="can-focus">False</property>
+                <property name="can-focus">0</property>
                 <property name="tooltip-text" translatable="yes">Ensure that the daemon process is running when the extension is loaded.</property>
                 <child>
                   <object class="GtkLabel">
-                    <property name="visible">True</property>
-                    <property name="can-focus">False</property>
+                    <property name="can-focus">0</property>
                     <property name="label" translatable="yes">Auto Start Daemon</property>
                   </object>
                   <packing>
@@ -640,8 +569,6 @@
                 </child>
                 <child>
                   <object class="GtkSwitch" id="switch_auto_start">
-                    <property name="visible">True</property>
-                    <property name="can-focus">True</property>
                     <property name="halign">end</property>
                   </object>
                   <packing>
@@ -659,13 +586,11 @@
             </child>
             <child>
               <object class="GtkBox">
-                <property name="visible">True</property>
-                <property name="can-focus">False</property>
+                <property name="can-focus">0</property>
                 <property name="tooltip-text" translatable="yes">If enabled the daemon will save the current and next wallpaper when it stops. When it starts, if the values are present, it will then use them to restore the current wallpaper and fill the queue.</property>
                 <child>
                   <object class="GtkLabel">
-                    <property name="visible">True</property>
-                    <property name="can-focus">False</property>
+                    <property name="can-focus">0</property>
                     <property name="label" translatable="yes">Remember Profile State</property>
                   </object>
                   <packing>
@@ -676,8 +601,6 @@
                 </child>
                 <child>
                   <object class="GtkSwitch" id="switch_remember_profile_state">
-                    <property name="visible">True</property>
-                    <property name="can-focus">True</property>
                     <property name="halign">end</property>
                   </object>
                   <packing>
@@ -695,13 +618,11 @@
             </child>
             <child>
               <object class="GtkBox">
-                <property name="visible">True</property>
-                <property name="can-focus">False</property>
+                <property name="can-focus">0</property>
                 <property name="tooltip-text" translatable="yes">The current status of the daemon itself. Toggling this will swith the entire daemon process on/off respectively.</property>
                 <child>
                   <object class="GtkLabel">
-                    <property name="visible">True</property>
-                    <property name="can-focus">False</property>
+                    <property name="can-focus">0</property>
                     <property name="label" translatable="yes">Daemon Running</property>
                   </object>
                   <packing>
@@ -712,8 +633,6 @@
                 </child>
                 <child>
                   <object class="GtkSwitch" id="switch_daemon_state">
-                    <property name="visible">True</property>
-                    <property name="can-focus">True</property>
                     <property name="halign">end</property>
                     <signal name="state-set" handler="_on_switch_daemon_running_state" swapped="no"/>
                   </object>
@@ -732,14 +651,11 @@
             </child>
             <child>
               <object class="GtkBox">
-                <property name="visible">True</property>
-                <property name="can-focus">True</property>
                 <property name="orientation">vertical</property>
                 <property name="spacing">5</property>
                 <child>
                   <object class="GtkLabel">
-                    <property name="visible">True</property>
-                    <property name="can-focus">False</property>
+                    <property name="can-focus">0</property>
                     <property name="halign">start</property>
                     <property name="label" translatable="yes">Allowed Mime Types</property>
                   </object>
@@ -751,18 +667,13 @@
                 </child>
                 <child>
                   <object class="GtkFrame">
-                    <property name="visible">True</property>
-                    <property name="can-focus">True</property>
-                    <property name="label-xalign">0</property>
                     <child>
                       <object class="GtkTextView">
                         <property name="width-request">200</property>
                         <property name="height-request">100</property>
-                        <property name="visible">True</property>
-                        <property name="can-focus">True</property>
                         <property name="buffer">allowed_mime_types</property>
-                        <property name="accepts-tab">False</property>
-                        <property name="monospace">True</property>
+                        <property name="accepts-tab">0</property>
+                        <property name="monospace">1</property>
                       </object>
                     </child>
                     <child type="label_item">
@@ -789,12 +700,118 @@
         </child>
         <child type="tab">
           <object class="GtkLabel">
-            <property name="visible">True</property>
-            <property name="can-focus">False</property>
+            <property name="can-focus">0</property>
             <property name="label" translatable="yes">Daemon</property>
           </object>
           <packing>
             <property name="position">3</property>
+            <property name="tab-fill">False</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkBox">
+            <property name="can-focus">0</property>
+            <property name="margin-start">10</property>
+            <property name="margin-end">10</property>
+            <property name="margin-top">10</property>
+            <property name="margin-bottom">10</property>
+            <property name="orientation">vertical</property>
+            <property name="spacing">5</property>
+            <child>
+              <object class="GtkImage" id="image_about_logo">
+                <property name="can-focus">0</property>
+                <property name="margin-start">20</property>
+                <property name="margin-end">20</property>
+                <property name="margin-top">20</property>
+                <property name="margin-bottom">20</property>
+                <property name="resource">/org/gnome/Shell/Extensions/DeskChanger/icons/wallpaper-icon.svg</property>
+              </object>
+              <packing>
+                <property name="expand">True</property>
+                <property name="fill">True</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel" id="label_about_name">
+                <property name="can-focus">0</property>
+                <property name="label" translatable="yes">DeskChanger</property>
+                <attributes>
+                  <attribute name="weight" value="bold"></attribute>
+                </attributes>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel" id="label_about_version">
+                <property name="can-focus">0</property>
+                <property name="label" translatable="yes">Version 31</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">2</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel" id="label_about_description">
+                <property name="can-focus">0</property>
+                <property name="margin-start">10</property>
+                <property name="margin-end">10</property>
+                <property name="margin-top">10</property>
+                <property name="margin-bottom">10</property>
+                <property name="label" translatable="yes">Simple wallpaper changer with multiple profile support. Integrates into the shell by providing it&apos;s own panel icon. The daemon is written using gjs and runs independently of the extension as a background process.</property>
+                <property name="justify">center</property>
+                <property name="wrap">1</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">3</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel" id="label_about_url">
+                <property name="can-focus">0</property>
+                <property name="label" translatable="yes">&lt;a href=&quot;https://github.com/BigE/desk-changer&quot;&gt;https://github.com/BigE/desk-changer&lt;/a&gt;</property>
+                <property name="use-markup">1</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">4</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel" id="label_about_license">
+                <property name="can-focus">0</property>
+                <property name="label" translatable="yes">&lt;span size=&quot;small&quot;&gt;This program comes with absolutely no warranty.
+See the &lt;a href=&quot;https://opensource.org/licenses/mit-license.php&quot;&gt;The MIT License (MIT)&lt;/a&gt; for details.&lt;/span&gt;</property>
+                <property name="use-markup">1</property>
+                <property name="justify">center</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">5</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="position">4</property>
+          </packing>
+        </child>
+        <child type="tab">
+          <object class="GtkLabel">
+            <property name="can-focus">0</property>
+            <property name="label" translatable="yes">About</property>
+          </object>
+          <packing>
+            <property name="position">4</property>
             <property name="tab-fill">False</property>
           </packing>
         </child>

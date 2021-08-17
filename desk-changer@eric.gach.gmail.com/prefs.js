@@ -33,7 +33,12 @@ const PrefsWidget = GObject.registerClass({
         'combo_current_profile',
         'combo_location_profile',
         'combo_rotation_mode',
+        'image_about_logo',
         'keyboard',
+        'label_about_description',
+        'label_about_name',
+        'label_about_url',
+        'label_about_version',
         'locations',
         'profiles',
         'spinner_interval',
@@ -89,6 +94,11 @@ class PrefsWidget extends Gtk.Box {
         this._daemon.connectSignal('Running', (proxy, name, [state]) => {
             this._switch_daemon_state.set_active(state);
         });
+        // label up
+        this._label_about_description.set_label(Me.metadata.description);
+        this._label_about_name.set_label(Me.metadata.name);
+        this._label_about_url.set_markup(`<a href="${Me.metadata.url}">${Me.metadata.url}</a>`);
+        this._label_about_version.set_label(`Version ${Me.metadata.version}`);
 
         this._is_init = false;
         if (shellVersion < 40) {

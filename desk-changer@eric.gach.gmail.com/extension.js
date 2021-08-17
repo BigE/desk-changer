@@ -1,6 +1,7 @@
 'use strict';
 
-const Me = imports.misc.extensionUtils.getCurrentExtension();
+const ExtensionUtils = imports.misc.extensionUtils;
+const Me = ExtensionUtils.getCurrentExtension();
 // first init the common things
 Me.imports._deskchanger;
 
@@ -55,6 +56,8 @@ function disable() {
 function enable() {
     deskchanger.debug('enabling extension');
 
+    Utils.installService();
+    daemon = Service.makeProxyWrapper();
 
     changed_id = daemon.connectSignal('Changed', function (proxy, name, [uri]) {
         notify(_('Wallpaper changed: %s'.format(uri)));
@@ -133,7 +136,5 @@ function notify(message, force) {
 function init() {
     log(`init ${Me.uuid} version ${Me.metadata.version}`);
 
-    Utils.installService();
-
-    daemon = Service.makeProxyWrapper();
+    ExtensionUtils.initTranslations();
 }
