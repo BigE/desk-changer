@@ -14,7 +14,7 @@ without reloading the daemon.
 The requirements are for the most recent version of the plugin. Previous
 versions support older versions of gnome-shell.
 
-* gnome-shell 3.30 or higher
+* gnome-shell 3.32 or higher
 * gjs 1.54 or higher
 
 ## Install
