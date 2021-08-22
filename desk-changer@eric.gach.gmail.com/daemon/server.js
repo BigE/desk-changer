@@ -256,10 +256,6 @@ class Server extends Gio.Application {
 
         // Keep us open and running... we are a daemon
         this.hold();
-
-        if (deskchanger.settings.auto_start) {
-            this.start();
-        }
     }
 
     _create_timer() {
