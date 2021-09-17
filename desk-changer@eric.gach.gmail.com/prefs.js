@@ -99,9 +99,9 @@ class DeskChangerPrefs extends GObject.Object {
         switch_daemon.set_active(daemon.running);
         switch_daemon.connect('notify::active', () => {
             if (switch_daemon.get_state() && !daemon.running) {
-                daemon.Start();
+                daemon.StartSync();
             } else if (!switch_daemon.get_state() && daemon.running) {
-                daemon.Stop();
+                daemon.StopSync();
             }
         });
         daemon.connectSignal('toggled', (running) => {
