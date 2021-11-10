@@ -1,0 +1,292 @@
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+#
+# chaozhi_l <chaozhi_l@foxmail.com>, 2021.
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2020-12-29 15:41-0600\n"
+"PO-Revision-Date: 2021-02-09 17:12+0800\n"
+"Last-Translator: chaozhi_l <chaozhi_l@foxmail.com>\n"
+"Language-Team: \n"
+"Language: zh_CN\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"X-Generator: Poedit 2.4.1\n"
+
+#: extension.js:60
+#, fuzzy, javascript-format
+#| msgid "Wallpaper Changed: %s"
+msgid "Wallpaper changed: %s"
+msgstr "壁纸已更改：%s"
+
+#: extension.js:64
+#, javascript-format
+msgid "Profile changed to %s"
+msgstr "配置更改为 %s"
+
+#: extension.js:69
+msgid "Notifications are now enabled"
+msgstr "通知已启用"
+
+#: extension.js:70
+msgid "Notifications are now disabled"
+msgstr "通知已关闭"
+
+#: extension.js:76
+msgid "Wallpapers will be shown in a random order"
+msgstr "壁纸将以随机顺序显示"
+
+#: extension.js:77
+msgid "Wallpapers will be shown in the order they were loaded"
+msgstr "壁纸将按照其加载顺序显示"
+
+#: extension.js:86
+#, javascript-format
+msgid "Rotation will occur every %d seconds"
+msgstr "每 %d 秒轮换一次"
+
+#: extension.js:89
+msgid "Rotation will occur at the beginning of every hour"
+msgstr "每小时开始时轮换一次"
+
+#: extension.js:92
+#, fuzzy
+#| msgid "Notifications are now disabled"
+msgid "Rotation has been disabled"
+msgstr "通知已关闭"
+
+#: prefs.js:41
+#, fuzzy
+#| msgid "DeskChanger Settings"
+msgid "DeskChanger Rotation Mode"
+msgstr "设置 DeskChanger"
+
+#: prefs.js:73
+msgid "DeskChanger Daemon Status"
+msgstr "DeskChanger 后台进程的状态"
+
+#: prefs.js:93
+msgid "DeskChanger Autostart Daemon"
+msgstr "自动启动 DeskChanger 后台进程"
+
+#: prefs.js:105
+msgid "Remember the profiles current/next wallpaper"
+msgstr "记住当前/下一个壁纸的配置"
+
+#: prefs.js:117
+msgid "Wallpaper Timer Interval (seconds)"
+msgstr "墙纸时间间隔（秒）"
+
+#: prefs.js:132
+msgid "Allowed Mime Types"
+msgstr "允许的Mime类型"
+
+#: prefs.js:149
+msgid "Daemon"
+msgstr "后台进程"
+
+#: prefs.js:154 prefs.js:287
+msgid "Profile"
+msgstr "配置文件"
+
+#: prefs.js:157 ui/popupMenu.js:276
+msgid "Desktop Profile"
+msgstr "桌面配置"
+
+#: prefs.js:182
+msgid "Show Preview as Icon"
+msgstr "以图标显示预览"
+
+#: prefs.js:195
+msgid "Show Notifications"
+msgstr "显示通知"
+
+#: prefs.js:205
+msgid "Extension"
+msgstr "扩展"
+
+#: prefs.js:213
+msgid "Action"
+msgstr "动作"
+
+#: prefs.js:231
+msgid "Next Wallpaper"
+msgstr "下一个壁纸"
+
+#: prefs.js:235
+msgid "Previous Wallpaper"
+msgstr "上一个壁纸"
+
+#: prefs.js:251 prefs.js:263
+msgid "Failed to update keybinding"
+msgstr "快捷键更新失败"
+
+#: prefs.js:272
+msgid "Modify"
+msgstr "修改"
+
+#: prefs.js:280
+msgid "Keyboard Shortcuts"
+msgstr "快捷键"
+
+#: prefs.js:289
+msgid "Add"
+msgstr "增加"
+
+#: prefs.js:290 prefs.js:393
+msgid "Remove"
+msgstr "移除"
+
+#: prefs.js:297
+msgid "Profile Name"
+msgstr "配置文件名称"
+
+#: prefs.js:303
+msgid "OK"
+msgstr "好了"
+
+#: prefs.js:304
+msgid "Cancel"
+msgstr "取消"
+
+#: prefs.js:320
+#, javascript-format
+msgid "Are you sure you want to delete the profile \"%s\"?"
+msgstr "你确定要删除配置文件“%s”？"
+
+#: prefs.js:323
+msgid "Yes"
+msgstr "是"
+
+#: prefs.js:324
+msgid "No"
+msgstr "不"
+
+#: prefs.js:362
+msgid "Uri"
+msgstr "Uri"
+
+#: prefs.js:386
+msgid "Sub Folders"
+msgstr "子文件夹"
+
+#: prefs.js:394 prefs.js:407
+msgid "Add Image"
+msgstr "添加图片"
+
+#: prefs.js:417 prefs.js:419
+msgid "Add Folder"
+msgstr "添加文件夹"
+
+#: prefs.js:427
+msgid "Profiles"
+msgstr "配置文件"
+
+#: daemon/server.js:32
+#, fuzzy
+#| msgid "Open Next Wallpaper"
+msgid "The next wallpaper in queue"
+msgstr "打开下一个壁纸文件"
+
+#: daemon/server.js:39
+msgid "Check if the daemon is running"
+msgstr "检查守护进程是否正在运行"
+
+#: daemon/server.js:70
+msgid "Enable debugging"
+msgstr "启用调试"
+
+#: daemon/server.js:71
+#, fuzzy
+#| msgid "Show Preview as Icon"
+msgid "Show release version"
+msgstr "以图标显示预览"
+
+#: ui/panelMenu.js:23
+msgid "Notifications"
+msgstr "通知"
+
+#: ui/panelMenu.js:24
+#, fuzzy
+#| msgid "Remember Profile State"
+msgid "Remember profile state"
+msgstr "记住配置文件状态"
+
+#: ui/panelMenu.js:33
+msgid "DeskChanger Settings"
+msgstr "设置 DeskChanger"
+
+#: ui/popupMenu.js:35
+msgid "No more wallpapers available in history"
+msgstr "历史上没有更多的壁纸可用"
+
+#: ui/popupMenu.js:91
+msgid "DeskChanger Daemon"
+msgstr "DeskChanger 后台进程"
+
+#: ui/popupMenu.js:129
+#, fuzzy
+#| msgid "Open Current Wallpaper"
+msgid "Open current wallpaper"
+msgstr "打开当前壁纸文件"
+
+#: ui/popupMenu.js:219
+#, fuzzy
+#| msgid "Open Next Wallpaper"
+msgid "Open next wallpaper"
+msgstr "打开下一个壁纸文件"
+
+#: ui/popupMenu.js:284
+msgid "Rotation mode"
+msgstr "轮换模式"
+
+#: ui/popupMenu.js:285
+msgid "Interval timer"
+msgstr "间隔时间"
+
+#: ui/popupMenu.js:286
+msgid "Beginning of hour"
+msgstr "每小时开始时"
+
+#: ui/popupMenu.js:287
+msgid "Disabled"
+msgstr "禁止"
+
+#~ msgid "Change with Profile"
+#~ msgstr "随配置文件更改"
+
+#~ msgid "Update Lock Screen"
+#~ msgstr "更新锁屏"
+
+#, javascript-format
+#~ msgid "Daemon Error: %s"
+#~ msgstr "后台进程错误：%s"
+
+#~ msgid "Lock Screen Profile"
+#~ msgstr "锁屏配置"
+
+#~ msgid "(inherited)"
+#~ msgstr "(继承)"
+
+#~ msgid "(inherit from desktop)"
+#~ msgstr "(从桌面继承)"
+
+#~ msgid "Update LockScreen Background"
+#~ msgstr "更新锁屏背景"
+
+#~ msgid "Lockscreen Profile"
+#~ msgstr "锁屏配置文件"
+
+#~ msgid "Integrate extension in system menu"
+#~ msgstr "在系统菜单中集成扩展"
+
+#, javascript-format
+#~ msgid "The keybinding %s is already in use"
+#~ msgstr "快捷键 %s 已经启用"
+
+#~ msgid "Path"
+#~ msgstr "路径"
