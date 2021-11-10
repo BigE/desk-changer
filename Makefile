@@ -29,4 +29,4 @@ update-translation: all
 
 zipfile: all
 	cd ./$(UUID)/; \
-	zip -r ../$(UUID)-$(VERSION).zip . -x 'resources/ui/*' -x 'resources/icons/*' -x 'resources/*.xml' -x 'resources/*.in'
+	zip -r ../$(UUID)-$(VERSION).zip . -x 'resources/ui/*' -x 'resources/icons/*' -x 'resources/*.xml' -x 'resources/*.in' -x '*.gitkeep'

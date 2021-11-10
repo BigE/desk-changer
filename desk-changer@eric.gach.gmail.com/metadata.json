@@ -4,13 +4,13 @@
   "name": "Desk Changer",
   "settings-schema": "org.gnome.shell.extensions.desk-changer",
   "shell-version": [
-    "3.32",
     "3.34",
     "3.36",
     "3.38",
-    "40"
+    "40",
+    "41"
   ],
   "url": "https://github.com/BigE/desk-changer/",
   "uuid": "desk-changer@eric.gach.gmail.com",
-  "version": "32"
+  "version": "3333"
 }

@@ -247,6 +247,11 @@ class DeskChangerProfile extends GObject.Object {
             deskchanger.settings.disconnect(this._profiles_changed_id);
         }
 
+        this._monitors.forEach((monitor) => {
+            monitor.cancel();
+            deskchanger.debug(`destroyed directory monitor`);
+        });
+
         this._history.clear();
         this._queue.clear();
         this._sequence = 0;
@@ -266,8 +271,20 @@ class DeskChangerProfile extends GObject.Object {
      * @param {string} other_file If applicable, the changed directory
      * @param {Gio.FileMonitorEvent} event_type Event type flag
      */
-    _directory_changed(file, other_file, event_type) {
-        deskchanger.debug(`detected change of "${event_type}" for ${file}`);
+    _directory_changed(_monitor, file, other_file, event_type) {
+        deskchanger.debug(`detected change of "${event_type}" for ${file.get_uri()}`);
+        if (event_type === Gio.FileMonitorEvent.CREATED) {
+            // TODO: make the recursive check against the parent
+            this._load_uri(this._profile, file.get_uri(), false);
+        } else if (event_type === Gio.FileMonitorEvent.DELETED) {
+            let uri = file.get_uri(),
+                index = this._wallpapers.indexOf(uri);
+
+            if (index >= 0) {
+                this._wallpapers.splice(index);
+                deskchanger.debug(`removed ${uri} from profile ${this._profile}`);
+            }
+        }
     }
 
     /**
