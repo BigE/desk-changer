@@ -89,9 +89,9 @@ class Server extends Gio.Application {
     }
 
     loadprofile(profile=null) {
-        let _profile = this._profile.loaded;
+        let _profile = this._profile.profile;
 
-        if (_profile) {
+        if (this._profile.loaded) {
             this._profile.unload(this._background.get_string('picture-uri'));
         }
 

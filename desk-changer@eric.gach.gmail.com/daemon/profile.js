@@ -64,6 +64,10 @@ class DeskChangerProfile extends GObject.Object {
         return Boolean(this._profile);
     }
 
+    get profile() {
+        return this._profile;
+    }
+
     get preview() {
         if (!this.loaded) {
             return null;
