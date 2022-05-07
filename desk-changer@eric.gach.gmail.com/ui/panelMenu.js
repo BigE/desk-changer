@@ -53,7 +53,7 @@ class DeskChangerPanelMenuIcon extends St.Bin {
         });
         this._icon = null;
         this._preview = null;
-        this.update_child();
+        this.update_child(this._daemon.Preview);
 
         this._preview_id = deskchanger.settings.connect('changed::icon-preview', (settings, key) => {
             this.update_child(this._daemon.Preview);

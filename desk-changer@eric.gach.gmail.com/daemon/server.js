@@ -89,9 +89,9 @@ class Server extends Gio.Application {
     }
 
     loadprofile(profile=null) {
-        let _profile = this._profile.loaded;
+        let _profile = this._profile.profile;
 
-        if (_profile) {
+        if (this._profile.loaded) {
             this._profile.unload(this._background.get_string('picture-uri'));
         }
 
@@ -352,6 +352,7 @@ class Server extends Gio.Application {
     _set_wallpaper(uri) {
         deskchanger.debug(`setting wallpaper to ${uri}`);
         this._background.set_string('picture-uri', uri);
+        this._background.set_string('picture-uri-dark', uri);
         this.emit_signal('Changed', new GLib.Variant('(s)', [uri]));
     }
 }
