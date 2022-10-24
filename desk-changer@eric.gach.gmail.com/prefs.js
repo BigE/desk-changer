@@ -151,14 +151,22 @@ class PrefsWidget extends Gtk.Box {
     }
 
     _on_button_add_folders_clicked() {
-        let dialog = new AddItemsDialog({'title': 'Add Folders', 'action': Gtk.FileChooserAction.SELECT_FOLDER});
+        let dialog = new AddItemsDialog({
+            action: Gtk.FileChooserAction.SELECT_FOLDER,
+            title: 'Add Folders',
+            transient_for: this.get_root(),
+        });
 
         dialog.show();
         dialog.connect('response', this._on_response_add_items.bind(this));
     }
 
     _on_button_add_items_clicked() {
-        let dialog = new AddItemsDialog({'title': 'Add Images', 'action': Gtk.FileChooserAction.OPEN}),
+        let dialog = new AddItemsDialog({
+            action: Gtk.FileChooserAction.OPEN,
+            title: 'Add Images',
+            transient_for: this.get_root(),
+        }),
             filter = new Gtk.FileFilter();
 
         deskchanger.settings.allowed_mime_types.forEach(value => {
@@ -170,7 +178,10 @@ class PrefsWidget extends Gtk.Box {
     }
 
     _on_button_add_profile_clicked() {
-        let dialog = new Gtk.Dialog(),
+        let dialog = new Gtk.Dialog({
+                                        title: 'DeskChanger New Profile',
+                                        transient_for: this.get_root(),
+                                    }),
             mbox = dialog.get_content_area(),
             box = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL}),
             label = new Gtk.Label({label: _('Profile Name')}),
@@ -187,8 +198,9 @@ class PrefsWidget extends Gtk.Box {
             mbox.append(box);
         }
 
-        dialog.add_button(_('OK'), Gtk.ResponseType.OK);
+        dialog.add_button(_('Add'), Gtk.ResponseType.OK);
         dialog.add_button(_('Cancel'), Gtk.ResponseType.CANCEL);
+        dialog.set_default_response(Gtk.ResponseType.OK);
         dialog.connect('response', (_dialog, result) => {
             if (result === Gtk.ResponseType.OK) {
                 let _profiles = deskchanger.settings.profiles,
@@ -198,7 +210,7 @@ class PrefsWidget extends Gtk.Box {
                 this._load_profiles();
                 this._combo_location_profile.set_active_id(profile);
             }
-            dialog.destroy();
+            _dialog.destroy();
         });
         dialog.show();
     }
@@ -212,14 +224,16 @@ class PrefsWidget extends Gtk.Box {
         
         if (this._locations.iter_n_children(iterator) === 1) {
             let dialog = new Gtk.MessageDialog({
-                'buttons': Gtk.ButtonsType.OK,
-                'message-type': Gtk.MessageType.ERROR,
-                'text': 'You cannot remove the last item in a profile',
+                buttons: Gtk.ButtonsType.OK,
+                message_type: Gtk.MessageType.ERROR,
+                text: 'You cannot remove the last item in a profile',
+                title: 'DeskChanger Error',
+                transient_for: this.get_root(),
+            });
+            dialog.connect('response', (_dialog, response) => {
+                _dialog.destroy();
             });
             dialog.show();
-            dialog.connect('response', () => {
-                dialog.destroy();
-            });
             return;
         }
 
@@ -240,23 +254,26 @@ class PrefsWidget extends Gtk.Box {
 
         if (deskchanger.settings.current_profile === profile) {
             dialog = new Gtk.MessageDialog({
-                'buttons': Gtk.ButtonsType.CLOSE,
-                'message-type': Gtk.MessageType.ERROR,
-                'text': 'You cannot remove the current profile',
+                buttons: Gtk.ButtonsType.CLOSE,
+                message_type: Gtk.MessageType.ERROR,
+                text: 'You cannot remove the current profile',
+                title: 'DeskChanger Error',
+                transient_for: this.get_root(),
+            });
+            dialog.connect('response', (_dialog, response) => {
+                _dialog.destroy();
             });
             dialog.show();
-            dialog.connect('response', (_dialog, response) => {
-                dialog.destroy();
-            })
             return;
         }
 
         dialog = new Gtk.MessageDialog({
-            'buttons': Gtk.ButtonsType.YES_NO,
-            'message-type': Gtk.MessageType.QUESTION,
-            'text': `Are you sure you want to remove the profile "${profile}"?`
+            buttons: Gtk.ButtonsType.YES_NO,
+            message_type: Gtk.MessageType.QUESTION,
+            text: `Are you sure you want to remove the profile "${profile}"?`,
+            title: 'DeskChanger Confirm',
+            transient_for: this.get_root(),
         });
-        dialog.show();
         dialog.connect('response', (_dialog, response) => {
             if (response === Gtk.ResponseType.YES) {
                 profiles = deskchanger.settings.profiles;
@@ -265,8 +282,9 @@ class PrefsWidget extends Gtk.Box {
                 this._load_profiles();
             }
 
-            dialog.destroy();
+            _dialog.destroy();
         });
+        dialog.show();
     }
 
     _on_cell_location_edited(_widget, path, new_text) {
