@@ -2,7 +2,7 @@
 <schemalist>
 	<schema id="org.gnome.Shell.Extensions.DeskChanger" path="/org/gnome/shell/extensions/desk-changer/">
 		<key name="allowed-mime-types" type="as">
-			<default><![CDATA[['application/xml', 'image/jpeg', 'image/png']]]></default>
+			<default><![CDATA[['application/xml', 'image/jpeg', 'image/png', 'image/webp', 'image/svg+xml']]]></default>
 			<description>
 				These are the mime types that the daemon will recognise as valid files to load and use for backgrounds.
 			</description>
