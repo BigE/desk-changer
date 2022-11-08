@@ -92,7 +92,7 @@ class DeskChangerPopupMenuOpenCurrent extends PopupMenu.PopupMenuItem {
         this._background = new Gio.Settings({'schema': 'org.gnome.desktop.background'});
         this._activate_id = this.connect('activate', () => {
             deskchanger.debug(`opening current wallpaper ${this._background.get_string('picture-uri')}`);
-            Util.spawn(['xdg-open', this._background.get_string('picture-uri')]);
+            Gio.AppInfo.launch_default_for_uri(this._background.get_string('picture-uri'), global.create_app_launch_context(0, -1));
         });
         deskchanger.debug(`connect active (${this._activate_id})`);
     }
@@ -185,7 +185,7 @@ class DeskChangerPopupMenuPreviewMenuItem extends PopupMenu.PopupBaseMenuItem {
         this._activate_id = this.connect('activate', () => {
             if (this._preview.file) {
                 deskchanger.debug(`opening file ${this._preview.file}`);
-                Util.spawn(['xdg-open', this._preview.file]);
+                Gio.AppInfo.launch_default_for_uri(this._preview.file, global.create_app_launch_context(0, -1));
             } else {
                 Utils.error('no preview set');
             }
