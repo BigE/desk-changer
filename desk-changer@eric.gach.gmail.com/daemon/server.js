@@ -47,7 +47,8 @@ var Server = GObject.registerClass({
 },
 class Server extends Gio.Application {
     _init() {
-        this._background = new Gio.Settings({'schema': 'org.gnome.desktop.background'});
+        this._background_schema = Gio.SettingsSchemaSource.get_default().lookup('org.gnome.desktop.background', true);
+        this._background = new Gio.Settings({schema: 'org.gnome.desktop.background'});
         this._current_profile_changed_id = null;
         this._dbus_id = null;
         this._interval_changed_id = null;
@@ -352,7 +353,9 @@ class Server extends Gio.Application {
     _set_wallpaper(uri) {
         deskchanger.debug(`setting wallpaper to ${uri}`);
         this._background.set_string('picture-uri', uri);
-        this._background.set_string('picture-uri-dark', uri);
+        if (this._background_schema.has_key('picture-uri-dark')) {
+            this._background.set_string('picture-uri-dark', uri);
+        }
         this.emit_signal('Changed', new GLib.Variant('(s)', [uri]));
     }
 }
