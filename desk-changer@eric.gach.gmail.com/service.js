@@ -1,16 +1,14 @@
 'use strict';
 
-const Gio = imports.gi.Gio;
-const GObject = imports.gi.GObject;
+import Gio from 'gi://Gio';
 
-const Me = imports.misc.extensionUtils.getCurrentExtension();
-const Interface = Me.imports.daemon.interface;
+import Interface from './daemon/interface.js';
 
-function makeProxyWrapper() {
-    let proxy = Gio.DBusProxy.makeProxyWrapper(deskchanger.dbusxml);
+export function makeProxyWrapper() {
+    let proxy = Gio.DBusProxy.makeProxyWrapper(Interface.dbusxml);
     return new proxy(
         Gio.DBus.session,
-        Interface.APP_ID,
-        Interface.APP_PATH
+        Interface.app_id,
+        Interface.app_path
     );
 }

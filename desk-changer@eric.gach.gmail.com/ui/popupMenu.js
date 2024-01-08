@@ -1,20 +1,18 @@
 'use strict';
 
-const Me = imports.misc.extensionUtils.getCurrentExtension();
-const Gettext = imports.gettext.domain(Me.metadata.uuid);
-const DeskChangerControl = Me.imports.ui.control;
+import Gio from 'gi://Gio';
+import GObject from 'gi://GObject';
+import * as Main from 'resource:///org/gnome/shell/ui/main.js';
+import Meta from 'gi://Meta';
+import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
+import Shell from 'gi://Shell';
+import St from 'gi://St';
 
-const Gio = imports.gi.Gio;
-const GObject = imports.gi.GObject;
-const Main = imports.ui.main;
-const Meta = imports.gi.Meta;
-const PopupMenu = imports.ui.popupMenu;
-const Shell = imports.gi.Shell;
-const St = imports.gi.St;
-const Util = imports.misc.util;
-const _ = Gettext.gettext;
+import Interface from '../daemon/interface.js';
+import * as DeskChangerControl from './control.js';
+import * as Logger from '../common/logging.js';
 
-var ControlsMenuItem = GObject.registerClass(
+export const ControlsMenuItem = GObject.registerClass(
 class DeskChangerPopupMenuControlsMenuItem extends PopupMenu.PopupBaseMenuItem {
     _init(daemon) {
         super._init({'can_focus': false, 'reactive': false});
@@ -45,10 +43,10 @@ class DeskChangerPopupMenuControlsMenuItem extends PopupMenu.PopupBaseMenuItem {
                 name: 'ordered',
             },
         ], (state) => {
-            deskchanger.debug(`setting order to ${state}`);
-            deskchanger.settings.random = (state === 'random');
+            Logger.debug(`setting order to ${state}`);
+            Interface.settings.random = (state === 'random');
         });
-        this._random.set_state((deskchanger.settings.random)? 'random' : 'ordered');
+        this._random.set_state((Interface.settings.random)? 'random' : 'ordered');
 
         this.add_child(this._prev);
         this.add_child(this._random);
@@ -59,7 +57,7 @@ class DeskChangerPopupMenuControlsMenuItem extends PopupMenu.PopupBaseMenuItem {
         let success = false;
         success = Main.wm.addKeybinding(
             key,
-            deskchanger.settings,
+            Interface.settings,
             Meta.KeyBindingFlags.NONE,
             Shell.ActionMode.NORMAL,
             handler
@@ -67,10 +65,10 @@ class DeskChangerPopupMenuControlsMenuItem extends PopupMenu.PopupBaseMenuItem {
 
         this._bindings.push(key);
         if (success) {
-            deskchanger.debug('added keybinding ' + key);
+            Logger.debug('added keybinding ' + key);
         } else {
-            deskchanger.debug('failed to add keybinding ' + key);
-            deskchanger.debug(success);
+            Logger.debug('failed to add keybinding ' + key);
+            Logger.debug(success);
         }
     }
 
@@ -79,26 +77,26 @@ class DeskChangerPopupMenuControlsMenuItem extends PopupMenu.PopupBaseMenuItem {
             this._bindings.splice(this._bindings.indexOf(key), 1);
         }
 
-        deskchanger.debug('removing keybinding ' + key);
+        Logger.debug('removing keybinding ' + key);
         Main.wm.removeKeybinding(key);
     }
 }
 );
 
-var OpenCurrentMenuItem = GObject.registerClass(
+export const OpenCurrentMenuItem = GObject.registerClass(
 class DeskChangerPopupMenuOpenCurrent extends PopupMenu.PopupMenuItem {
     _init() {
         super._init(_('Open current wallpaper'));
         this._background = new Gio.Settings({'schema': 'org.gnome.desktop.background'});
         this._activate_id = this.connect('activate', () => {
-            deskchanger.debug(`opening current wallpaper ${this._background.get_string('picture-uri')}`);
+            Logger.debug(`opening current wallpaper ${this._background.get_string('picture-uri')}`);
             Gio.AppInfo.launch_default_for_uri(this._background.get_string('picture-uri'), global.create_app_launch_context(0, -1));
         });
-        deskchanger.debug(`connect active (${this._activate_id})`);
+        Logger.debug(`connect active (${this._activate_id})`);
     }
 
     destroy() {
-        deskchanger.debug(`disconnect active (${this._activate_id})`);
+        Logger.debug(`disconnect active (${this._activate_id})`);
         this.disconnect(this._activate_id);
 
         super.destroy();
@@ -106,7 +104,7 @@ class DeskChangerPopupMenuOpenCurrent extends PopupMenu.PopupMenuItem {
 }
 );
 
-let PopupMenuItem = GObject.registerClass(
+export const PopupMenuItem = GObject.registerClass(
 class DeskChangerPopupMenuItem extends PopupMenu.PopupMenuItem {
     _init(label, value, key) {
         super._init(label);
@@ -114,12 +112,12 @@ class DeskChangerPopupMenuItem extends PopupMenu.PopupMenuItem {
         this._key = key;
         this._key_normalized = key.replace('_', '-');
 
-        if (deskchanger.settings[this._key] === this._value) {
+        if (Interface.settings[this._key] === this._value) {
             this.setOrnament(PopupMenu.Ornament.DOT);
         }
 
-        this._handler_key_changed = deskchanger.settings.connect(`changed::${this._key_normalized}`, () => {
-            if (deskchanger.settings[key] === value) {
+        this._handler_key_changed = Interface.settings.connect(`changed::${this._key_normalized}`, () => {
+            if (Interface.settings[key] === value) {
                 this.setOrnament(PopupMenu.Ornament.DOT);
             } else {
                 this.setOrnament(PopupMenu.Ornament.NONE);
@@ -127,13 +125,13 @@ class DeskChangerPopupMenuItem extends PopupMenu.PopupMenuItem {
         });
 
         this._handler_id = this.connect('activate', () => {
-            deskchanger.settings[key] = value;
+            Interface.settings[key] = value;
         });
     }
 
     destroy() {
         if (this._handler_key_changed) {
-            deskchanger.settings.disconnect(this._handler_key_changed);
+            Interface.settings.disconnect(this._handler_key_changed);
             this._handler_key_changed = null;
         }
 
@@ -147,20 +145,20 @@ class DeskChangerPopupMenuItem extends PopupMenu.PopupMenuItem {
 }
 );
 
-let PopupSubMenuMenuItem = GObject.registerClass(
+export const PopupSubMenuMenuItem = GObject.registerClass(
 class DeskChangerPopupSubMenuMenuItem extends PopupMenu.PopupSubMenuMenuItem {
     _init(prefix, key, sensitive=true) {
-        super._init(`${prefix}: ${deskchanger.settings[key]}`);
+        super._init(`${prefix}: ${Interface.settings[key]}`);
         this._prefix = prefix;
-        this._changed_id = deskchanger.settings.connect(`changed::${key.replace('_', '-')}`, () => {
-            this.setLabel(deskchanger.settings[key]);
+        this._changed_id = Interface.settings.connect(`changed::${key.replace('_', '-')}`, () => {
+            this.setLabel(Interface.settings[key]);
         });
         this.setSensitive(sensitive);
     }
 
     destroy() {
         if (this._changed_id) {
-            deskchanger.settings.disconnect(this._changed_id);
+            Interface.settings.disconnect(this._changed_id);
         }
 
         super.destroy();
@@ -172,7 +170,7 @@ class DeskChangerPopupSubMenuMenuItem extends PopupMenu.PopupSubMenuMenuItem {
 }
 );
 
-var PreviewMenuItem = GObject.registerClass(
+export const PreviewMenuItem = GObject.registerClass(
 class DeskChangerPopupMenuPreviewMenuItem extends PopupMenu.PopupBaseMenuItem {
     _init(daemon) {
         super._init({reactive: true});
@@ -184,17 +182,17 @@ class DeskChangerPopupMenuPreviewMenuItem extends PopupMenu.PopupBaseMenuItem {
         this._box.add(this._preview);
         this._activate_id = this.connect('activate', () => {
             if (this._preview.file) {
-                deskchanger.debug(`opening file ${this._preview.file}`);
+                Logger.debug(`opening file ${this._preview.file}`);
                 Gio.AppInfo.launch_default_for_uri(this._preview.file, global.create_app_launch_context(0, -1));
             } else {
                 Utils.error('no preview set');
             }
         });
-        deskchanger.debug(`connect activate ${this._activate_id}`);
+        Logger.debug(`connect activate ${this._activate_id}`);
     }
 
     destroy() {
-        deskchanger.debug(`disconnect activate ${this._activate_id}`);
+        Logger.debug(`disconnect activate ${this._activate_id}`);
         this.disconnect(this._activate_id);
 
         this._preview.destroy();
@@ -205,26 +203,26 @@ class DeskChangerPopupMenuPreviewMenuItem extends PopupMenu.PopupBaseMenuItem {
 }
 );
 
-let ProfileMenuItem = GObject.registerClass({
+export const ProfileMenuItem = GObject.registerClass({
     Abstract: true,
 },
 class DeskChangerPopupSubMenuMenuItemProfile extends PopupSubMenuMenuItem {
     _init(label, key, sensitive=true) {
-        super._init(label, key, deskchanger.settings, sensitive);
-        this._profiles_changed_id = deskchanger.settings.connect('changed::profiles', () => {
+        super._init(label, key, Interface.settings, sensitive);
+        this._profiles_changed_id = Interface.settings.connect('changed::profiles', () => {
             this._populate_profiles(key);
         });
         this._populate_profiles(key);
     }
 
     destroy() {
-        deskchanger.settings.disconnect(this._profiles_changed_id);
+        Interface.settings.disconnect(this._profiles_changed_id);
         super.destroy();
     }
 
     _populate_profiles(key) {
         this.menu.removeAll();
-        for (let index in deskchanger.settings.profiles) {
+        for (let index in Interface.settings.profiles) {
             let item = new PopupMenuItem(index, index, key);
             this.menu.addMenuItem(item);
         }
@@ -232,7 +230,7 @@ class DeskChangerPopupSubMenuMenuItemProfile extends PopupSubMenuMenuItem {
 }
 );
 
-var ProfileDesktopMenuItem = GObject.registerClass(
+export const ProfileDesktopMenuItem = GObject.registerClass(
 class DeskChangerPopupSubMenuMenuItemProfileDesktop extends ProfileMenuItem {
     _init(sensitive = true) {
         super._init(_('Desktop Profile'), 'current_profile', sensitive);
