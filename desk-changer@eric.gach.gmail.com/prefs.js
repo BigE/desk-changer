@@ -1,14 +1,15 @@
 'use strict';
 
-const {Gio, GObject, Gtk} = imports.gi;
-const Config = imports.misc.config;
-const shellVersion = Number.parseInt(Config.PACKAGE_VERSION.split('.')[0]);
-const ExtensionUtils = imports.misc.extensionUtils;
+import Adw from 'gi://Adw';
+import { ExtensionPreferences, gettext as _ } from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
+import Gio from 'gi://Gio';
+import GObject from 'gi://GObject';
+import Gtk from 'gi://Gtk?version=4.0'
 
-const Me = ExtensionUtils.getCurrentExtension();
-Me.imports._deskchanger;
-const _ = deskchanger._;
-const Service = Me.imports.service;
+import DeskChanger from './deskchanger.js';
+import Interface from './daemon/interface.js';
+import * as Logger from './common/logging.js';
+import { makeProxyWrapper } from './service.js';
 
 const AddItemsDialog = GObject.registerClass({
     GTypeName: 'AddItemsDialog',
@@ -49,30 +50,30 @@ const PrefsWidget = GObject.registerClass({
         'switch_remember_profile_state',
         'tree_locations',
     ],
-    Template: `resource://${deskchanger.app_path}/ui/${(shellVersion < 40)? 'prefs.3.ui' : 'prefs.ui'}`,
+    Template: `resource://${DeskChanger.app_path}/ui/prefs.ui`,
 },
 class PrefsWidget extends Gtk.Box {
     _init(params={}) {
         let success, iterator,
-            mime_types = deskchanger.settings.allowed_mime_types.join("\n");
+            mime_types = Interface.settings.allowed_mime_types.join("\n");
 
         this._is_init = true;
-        this._daemon = Service.makeProxyWrapper();
+        this._daemon = makeProxyWrapper();
         // set up us the base
         super._init(params);
 
         // bind our simple settings
-        deskchanger.settings.bind('auto-start', this._switch_auto_start, 'active', Gio.SettingsBindFlags.DEFAULT);
-        deskchanger.settings.bind('icon-preview', this._switch_icon_preview, 'active', Gio.SettingsBindFlags.DEFAULT);
-        deskchanger.settings.bind('interval', this._spinner_interval, 'value', Gio.SettingsBindFlags.DEFAULT);
-        deskchanger.settings.bind('notifications', this._switch_notifications, 'active', Gio.SettingsBindFlags.DEFAULT);
-        deskchanger.settings.bind('remember-profile-state', this._switch_remember_profile_state, 'active', Gio.SettingsBindFlags.DEFAULT);
+        Interface.settings.bind('auto-start', this._switch_auto_start, 'active', Gio.SettingsBindFlags.DEFAULT);
+        Interface.settings.bind('icon-preview', this._switch_icon_preview, 'active', Gio.SettingsBindFlags.DEFAULT);
+        Interface.settings.bind('interval', this._spinner_interval, 'value', Gio.SettingsBindFlags.DEFAULT);
+        Interface.settings.bind('notifications', this._switch_notifications, 'active', Gio.SettingsBindFlags.DEFAULT);
+        Interface.settings.bind('remember-profile-state', this._switch_remember_profile_state, 'active', Gio.SettingsBindFlags.DEFAULT);
 
         // keybindings
         [success, iterator] = this._keyboard.get_iter_first();
         while (success) {
             let name = this._keyboard.get_value(iterator, 3),
-                [ok, key, mods] = Gtk.accelerator_parse(deskchanger.settings.getKeybinding(name));
+                [ok, key, mods] = Gtk.accelerator_parse(Interface.settings.getKeybinding(name));
 
             if (ok === true || mods === undefined) {
                 if (mods === undefined) {
@@ -87,24 +88,20 @@ class PrefsWidget extends Gtk.Box {
 
         // load everything else
         this._allowed_mime_types.set_text(mime_types, mime_types.length);
-        this._combo_rotation_mode.set_model(deskchanger.rotation);
-        this._combo_rotation_mode.set_active_id(deskchanger.settings.rotation);
+        this._combo_rotation_mode.set_model(DeskChanger.rotation);
+        this._combo_rotation_mode.set_active_id(Interface.settings.rotation);
         this._load_profiles();
         this._switch_daemon_state.set_active(this._daemon.Running);
         this._daemon.connectSignal('Running', (proxy, name, [state]) => {
             this._switch_daemon_state.set_active(state);
         });
         // label up
-        this._label_about_description.set_label(Me.metadata.description);
-        this._label_about_name.set_label(Me.metadata.name);
-        this._label_about_url.set_markup(`<a href="${Me.metadata.url}">${Me.metadata.url}</a>`);
-        this._label_about_version.set_label(`Version ${Me.metadata.version}`);
+        this._label_about_description.set_label(DeskChanger.metadata.description);
+        this._label_about_name.set_label(DeskChanger.metadata.name);
+        this._label_about_url.set_markup(`<a href="${DeskChanger.metadata.url}">${DeskChanger.metadata.url}</a>`);
+        this._label_about_version.set_label(`Version ${DeskChanger.metadata.version}`);
 
         this._is_init = false;
-        if (shellVersion < 40) {
-            // show it all
-            this.show_all();
-        }
     }
 
     _get_location_profile() {
@@ -117,10 +114,10 @@ class PrefsWidget extends Gtk.Box {
     _load_profiles() {
         this._profiles.clear();
 
-        for (let profile in deskchanger.settings.profiles) {
+        for (let profile in Interface.settings.profiles) {
             let iterator = this._profiles.append();
             this._profiles.set_value(iterator, 0, profile);
-            if (deskchanger.settings.current_profile === profile) {
+            if (Interface.settings.current_profile === profile) {
                 this._combo_current_profile.set_active_iter(iterator);
                 this._combo_location_profile.set_active_iter(iterator);
             }
@@ -128,7 +125,7 @@ class PrefsWidget extends Gtk.Box {
     }
 
     _on_accel_key(_widget, path, key=0, mods=0, keycode=0) {
-        deskchanger.debug(_widget);
+        Logger.debug(_widget);
         let [success, iterator] = this._keyboard.get_iter_from_string(path);
 
         if (!success) {
@@ -138,7 +135,7 @@ class PrefsWidget extends Gtk.Box {
         let name = this._keyboard.get_value(iterator, 3),
             value = Gtk.accelerator_name(key, mods);
         this._keyboard.set(iterator, [1, 2], [mods, key]);
-        deskchanger.settings.setKeybinding(name, value);
+        Interface.settings.setKeybinding(name, value);
     }
 
     _on_buffer_allowed_mime_types_changed() {
@@ -147,7 +144,7 @@ class PrefsWidget extends Gtk.Box {
         let start = this._allowed_mime_types.get_start_iter(),
             end = this._allowed_mime_types.get_end_iter(),
             text = this._allowed_mime_types.get_text(start, end, false)
-        deskchanger.settings.allowed_mime_types = text.split("\n");
+        Interface.settings.allowed_mime_types = text.split("\n");
     }
 
     _on_button_add_folders_clicked() {
@@ -169,7 +166,7 @@ class PrefsWidget extends Gtk.Box {
         }),
             filter = new Gtk.FileFilter();
 
-        deskchanger.settings.allowed_mime_types.forEach(value => {
+        Interface.settings.allowed_mime_types.forEach(value => {
             filter.add_mime_type(value);
         });
         dialog.set_filter(filter);
@@ -187,26 +184,19 @@ class PrefsWidget extends Gtk.Box {
             label = new Gtk.Label({label: _('Profile Name')}),
             input = new Gtk.Entry();
 
-        if (shellVersion < 40) {
-            box.pack_start(label, false, false, 0);
-            box.pack_start(input, true, true, 0);
-            mbox.pack_start(box, true, true, 0);
-            mbox.show_all();
-        } else {
-            box.append(label);
-            box.append(input);
-            mbox.append(box);
-        }
+        box.append(label);
+        box.append(input);
+        mbox.append(box);
 
         dialog.add_button(_('Add'), Gtk.ResponseType.OK);
         dialog.add_button(_('Cancel'), Gtk.ResponseType.CANCEL);
         dialog.set_default_response(Gtk.ResponseType.OK);
         dialog.connect('response', (_dialog, result) => {
             if (result === Gtk.ResponseType.OK) {
-                let _profiles = deskchanger.settings.profiles,
+                let _profiles = Interface.settings.profiles,
                     profile = input.get_text();
                 _profiles[profile] = [];
-                deskchanger.settings.profiles = _profiles;
+                Interface.settings.profiles = _profiles;
                 this._load_profiles();
                 this._combo_location_profile.set_active_id(profile);
             }
@@ -240,9 +230,9 @@ class PrefsWidget extends Gtk.Box {
         [ok, model, iterator] = this._tree_locations.get_selection().get_selected();
         index = this._locations.get_string_from_iter(iterator);
         this._locations.remove(iterator);
-        profiles = deskchanger.settings.profiles;
+        profiles = Interface.settings.profiles;
         profiles[profile].splice(index);
-        deskchanger.settings.profiles = profiles;
+        Interface.settings.profiles = profiles;
     }
 
     _on_button_remove_profile_clicked() {
@@ -252,7 +242,7 @@ class PrefsWidget extends Gtk.Box {
         if (!ok) return;
         profile = this._profiles.get_value(iterator, 0);
 
-        if (deskchanger.settings.current_profile === profile) {
+        if (Interface.settings.current_profile === profile) {
             dialog = new Gtk.MessageDialog({
                 buttons: Gtk.ButtonsType.CLOSE,
                 message_type: Gtk.MessageType.ERROR,
@@ -276,9 +266,9 @@ class PrefsWidget extends Gtk.Box {
         });
         dialog.connect('response', (_dialog, response) => {
             if (response === Gtk.ResponseType.YES) {
-                profiles = deskchanger.settings.profiles;
+                profiles = Interface.settings.profiles;
                 delete profiles[profile];
-                deskchanger.settings.profiles = profiles;
+                Interface.settings.profiles = profiles;
                 this._load_profiles();
             }
 
@@ -299,7 +289,7 @@ class PrefsWidget extends Gtk.Box {
         let [ok, iterator] = this._locations.get_iter_from_string(path),
             new_value;
 
-        deskchanger.debug(`path: ${path}; ok: ${ok}; iterator: ${iterator}`);
+        Logger.debug(`path: ${path}; ok: ${ok}; iterator: ${iterator}`);
         if (!ok) return;
         new_value = !this._locations.get_value(iterator, 1);
         this._locations.set_value(iterator, 1, new_value);
@@ -312,7 +302,7 @@ class PrefsWidget extends Gtk.Box {
 
         if (this._is_init || !ok) return;
         profile = this._profiles.get_value(iterator, 0);
-        deskchanger.settings.current_profile = profile;
+        Interface.settings.current_profile = profile;
     }
 
     _on_combo_location_profile_changed(_widget) {
@@ -323,7 +313,7 @@ class PrefsWidget extends Gtk.Box {
         profile = this._profiles.get_value(iterator, 0);
         this._locations.clear();
 
-        deskchanger.settings.profiles[profile].forEach(item => {
+        Interface.settings.profiles[profile].forEach(item => {
             let [uri, recursive] = item;
 
             iterator = this._locations.append();
@@ -336,29 +326,26 @@ class PrefsWidget extends Gtk.Box {
         let [ok, iterator] = this._combo_rotation_mode.get_active_iter();
 
         if (this._is_init || !ok) return;
-        deskchanger.settings.rotation = deskchanger.rotation.get_value(iterator, 0);
+        Interface.settings.rotation = DeskChanger.rotation.get_value(iterator, 0);
     }
 
     _on_response_add_items(_dialog, response)
     {
         if (response === Gtk.ResponseType.OK) {
             let list = _dialog.get_files(),
-                length = (shellVersion < 40)? list.length : list.get_n_items(),
-                profiles = deskchanger.settings.profiles,
+                length = list.get_n_items(),
+                profiles = Interface.settings.profiles,
                 profile = this._get_location_profile();
-            deskchanger.debug(typeof list);
+            Logger.debug(typeof list);
 
             for (let i = 0; i < length; i++) {
                 let item, values;
-                item = (shellVersion < 40)? list[i] : list.get_item(i);
+                item = list.get_item(i);
                 values = [item.get_uri(), false, true];
-                if (shellVersion < 40)
-                    this._locations.insert_with_valuesv(-1, [0, 1, 2], values);
-                else
-                    this._locations.insert_with_values(-1, [0, 1, 2], values);
+                this._locations.insert_with_values(-1, [0, 1, 2], values);
                 profiles[profile].push(values);
             }
-            deskchanger.settings.profiles = profiles;
+            Interface.settings.profiles = profiles;
         }
 
         _dialog.destroy();
@@ -375,20 +362,16 @@ class PrefsWidget extends Gtk.Box {
     }
 
     _update_location_profile(path, column, value) {
-        let profiles = deskchanger.settings.profiles,
+        let profiles = Interface.settings.profiles,
             profile = this._get_location_profile();
 
         profiles[profile][Number.parseInt(path)][column] = value;
-        deskchanger.settings.profiles = profiles;
+        Interface.settings.profiles = profiles;
     }
 });
 
-function init() {
-    deskchanger.debug('init()');
-    ExtensionUtils.initTranslations('desk-changer');
-}
-
-function buildPrefsWidget() {
-    deskchanger.debug('buildPrefsWidget()');
-    return new PrefsWidget();
+export default class DeskChangerPreferences extends ExtensionPreferences {
+    getPreferencesWidget() {
+        return new PrefsWidget();
+    }
 }

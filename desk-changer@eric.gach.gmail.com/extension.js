@@ -1,140 +1,133 @@
 'use strict';
 
-const ExtensionUtils = imports.misc.extensionUtils;
-const Me = ExtensionUtils.getCurrentExtension();
-// first init the common things
-Me.imports._deskchanger;
+import * as Main from 'resource:///org/gnome/shell/ui/main.js';
+import {Extension, gettext as _} from 'resource:///org/gnome/shell/extensions/extension.js';
 
-const Utils = Me.imports.common.utils;
-const Convenience = Me.imports.convenience;
-const Service = Me.imports.service;
-const DeskChangerPanelMenuButton = Me.imports.ui.panelMenu.Button;
-
-const Main = imports.ui.main;
-const _ = deskchanger._;
+import DeskChanger from './deskchanger.js';
+import Interface from './daemon/interface.js';
+import { debug } from './common/logging.js';
+import * as Utils from './common/utils.js';
+import { makeProxyWrapper } from './service.js';
+import {Button as DeskChangerPanelMenuButton} from './ui/panelMenu.js';
 
     // general
 let daemon, button,
     // signals
     changed_id, current_profile_id, notifications_id, random_id, rotation_id;
 
-function disable() {
-    deskchanger.debug('disabling extension');
+export default class DeskChangerExtension extends Extension {
+    disable() {
+        debug('disabling extension');
 
-    // button go bye bye
-    if (button && typeof button.destroy === 'function') {
-        button.destroy();
+        // button go bye bye
+        if (button && typeof button.destroy === 'function') {
+            button.destroy();
+        }
+        button = null;
+
+        if (changed_id) {
+            daemon.disconnectSignal(changed_id);
+        }
+        changed_id = null;
+
+        if (current_profile_id) {
+            Interface.settings.disconnect(current_profile_id);
+        }
+        current_profile_id = null;
+
+        if (notifications_id) {
+            Interface.settings.disconnect(notifications_id);
+        }
+        notifications_id = null;
+
+        if (random_id) {
+            Interface.settings.disconnect(random_id);
+        }
+        random_id = null;
+
+        if (rotation_id) {
+            Interface.settings.disconnect(rotation_id);
+        }
+        rotation_id = null;
     }
-    button = null;
 
-    if (changed_id) {
-        daemon.disconnectSignal(changed_id);
-    }
-    changed_id = null;
+    enable() {
+        debug('enabling extension');
 
-    if (current_profile_id) {
-        deskchanger.settings.disconnect(current_profile_id);
-    }
-    current_profile_id = null;
+        Utils.installService();
+        daemon = makeProxyWrapper();
 
-    if (notifications_id) {
-        deskchanger.settings.disconnect(notifications_id);
-    }
-    notifications_id = null;
+        changed_id = daemon.connectSignal('Changed', (proxy, name, [uri]) => {
+            this.notify(_('Wallpaper changed: %s'.format(uri)));
+        });
 
-    if (random_id) {
-        deskchanger.settings.disconnect(random_id);
-    }
-    random_id = null;
+        current_profile_id = Interface.settings.connect('changed::current-profile', () => {
+            this.notify(_('Profile changed to %s'.format(Interface.settings.current_profile)));
+        });
 
-    if (rotation_id) {
-        deskchanger.settings.disconnect(rotation_id);
-    }
-    rotation_id = null;
-}
+        notifications_id = Interface.settings.connect('changed::notifications', () => {
+            this.notify(((Interface.settings.notifications) ?
+                _('Notifications are now enabled') :
+                _('Notifications are now disabled')
+            ), true);
+        });
 
-function enable() {
-    deskchanger.debug('enabling extension');
+        random_id = Interface.settings.connect('changed::random', () => {
+            this.notify(((Interface.settings.random)?
+                _('Wallpapers will be shown in a random order') :
+                _('Wallpapers will be shown in the order they were loaded')
+            ));
+        });
 
-    Utils.installService();
-    daemon = Service.makeProxyWrapper();
+        rotation_id = Interface.settings.connect('changed::rotation', () => {
+            let message, interval,
+                rotation = Interface.settings.rotation,
+                [success, iterator] = DeskChanger.rotation.get_iter_first();
 
-    changed_id = daemon.connectSignal('Changed', function (proxy, name, [uri]) {
-        notify(_('Wallpaper changed: %s'.format(uri)));
-    });
+            while (success) {
+                if (deskchanger.rotation.get_value(iterator, 0) === rotation) {
+                    if (rotation === 'interval') {
+                        interval = `${DeskChanger.rotation.get_value(iterator, 2)} of ${Interface.settings.interval} seconds`;
+                    } else {
+                        interval = DeskChanger.rotation.get_value(iterator, 2);
+                    }
 
-    current_profile_id = deskchanger.settings.connect('changed::current-profile', function () {
-        notify(_('Profile changed to %s'.format(deskchanger.settings.current_profile)));
-    });
-
-    notifications_id = deskchanger.settings.connect('changed::notifications', function () {
-        notify(((deskchanger.settings.notifications) ?
-            _('Notifications are now enabled') :
-            _('Notifications are now disabled')
-        ), true);
-    });
-
-    random_id = deskchanger.settings.connect('changed::random', function () {
-        notify(((deskchanger.settings.random)?
-            _('Wallpapers will be shown in a random order') :
-            _('Wallpapers will be shown in the order they were loaded')
-        ));
-    });
-
-    rotation_id = deskchanger.settings.connect('changed::rotation', function () {
-        let message, interval,
-            rotation = deskchanger.settings.rotation,
-            [success, iterator] = deskchanger.rotation.get_iter_first();
-
-        while (success) {
-            if (deskchanger.rotation.get_value(iterator, 0) === rotation) {
-                if (rotation === 'interval') {
-                    interval = `${deskchanger.rotation.get_value(iterator, 2)} of ${deskchanger.settings.interval} seconds`;
-                } else {
-                    interval = deskchanger.rotation.get_value(iterator, 2);
+                    rotation = DeskChanger.rotation.get_value(iterator, 1);
+                    break;
                 }
 
-                rotation = deskchanger.rotation.get_value(iterator, 1);
-                break;
+                success = DeskChanger.rotation.iter_next(iterator);
             }
 
-            success = deskchanger.rotation.iter_next(iterator);
+            switch (rotation) {
+                case 'interval':
+                    message = _(`Rotation will occur at a ${interval}`);
+                    break;
+                case 'hourly':
+                    message = _('Rotation will occur at the beginning of every hour');
+                    break;
+                case 'daily':
+                    message = _('Rotation will occur at the beginning of every day');
+                    break;
+                default:
+                    message = _('Rotation has been disabled');
+                    break;
+            }
+
+            this.notify(message);
+        });
+
+        button = new DeskChangerPanelMenuButton(daemon);
+        Main.panel.addToStatusArea('DeskChanger', button);
+
+        if (Interface.settings.auto_start && !daemon.Running) {
+            daemon.StartSync();
         }
+    }
 
-        switch (rotation) {
-            case 'interval':
-                message = _(`Rotation will occur at a ${interval}`);
-                break;
-            case 'hourly':
-                message = _('Rotation will occur at the beginning of every hour');
-                break;
-            case 'daily':
-                message = _('Rotation will occur at the beginning of every day');
-                break;
-            default:
-                message = _('Rotation has been disabled');
-                break;
+    notify(message, force) {
+        if (Interface.settings.notifications || force === true) {
+            Main.notify('DeskChanger', message);
         }
-
-        notify(message);
-    });
-
-    button = new DeskChangerPanelMenuButton(daemon);
-    Main.panel.addToStatusArea('DeskChanger', button);
-
-    if (deskchanger.settings.auto_start && !daemon.Running) {
-        daemon.StartSync();
     }
-}
-
-function notify(message, force) {
-    if (deskchanger.settings.notifications || force === true) {
-        Main.notify('DeskChanger', message);
-    }
-}
-
-function init() {
-    log(`init ${Me.uuid} version ${Me.metadata.version}`);
-
-    ExtensionUtils.initTranslations();
 }

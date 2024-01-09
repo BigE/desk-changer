@@ -1,27 +1,15 @@
-#!/usr/bin/env gjs
+#!/usr/bin/env -S gjs -m
 
 'use strict';
 
-const Gio = imports.gi.Gio;
-const GLib = imports.gi.GLib;
-const GObject = imports.gi.GObject;
+import Gio from "gi://Gio";
+import GLib from "gi://GLib";
+import GObject from "gi://GObject";
 
-if ((typeof globalThis !== 'undefined' && !globalThis.deskchanger) || !window.deskchanger) {
-// Find the root datadir of the extension
-    function get_datadir() {
-        let m = /@(.+):\d+/.exec((new Error()).stack.split('\n')[1]);
-        return Gio.File.new_for_path(m[1]).get_parent().get_parent().get_path();
-    }
-
-    imports.searchPath.unshift(get_datadir());
-    imports._deskchanger;
-}
-
-const Interface = imports.daemon.interface;
-const Profile = imports.daemon.profile;
-const Timer = imports.daemon.timer;
-const Utils = imports.common.utils;
-const _ = deskchanger._;
+import Interface from "./interface.js";
+import * as Profile from "./profile.js";
+import * as Timer from "./timer.js";
+import * as Logger from "../common/logging.js";
 
 var Server = GObject.registerClass({
     GTypeName: 'DeskChangerDaemonServer',
@@ -29,14 +17,14 @@ var Server = GObject.registerClass({
         'preview': GObject.ParamSpec.string(
             'preview',
             'Preview',
-            _('The next wallpaper in queue'),
+            'The next wallpaper in queue',
             GObject.ParamFlags.READABLE,
             null
         ),
         'running': GObject.ParamSpec.boolean(
             'running',
             'Running',
-            _('Check if the daemon is running'),
+            'Check if the daemon is running',
             GObject.ParamFlags.READABLE,
             false
         ),
@@ -62,14 +50,14 @@ class Server extends Gio.Application {
         this._timer = null;
 
         super._init({
-            application_id: Interface.APP_ID,
+            application_id: Interface.app_id,
             flags: Gio.ApplicationFlags.IS_SERVICE |
                    Gio.ApplicationFlags.HANDLES_OPEN |
                    Gio.ApplicationFlags.HANDLES_COMMAND_LINE,
         });
 
-        this.add_main_option('debug', 'd'.charCodeAt(0), GLib.OptionFlags.NONE, GLib.OptionArg.NONE, _('Enable debugging'), null);
-        this.add_main_option('version', 'v'.charCodeAt(0), GLib.OptionFlags.NONE, GLib.OptionArg.NONE, _('Show release version'), null);
+        this.add_main_option('debug', 'd'.charCodeAt(0), GLib.OptionFlags.NONE, GLib.OptionArg.NONE, 'Enable debugging', null);
+        this.add_main_option('version', 'v'.charCodeAt(0), GLib.OptionFlags.NONE, GLib.OptionArg.NONE, 'Show release version', null);
     }
 
     get preview() {
@@ -84,8 +72,8 @@ class Server extends Gio.Application {
         let connection = this.get_dbus_connection();
 
         if (connection) {
-            deskchanger.debug(`DBUS::${signal}(${variant.recursiveUnpack()})`);
-            connection.emit_signal(null, Interface.APP_PATH, Interface.APP_ID, signal, variant);
+            Logger.debug(`DBUS::${signal}(${variant.recursiveUnpack()})`);
+            connection.emit_signal(null, Interface.app_path, Interface.app_id, signal, variant);
         }
     }
 
@@ -128,17 +116,17 @@ class Server extends Gio.Application {
 
     start() {
         if (this._running) {
-            deskchanger.debug('daemon is already started');
+            Logger.debug('daemon is already started');
             return false;
         }
 
         this.loadprofile();
         this._create_timer();
-        this._rotation_changed_id = deskchanger.settings.connect('changed::rotation', () => {
+        this._rotation_changed_id = Interface.settings.connect('changed::rotation', () => {
             this._destroy_timer();
             this._create_timer();
         });
-        this._current_profile_changed_id = deskchanger.settings.connect('changed::current-profile', () => {
+        this._current_profile_changed_id = Interface.settings.connect('changed::current-profile', () => {
             this.loadprofile();
         });
         this._running = true;
@@ -149,19 +137,19 @@ class Server extends Gio.Application {
 
     stop() {
         if (!this._running) {
-            deskchanger.debug('cannot stop, daemon isn\'t running');
+            Logger.debug('cannot stop, daemon isn\'t running');
             return false;
         }
 
         this._destroy_timer();
 
         if (this._current_profile_changed_id) {
-            deskchanger.settings.disconnect(this._current_profile_changed_id);
+            Interface.settings.disconnect(this._current_profile_changed_id);
             this._current_profile_changed_id = null;
         }
 
         if (this._rotation_changed_id) {
-            deskchanger.settings.disconnect(this._rotation_changed_id);
+            Interface.settings.disconnect(this._rotation_changed_id);
             this._rotation_changed_id = null;
         }
 
@@ -174,15 +162,15 @@ class Server extends Gio.Application {
 
     vfunc_dbus_register(connection, object_path) {
         if (super.vfunc_dbus_register(connection, object_path)) {
-            deskchanger.debug(`attempting to register object on dbus: ${object_path}`);
+            Logger.debug(`attempting to register object on dbus: ${object_path}`);
 
             try {
                 this._dbus_id = connection.register_object(
                     object_path,
-                    deskchanger.dbusinfo.lookup_interface(Interface.APP_ID),
+                    Interface.dbusinfo.lookup_interface(Interface.app_id),
                     (connection, sender, object_path, interface_name, method_name, parameters, invocation) => {
                         parameters = parameters.recursiveUnpack();
-                        deskchanger.debug(`[DBUS.call] ${interface_name}.${method_name}(${parameters})`)
+                        Logger.debug(`[DBUS.call] ${interface_name}.${method_name}(${parameters})`)
 
                         if (!this._running && ['quit', 'start'].indexOf(method_name.toLowerCase()) === -1) {
                             invocation.return_dbus_error(`${interface_name}.${method_name}`, 'daemon must be started first');
@@ -192,7 +180,7 @@ class Server extends Gio.Application {
                         try {
                             this[`_dbus_call_${method_name.toLowerCase()}`](invocation, ...parameters);
                         } catch (e) {
-                            deskchanger.error(e, `DBUS::call ${e.message}`);
+                            Logger.error(e, `DBUS::call ${e.message}`);
                             invocation.return_dbus_error(`${interface_name}.${method_name}`, e.message);
                         }
                     },
@@ -200,10 +188,10 @@ class Server extends Gio.Application {
                     () => {},
                 );
 
-                deskchanger.debug(`successfully registered object on dbus: ${object_path}(${this._dbus_id})`);
+                Logger.debug(`successfully registered object on dbus: ${object_path}(${this._dbus_id})`);
                 return true;
             } catch (e) {
-                deskchanger.error(e, `failed to register object on dbus: ${object_path}`);
+                Logger.error(e, `failed to register object on dbus: ${object_path}`);
             } finally {
                 if (this._dbus_id === 0) {
                     this._dbus_id = null;
@@ -216,7 +204,7 @@ class Server extends Gio.Application {
 
     vfunc_dbus_unregister(connection, object_path) {
         if (this._dbus_id) {
-            deskchanger.debug(`unregistering object from dbus: ${object_path}(${this._dbus_id})`);
+            Logger.debug(`unregistering object from dbus: ${object_path}(${this._dbus_id})`);
             connection.unregister_object(this._dbus_id);
         }
 
@@ -225,19 +213,19 @@ class Server extends Gio.Application {
 
     vfunc_handle_local_options(options) {
         if (options.contains('version')) {
-            print(`${deskchanger.app_id} ${deskchanger.metadata.version}`);
+            print(`${Interface.app_id} ${Interface.metadata.version}`);
             return 0;
         }
 
         if (options.contains('debug')) {
-            deskchanger.force_debug = true;
+            Interface.force_debug = true;
         }
 
         return -1;
     }
 
     vfunc_shutdown() {
-        deskchanger.debug('vfunc_shutdown');
+        Logger.debug('vfunc_shutdown');
         
         if (this._running) {
             this.stop();
@@ -252,7 +240,7 @@ class Server extends Gio.Application {
     }
 
     vfunc_startup() {
-        deskchanger.debug('vfunc_startup');
+        Logger.debug('vfunc_startup');
         super.vfunc_startup();
 
         // Keep us open and running... we are a daemon
@@ -261,30 +249,30 @@ class Server extends Gio.Application {
 
     _create_timer() {
         let interval,
-            rotation = deskchanger.settings.rotation,
-            [success, iterator] = deskchanger.rotation.get_iter_first();
+            rotation = Interface.settings.rotation,
+            [success, iterator] = Interface.rotation.get_iter_first();
 
         while (success) {
-            if (deskchanger.rotation.get_value(iterator, 0) === rotation) {
-                interval = (rotation === 'interval')? deskchanger.settings.interval : deskchanger.rotation.get_value(iterator, 3);
-                rotation = deskchanger.rotation.get_value(iterator, 1);
+            if (Interface.rotation.get_value(iterator, 0) === rotation) {
+                interval = (rotation === 'interval')? Interface.settings.interval : Interface.rotation.get_value(iterator, 3);
+                rotation = Interface.rotation.get_value(iterator, 1);
                 break;
             }
             
-            success = deskchanger.rotation.iter_next(iterator);
+            success = Interface.rotation.iter_next(iterator);
         }
 
         if (rotation === 'interval') {
             this._timer = new Timer.Interval(interval, this.next.bind(this));
-            if (deskchanger.settings.rotation === 'interval') {
-                this._interval_changed_id = deskchanger.settings.connect('changed::interval', () => {
+            if (Interface.settings.rotation === 'interval') {
+                this._interval_changed_id = Interface.settings.connect('changed::interval', () => {
                     this._timer.destroy();
-                    this._timer = new Timer.Interval(deskchanger.settings.interval, this.next.bind(this));
+                    this._timer = new Timer.Interval(Interface.settings.interval, this.next.bind(this));
                 });
             }
-        } else if (deskchanger.settings.rotation === 'hourly') {
+        } else if (Interface.settings.rotation === 'hourly') {
             this._timer = new Timer.Hourly(this.next.bind(this));
-        } else if (deskchanger.settings.rotation === 'daily') {
+        } else if (Interface.settings.rotation === 'daily') {
             this._timer = new Timer.Daily(this.next.bind(this));
         }
     }
@@ -292,7 +280,7 @@ class Server extends Gio.Application {
     _destroy_timer() {
         if (this._timer) {
             if (this._interval_changed_id) {
-                deskchanger.settings.disconnect(this._interval_changed_id);
+                Interface.settings.disconnect(this._interval_changed_id);
                 this._interval_changed_id = null;
             }
 
@@ -331,7 +319,7 @@ class Server extends Gio.Application {
     }
 
     _handle_dbus_get(connection, sender, object_path, interface_name, property_name) {
-        deskchanger.debug(`DBUS::getProperty(${property_name})`);
+        Logger.debug(`DBUS::getProperty(${property_name})`);
         switch (property_name.toLowerCase()) {
             case 'history':
                 return new GLib.Variant('as', []);
@@ -340,18 +328,18 @@ class Server extends Gio.Application {
                 return new GLib.Variant('as', []);
 
             case 'preview':
-                return new GLib.Variant('s', this.preview);
+                return new GLib.Variant('s', String(this.preview));
 
             case 'running':
-                return new GLib.Variant('b', this.running);
+                return new GLib.Variant('b', Boolean(this.running));
         }
 
-        deskchanger.debug(`unknown property ${interface_name}.${property_name}`)
+        Logger.debug(`unknown property ${interface_name}.${property_name}`)
         return null;
     }
 
     _set_wallpaper(uri) {
-        deskchanger.debug(`setting wallpaper to ${uri}`);
+        Logger.debug(`setting wallpaper to ${uri}`);
         this._background.set_string('picture-uri', uri);
         if (this._background_schema.has_key('picture-uri-dark')) {
             this._background.set_string('picture-uri-dark', uri);
