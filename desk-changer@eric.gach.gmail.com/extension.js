@@ -85,7 +85,7 @@ export default class DeskChangerExtension extends Extension {
                 [success, iterator] = DeskChanger.rotation.get_iter_first();
 
             while (success) {
-                if (deskchanger.rotation.get_value(iterator, 0) === rotation) {
+                if (DeskChanger.rotation.get_value(iterator, 0) === rotation) {
                     if (rotation === 'interval') {
                         interval = `${DeskChanger.rotation.get_value(iterator, 2)} of ${Interface.settings.interval} seconds`;
                     } else {
