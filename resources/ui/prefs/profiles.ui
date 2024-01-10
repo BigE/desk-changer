@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <requires lib="gtk" version="4.0"/>
+  <object class="GtkListStore" id="locations">
+    <columns>
+      <column type="gchararray"/>
+      <column type="gboolean"/>
+      <column type="gboolean"/>
+    </columns>
+  </object>
+  <object class="GtkListStore" id="profiles">
+    <columns>
+      <column type="gchararray"/>
+    </columns>
+  </object>
+  <template class="ProfilesBox" parent="GtkBox">
+    <property name="focusable">1</property>
+    <property name="margin-start">5</property>
+    <property name="margin-end">5</property>
+    <property name="margin-top">5</property>
+    <property name="margin-bottom">5</property>
+    <property name="orientation">vertical</property>
+    <property name="spacing">5</property>
+    <child>
+      <object class="GtkFrame">
+        <property name="vexpand">1</property>
+        <property name="focusable">1</property>
+        <property name="child">
+          <object class="GtkBox">
+            <property name="focusable">1</property>
+            <property name="orientation">vertical</property>
+            <child>
+              <object class="GtkTreeView" id="tree_locations">
+                <property name="vexpand">1</property>
+                <property name="focusable">1</property>
+                <property name="model">locations</property>
+                <child internal-child="selection">
+                  <object class="GtkTreeSelection"/>
+                </child>
+                <child>
+                  <object class="GtkTreeViewColumn">
+                    <property name="title" translatable="1">Location URI</property>
+                    <property name="expand">1</property>
+                    <child>
+                      <object class="GtkCellRendererText">
+                        <property name="editable">1</property>
+                        <signal name="edited" handler="_on_cell_location_edited" swapped="no"/>
+                      </object>
+                      <attributes>
+                        <attribute name="text">0</attribute>
+                      </attributes>
+                    </child>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkTreeViewColumn">
+                    <property name="title" translatable="1">Recursive</property>
+                    <child>
+                      <object class="GtkCellRendererToggle">
+                        <signal name="toggled" handler="_on_cell_recursive_toggled" swapped="no"/>
+                      </object>
+                      <attributes>
+                        <attribute name="active">1</attribute>
+                      </attributes>
+                    </child>
+                  </object>
+                </child>
+              </object>
+            </child>
+            <child>
+              <object class="GtkBox">
+                <property name="margin-start">5</property>
+                <property name="margin-end">5</property>
+                <property name="margin-top">5</property>
+                <property name="margin-bottom">5</property>
+                <property name="spacing">5</property>
+                <child>
+                  <object class="GtkButton">
+                    <property name="label" translatable="1">Add Item(s)</property>
+                    <property name="focusable">1</property>
+                    <property name="receives-default">1</property>
+                    <signal name="clicked" handler="_on_button_add_items_clicked" swapped="no"/>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkButton">
+                    <property name="label" translatable="1">Add Folder(s)</property>
+                    <property name="focusable">1</property>
+                    <property name="receives-default">1</property>
+                    <signal name="clicked" handler="_on_button_add_folders_clicked" swapped="no"/>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkButton">
+                    <property name="label" translatable="1">Remove Item</property>
+                    <property name="focusable">1</property>
+                    <property name="receives-default">1</property>
+                    <signal name="clicked" handler="_on_button_remove_item_clicked" swapped="no"/>
+                  </object>
+                </child>
+              </object>
+            </child>
+          </object>
+        </property>
+        <child type="label_item">
+          <placeholder/>
+        </child>
+      </object>
+    </child>
+    <child>
+      <object class="GtkBox">
+        <property name="tooltip-text" translatable="1">Edit the locations of the currently selected profile.</property>
+        <child>
+          <object class="GtkLabel">
+            <property name="halign">start</property>
+            <property name="label" translatable="1">Edit Profile</property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkComboBox" id="combo_location_profile">
+            <property name="hexpand">1</property>
+            <property name="halign">end</property>
+            <property name="model">profiles</property>
+            <property name="id-column">0</property>
+            <signal name="changed" handler="_on_combo_location_profile_changed" swapped="no"/>
+            <child>
+              <object class="GtkCellRendererText"/>
+              <attributes>
+                <attribute name="text">0</attribute>
+              </attributes>
+            </child>
+          </object>
+        </child>
+      </object>
+    </child>
+    <child>
+      <object class="GtkBox">
+        <property name="halign">end</property>
+        <property name="spacing">5</property>
+        <child>
+          <object class="GtkButton">
+            <property name="label" translatable="1">Add New Profile</property>
+            <property name="focusable">1</property>
+            <property name="receives-default">1</property>
+            <property name="tooltip-text" translatable="1">Add a new profile</property>
+            <signal name="clicked" handler="_on_button_add_profile_clicked" swapped="no"/>
+          </object>
+        </child>
+        <child>
+          <object class="GtkButton">
+            <property name="label" translatable="1">Remove Selected Profile</property>
+            <property name="focusable">1</property>
+            <property name="receives-default">1</property>
+            <property name="tooltip-text" translatable="1">Remove the selected profile</property>
+            <signal name="clicked" handler="_on_button_remove_profile_clicked" swapped="no"/>
+          </object>
+        </child>
+      </object>
+    </child>
+  </template>
+</interface>

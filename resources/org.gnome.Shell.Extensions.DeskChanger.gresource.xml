@@ -4,8 +4,11 @@
         <file compressed="true">icons/wallpaper-icon.svg</file>
         <file compressed="true" preprocess="xml-stripblanks">Daemon/org.gnome.Shell.Extensions.DeskChanger.Daemon.xml</file>
         <file compressed="true">org.gnome.Shell.Extensions.DeskChanger.Daemon.service.in</file>
-        <file compressed="true">ui/prefs.3.ui</file>
-        <file compressed="true">ui/prefs.ui</file>
+        <file compressed="true">ui/prefs/about.ui</file>
+        <file compressed="true">ui/prefs/daemon.ui</file>
+        <file compressed="true">ui/prefs/extension.ui</file>
+        <file compressed="true">ui/prefs/keyboard.ui</file>
+        <file compressed="true">ui/prefs/profiles.ui</file>
         <file compressed="true">ui/rotation.ui</file>
     </gresource>
 </gresources>
