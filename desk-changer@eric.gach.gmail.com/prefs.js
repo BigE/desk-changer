@@ -10,8 +10,6 @@ import { makeProxyWrapper } from './service.js';
 
 export default class DeskChangerPreferences extends ExtensionPreferences {
     fillPreferencesWindow(window) {
-        this._daemon = makeProxyWrapper();
-
         this._initProfiles(window);
         this._initKeyboard(window);
         this._initExtension(window);
@@ -35,7 +33,7 @@ export default class DeskChangerPreferences extends ExtensionPreferences {
         const page = new Adw.PreferencesPage({ icon_name: 'application-x-executable-symbolic', title: _('Daemon') }),
               group = new Adw.PreferencesGroup();
 
-        this._daemonBox = new DaemonBox(this._daemon);
+        this._daemonBox = new DaemonBox();
         group.add(this._daemonBox);
         page.add(group);
         window.add(page);
@@ -124,12 +122,12 @@ const DaemonBox = GObject.registerClass({
     Template: `resource://${DeskChanger.app_path}/ui/prefs/daemon.ui`,
 },
 class DeskChangerPreferencesDaemonBox extends Gtk.Box {
-    constructor(daemon, params = {}) {
+    constructor(params = {}) {
         let mime_types = Interface.settings.allowed_mime_types.join("\n");
-
         super(params);
 
-        this._daemon = daemon;
+        this._is_init = true;
+        this._daemon = makeProxyWrapper();
 
         Interface.settings.bind('auto-start', this._switch_auto_start, 'active', Gio.SettingsBindFlags.DEFAULT);
         Interface.settings.bind('interval', this._spinner_interval, 'value', Gio.SettingsBindFlags.DEFAULT);
@@ -142,6 +140,8 @@ class DeskChangerPreferencesDaemonBox extends Gtk.Box {
         this._daemon.connectSignal('Running', (proxy, name, [state]) => {
             this._switch_daemon_state.set_active(state);
         });
+
+        this._is_init = false;
     }
 
     _on_buffer_allowed_mime_types_changed() {
@@ -160,7 +160,7 @@ class DeskChangerPreferencesDaemonBox extends Gtk.Box {
         Interface.settings.rotation = DeskChanger.rotation.get_value(iterator, 0);
     }
 
-    _on_switch_daemon_running_state() {
+    _on_switch_daemon_running_state(_widget, state) {
         if (this._is_init) return false;
 
         if (state)
@@ -176,11 +176,26 @@ const ExtensionBox = GObject.registerClass({
     InternalChildren: [
         'combo_current_profile',
         'profiles',
+        'switch_icon_preview',
+        'switch_notifications',
     ],
     Template: `resource://${DeskChanger.app_path}/ui/prefs/extension.ui`,
 },
 class DeskChangerPreferencesExtensionBox extends Gtk.Box {
+    constructor(prefs={}) {
+        super(prefs);
+
+        Interface.settings.bind('icon-preview', this._switch_icon_preview, 'active', Gio.SettingsBindFlags.DEFAULT);
+        Interface.settings.bind('notifications', this._switch_notifications, 'active', Gio.SettingsBindFlags.DEFAULT);
+    }
+
     _on_combo_current_profile_changed() {
+        let [ok, iterator] = this._combo_current_profile.get_active_iter(),
+            profile;
+
+        if (this._is_init || !ok) return;
+        profile = this._profiles.get_value(iterator, 0);
+        Interface.settings.current_profile = profile;
     }
 });
 
