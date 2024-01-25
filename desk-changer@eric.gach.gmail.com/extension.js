@@ -7,7 +7,7 @@ import DeskChanger from './deskchanger.js';
 import Interface from './daemon/interface.js';
 import { debug } from './common/logging.js';
 import * as Utils from './common/utils.js';
-import { makeProxyWrapper } from './service.js';
+import { makeProxyWrapper } from './common/service.js';
 import {Button as DeskChangerPanelMenuButton} from './ui/panelMenu.js';
 
     // general

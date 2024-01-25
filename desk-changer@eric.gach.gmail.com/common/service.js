@@ -2,7 +2,7 @@
 
 import Gio from 'gi://Gio';
 
-import Interface from './daemon/interface.js';
+import Interface from '../daemon/interface.js';
 
 export function makeProxyWrapper() {
     let proxy = Gio.DBusProxy.makeProxyWrapper(Interface.dbusxml);
