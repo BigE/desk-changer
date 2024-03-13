@@ -1,69 +1,35 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0' encoding='UTF-8'?>
+<!-- Created with Cambalache 0.17.0 -->
 <interface>
   <requires lib="gtk" version="4.0"/>
-  <object class="GtkListStore" id="profiles">
-    <columns>
-      <column type="gchararray"/>
-    </columns>
-  </object>
-  <template class="ExtensionBox" parent="GtkBox">
-    <property name="margin-start">5</property>
-    <property name="margin-end">5</property>
-    <property name="margin-top">5</property>
-    <property name="margin-bottom">5</property>
-    <property name="orientation">vertical</property>
-    <property name="spacing">10</property>
+  <requires lib="libadwaita" version="1.4"/>
+  <template class="ExtensionPage" parent="AdwPreferencesPage">
+    <property name="icon-name">applications-system-symbolic</property>
+    <property name="title" translatable="yes">Extension</property>
     <child>
-      <object class="GtkBox">
+      <object class="AdwPreferencesGroup">
+        <property name="title" translatable="yes">Extension Settings</property>
         <child>
-          <object class="GtkLabel">
-            <property name="label" translatable="1">Current Profile</property>
+          <object class="AdwComboRow" id="current_profile_combo">
+            <property name="factory">
+              <object class="GtkSignalListItemFactory">
+                <signal name="bind" handler="_on_current_profile_combo_factory_bind"/>
+                <signal name="setup" handler="_on_current_profile_combo_factory_setup"/>
+              </object>
+            </property>
+            <property name="title" translatable="yes">Current Profile</property>
           </object>
         </child>
         <child>
-          <object class="GtkComboBox" id="combo_current_profile">
-            <property name="hexpand">1</property>
-            <property name="halign">end</property>
-            <property name="model">profiles</property>
-            <signal name="changed" handler="_on_combo_current_profile_changed" swapped="no"/>
-            <child>
-              <object class="GtkCellRendererText"/>
-              <attributes>
-                <attribute name="text">0</attribute>
-              </attributes>
-            </child>
-          </object>
-        </child>
-      </object>
-    </child>
-    <child>
-      <object class="GtkBox">
-        <child>
-          <object class="GtkLabel">
-            <property name="label" translatable="1">Show Icon as Preview</property>
+          <object class="AdwSwitchRow" id="icon_preview_switch">
+            <property name="title" translatable="yes">Icon as Preview</property>
+            <property name="use-markup">False</property>
           </object>
         </child>
         <child>
-          <object class="GtkSwitch" id="switch_icon_preview">
-            <property name="hexpand">1</property>
-            <property name="focusable">1</property>
-            <property name="halign">end</property>
-          </object>
-        </child>
-      </object>
-    </child>
-    <child>
-      <object class="GtkBox">
-        <child>
-          <object class="GtkLabel">
-            <property name="label" translatable="1">Notifications</property>
-          </object>
-        </child>
-        <child>
-          <object class="GtkSwitch" id="switch_notifications">
-            <property name="hexpand">1</property>
-            <property name="focusable">1</property>
-            <property name="halign">end</property>
+          <object class="AdwSwitchRow" id="notifications_switch">
+            <property name="title" translatable="yes">Notifications</property>
+            <property name="use-markup">False</property>
           </object>
         </child>
       </object>

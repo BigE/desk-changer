@@ -1,164 +1,86 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0' encoding='UTF-8'?>
+<!-- Created with Cambalache 0.17.0 -->
 <interface>
-  <requires lib="gtk" version="4.0"/>
-  <object class="GtkTextBuffer" id="allowed_mime_types">
-    <signal name="changed" handler="_on_buffer_allowed_mime_types_changed" swapped="no"/>
-  </object>
-  <object class="GtkAdjustment" id="interval">
-    <property name="lower">1</property>
-    <property name="upper">84600</property>
-    <property name="value">1</property>
-    <property name="step-increment">1</property>
-    <property name="page-increment">10</property>
-  </object>
-  <template class="DaemonBox" parent="GtkBox">
-    <property name="focusable">1</property>
-    <property name="margin-start">5</property>
-    <property name="margin-end">5</property>
-    <property name="margin-top">5</property>
-    <property name="margin-bottom">5</property>
-    <property name="orientation">vertical</property>
-    <property name="spacing">10</property>
+  <requires lib="gtk" version="4.12"/>
+  <requires lib="libadwaita" version="1.4"/>
+  <template class="DaemonPage" parent="AdwPreferencesPage">
+    <property name="icon-name">application-x-executable-symbolic</property>
+    <property name="title">Daemon</property>
     <child>
-      <object class="GtkFrame">
-        <property name="child">
-          <object class="GtkBox">
-            <property name="margin-start">5</property>
-            <property name="margin-end">5</property>
-            <property name="margin-top">5</property>
-            <property name="margin-bottom">5</property>
-            <property name="orientation">vertical</property>
-            <property name="spacing">5</property>
-            <child>
-              <object class="GtkBox">
-                <child>
-                  <object class="GtkLabel">
-                    <property name="tooltip-text" translatable="1">The rotation mode of the damon. Interval will rotate at the specified timer interval. Hourly will rotate at the top of each hour. Disabled will disable automatic rotation.</property>
-                    <property name="label" translatable="1">Mode</property>
-                  </object>
-                </child>
-                <child>
-                  <object class="GtkComboBox" id="combo_rotation_mode">
-                    <property name="hexpand">1</property>
-                    <property name="halign">end</property>
-                    <property name="id-column">0</property>
-                    <signal name="changed" handler="_on_combo_rotation_mode_changed" swapped="no"/>
-                    <child>
-                      <object class="GtkCellRendererText"/>
-                      <attributes>
-                        <attribute name="text">2</attribute>
-                      </attributes>
-                    </child>
-                  </object>
-                </child>
-              </object>
-            </child>
-            <child>
-              <object class="GtkBox">
-                <child>
-                  <object class="GtkLabel">
-                    <property name="tooltip-text" translatable="1">This only applies to the Interval Timer option and sets the interval at which the timer will change the wallpaper.</property>
-                    <property name="label" translatable="1">Custom Timer (in seconds)</property>
-                  </object>
-                </child>
-                <child>
-                  <object class="GtkSpinButton" id="spinner_interval">
-                    <property name="hexpand">1</property>
-                    <property name="focusable">1</property>
-                    <property name="halign">end</property>
-                    <property name="adjustment">interval</property>
-                  </object>
-                </child>
-              </object>
-            </child>
-          </object>
-        </property>
-        <child type="label">
-          <object class="GtkLabel">
-            <property name="label" translatable="1">Rotation Options</property>
-          </object>
-        </child>
-      </object>
-    </child>
-    <child>
-      <object class="GtkBox">
-        <property name="tooltip-text" translatable="1">Ensure that the daemon process is running when the extension is loaded.</property>
+      <object class="AdwPreferencesGroup">
+        <property name="title">Rotation Options</property>
         <child>
-          <object class="GtkLabel">
-            <property name="label" translatable="1">Auto Start Daemon</property>
-          </object>
-        </child>
-        <child>
-          <object class="GtkSwitch" id="switch_auto_start">
-            <property name="hexpand">1</property>
-            <property name="focusable">1</property>
-            <property name="halign">end</property>
-          </object>
-        </child>
-      </object>
-    </child>
-    <child>
-      <object class="GtkBox">
-        <property name="tooltip-text" translatable="1">If enabled the daemon will save the current and next wallpaper when it stops. When it starts, if the values are present, it will then use them to restore the current wallpaper and fill the queue.</property>
-        <child>
-          <object class="GtkLabel">
-            <property name="label" translatable="1">Remember Profile State</property>
-          </object>
-        </child>
-        <child>
-          <object class="GtkSwitch" id="switch_remember_profile_state">
-            <property name="hexpand">1</property>
-            <property name="focusable">1</property>
-            <property name="halign">end</property>
-          </object>
-        </child>
-      </object>
-    </child>
-    <child>
-      <object class="GtkBox">
-        <property name="tooltip-text" translatable="1">The current status of the daemon itself. Toggling this will swith the entire daemon process on/off respectively.</property>
-        <child>
-          <object class="GtkLabel">
-            <property name="label" translatable="1">Daemon Running</property>
-          </object>
-        </child>
-        <child>
-          <object class="GtkSwitch" id="switch_daemon_state">
-            <property name="hexpand">1</property>
-            <property name="focusable">1</property>
-            <property name="halign">end</property>
-            <signal name="state-set" handler="_on_switch_daemon_running_state" swapped="no"/>
-          </object>
-        </child>
-      </object>
-    </child>
-    <child>
-      <object class="GtkBox">
-        <property name="focusable">1</property>
-        <property name="orientation">vertical</property>
-        <property name="spacing">5</property>
-        <child>
-          <object class="GtkLabel">
-            <property name="halign">start</property>
-            <property name="label" translatable="1">Allowed Mime Types</property>
-          </object>
-        </child>
-        <child>
-          <object class="GtkFrame">
-            <property name="focusable">1</property>
-            <property name="child">
-              <object class="GtkTextView">
-                <property name="width-request">200</property>
-                <property name="height-request">100</property>
-                <property name="focusable">1</property>
-                <property name="buffer">allowed_mime_types</property>
-                <property name="accepts-tab">0</property>
-                <property name="monospace">1</property>
+          <object class="AdwComboRow" id="rotation_mode_combo">
+            <property name="factory">
+              <object class="GtkSignalListItemFactory">
+                <signal name="bind" handler="_on_rotation_mode_combo_factory_bind"/>
+                <signal name="setup" handler="_on_rotation_mode_combo_factory_setup"/>
               </object>
             </property>
-            <child type="label_item">
-              <placeholder/>
+            <property name="title">Mode</property>
+          </object>
+        </child>
+        <child>
+          <object class="AdwSpinRow" id="rotation_custom_interval_spinner">
+            <property name="adjustment">
+              <object class="GtkAdjustment">
+                <property name="lower">1.0</property>
+                <property name="page-increment">10.0</property>
+                <property name="step-increment">1.0</property>
+                <property name="upper">86400.0</property>
+                <property name="value">500.0</property>
+              </object>
+            </property>
+            <property name="title" translatable="yes">Custom Interval</property>
+            <property name="use-markup">False</property>
+          </object>
+        </child>
+      </object>
+    </child>
+    <child>
+      <object class="AdwPreferencesGroup">
+        <property name="title" translatable="yes">Daemon</property>
+        <child>
+          <object class="AdwSwitchRow" id="daemon_auto_start_switch">
+            <property name="title">Auto Start</property>
+          </object>
+        </child>
+        <child>
+          <object class="AdwSwitchRow" id="daemon_remember_profile_state_switch">
+            <property name="title" translatable="yes">Remember Profile State</property>
+            <property name="use-markup">False</property>
+          </object>
+        </child>
+        <child>
+          <object class="AdwSwitchRow" id="daemon_running_switch">
+            <property name="title" translatable="yes">Currently Running</property>
+            <property name="use-markup">False</property>
+          </object>
+        </child>
+      </object>
+    </child>
+    <child>
+      <object class="AdwPreferencesGroup">
+        <property name="header-suffix">
+          <object class="GtkButton" id="allowed_mime_types_reset_button">
+            <property name="label">Reset</property>
+            <property name="visible">False</property>
+            <signal name="clicked" handler="_on_allowed_mime_types_reset_button_clicked"/>
+            <style>
+              <class name="error"/>
+            </style>
+          </object>
+        </property>
+        <property name="title" translatable="yes">Allowed MIME Types</property>
+        <child>
+          <object class="GtkListBox" id="allowed_mime_types_listbox">
+            <property name="selection-mode">none</property>
+            <child>
+              <object class="GtkListBoxRow"/>
             </child>
+            <style>
+              <class name="boxed-list"/>
+            </style>
           </object>
         </child>
       </object>

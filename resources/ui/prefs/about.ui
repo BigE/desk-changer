@@ -1,59 +1,63 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0' encoding='UTF-8'?>
+<!-- Created with Cambalache 0.17.0 -->
 <interface>
-  <requires lib="gtk" version="4.0"/>
-  <template class="AboutBox" parent="GtkBox">
-    <property name="margin-start">10</property>
-    <property name="margin-end">10</property>
-    <property name="margin-top">10</property>
-    <property name="margin-bottom">10</property>
-    <property name="orientation">vertical</property>
-    <property name="spacing">5</property>
+  <requires lib="gtk" version="4.12"/>
+  <requires lib="libadwaita" version="1.4"/>
+  <template class="AboutPage" parent="AdwPreferencesPage">
+    <property name="icon-name">dialog-information-symbolic</property>
+    <property name="title">About</property>
     <child>
-      <object class="GtkImage" id="image_about_logo">
-        <property name="vexpand">1</property>
-        <property name="margin-start">20</property>
-        <property name="margin-end">20</property>
-        <property name="margin-top">20</property>
-        <property name="margin-bottom">20</property>
-        <property name="resource">/org/gnome/Shell/Extensions/DeskChanger/icons/wallpaper-icon.svg</property>
-      </object>
-    </child>
-    <child>
-      <object class="GtkLabel" id="label_about_name">
-        <property name="label" translatable="1">DeskChanger</property>
-        <attributes>
-          <attribute name="weight" value="bold"></attribute>
-        </attributes>
-      </object>
-    </child>
-    <child>
-      <object class="GtkLabel" id="label_about_version">
-        <property name="label" translatable="1">Version 31</property>
-      </object>
-    </child>
-    <child>
-      <object class="GtkLabel" id="label_about_description">
-        <property name="margin-start">10</property>
-        <property name="margin-end">10</property>
-        <property name="margin-top">10</property>
-        <property name="margin-bottom">10</property>
-        <property name="label" translatable="1">Simple wallpaper changer with multiple profile support. Integrates into the shell by providing it&apos;s own panel icon. The daemon is written using gjs and runs independently of the extension as a background process.</property>
-        <property name="justify">center</property>
-        <property name="wrap">1</property>
-      </object>
-    </child>
-    <child>
-      <object class="GtkLabel" id="label_about_url">
-        <property name="label" translatable="1">&lt;a href=&quot;https://github.com/BigE/desk-changer&quot;&gt;https://github.com/BigE/desk-changer&lt;/a&gt;</property>
-        <property name="use-markup">1</property>
-      </object>
-    </child>
-    <child>
-      <object class="GtkLabel" id="label_about_license">
-        <property name="label" translatable="1">&lt;span size=&quot;small&quot;&gt;This program comes with absolutely no warranty.
-  See the &lt;a href=&quot;https://opensource.org/licenses/mit-license.php&quot;&gt;The MIT License (MIT)&lt;/a&gt; for details.&lt;/span&gt;</property>
-        <property name="use-markup">1</property>
-        <property name="justify">center</property>
+      <object class="AdwPreferencesGroup">
+        <child>
+          <object class="GtkBox">
+            <property name="margin-bottom">10</property>
+            <property name="margin-end">10</property>
+            <property name="margin-start">10</property>
+            <property name="margin-top">10</property>
+            <property name="orientation">vertical</property>
+            <property name="spacing">5</property>
+            <child>
+              <object class="GtkImage">
+                <property name="hexpand">True</property>
+                <property name="hexpand-set">True</property>
+                <property name="resource">/org/gnome/Shell/Extensions/DeskChanger/icons/wallpaper-icon.svg</property>
+                <property name="vexpand">True</property>
+                <property name="vexpand-set">True</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel" id="name_label">
+                <property name="label">&lt;b&gt;DeskChanger&lt;/b&gt;</property>
+                <property name="use-markup">True</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel" id="version_label">
+                <property name="label">Version 36</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel" id="description_label">
+                <property name="label">Simple wallpaper changer with multiple profile support. Integrates into the shell by providing it's own panel icon. The daemon is written using gjs and runs independently of the extension as a background process.</property>
+                <property name="wrap">True</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel" id="url_label">
+                <property name="label">&lt;a href="https://github.com/BigE/desk-changer"&gt;https://github.com/BigE/desk-changer&lt;/a&gt;</property>
+                <property name="use-markup">True</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel" id="license_label">
+                <property name="label">&lt;span size="small"&gt;This program comes with absolutely no warranty.
+See the &lt;a href="https://opensource.org/licenses/mit-license.php"&gt;The MIT License (MIT)&lt;/a&gt; for details.&lt;/span&gt;</property>
+                <property name="use-markup">True</property>
+                <property name="wrap">True</property>
+              </object>
+            </child>
+          </object>
+        </child>
       </object>
     </child>
   </template>
