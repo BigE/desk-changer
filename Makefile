@@ -7,7 +7,7 @@ else
 	INSTALLBASE = $(DESTDIR)/usr/share/gnome-shell/extensions
 endif
 
-all: convert-glade-to-ui compile-resources compile-schemas
+all: compile-resources compile-schemas
 
 compile-resources:
 	glib-compile-resources \
@@ -17,14 +17,6 @@ compile-resources:
 
 compile-schemas:
 	glib-compile-schemas ./$(UUID)/schemas/
-
-convert-glade-to-ui:
-	gtk4-builder-tool simplify --3to4 ./resources/ui/rotation.glade > ./resources/ui/rotation.ui
-	gtk4-builder-tool simplify --3to4 ./resources/ui/prefs/about.glade > ./resources/ui/prefs/about.ui
-	gtk4-builder-tool simplify --3to4 ./resources/ui/prefs/daemon.glade > ./resources/ui/prefs/daemon.ui
-	gtk4-builder-tool simplify --3to4 ./resources/ui/prefs/extension.glade > ./resources/ui/prefs/extension.ui
-	gtk4-builder-tool simplify --3to4 ./resources/ui/prefs/keyboard.glade > ./resources/ui/prefs/keyboard.ui
-	gtk4-builder-tool simplify --3to4 ./resources/ui/prefs/profiles.glade > ./resources/ui/prefs/profiles.ui
 
 install: update-translation
 	mkdir -p $(INSTALLBASE)
