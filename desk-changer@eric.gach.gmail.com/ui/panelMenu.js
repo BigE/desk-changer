@@ -9,6 +9,7 @@ import St from 'gi://St';
 
 import DeskChanger from '../deskchanger.js';
 import Interface from '../daemon/interface.js';
+import * as DeskChangerLogging from '../common/logging.js';
 import * as DeskChangerControl from './control.js';
 import * as DeskChangerPopupMenu from './popupMenu.js';
 
@@ -52,10 +53,10 @@ class DeskChangerPanelMenuIcon extends St.Bin {
         });
         this._icon = null;
         this._preview = null;
-        this.update_child(this._daemon.Preview);
+        this.update_child();
 
         this._preview_id = Interface.settings.connect('changed::icon-preview', (settings, key) => {
-            this.update_child(this._daemon.Preview);
+            this.update_child();
         });
     }
 
@@ -69,8 +70,10 @@ class DeskChangerPanelMenuIcon extends St.Bin {
         super.destroy();
     }
 
-    update_child(file) {
-        if (Interface.settings.icon_preview && this._create_preview(file)) {
+    update_child() {
+        if (Interface.settings.icon_preview) {
+            this._destroy_preview();
+            this._preview = new DeskChangerControl.PreviewControl({height: 32, width: -1}, this._daemon);
             this.set_child(this._preview);
             this._destroy_icon();
         } else if (!(this._icon)) {
@@ -81,22 +84,6 @@ class DeskChangerPanelMenuIcon extends St.Bin {
             this.set_child(this._icon);
             this._destroy_preview();
         }
-    }
-
-    _create_preview(file) {
-        this._destroy_preview();
-        this._preview = new DeskChangerControl.PreviewControl(34, this._daemon, this.update_child.bind(this));
-
-        if (!(this._preview.file)) {
-            if (typeof file === 'string') {
-                this._preview.set_wallpaper(file);
-            } else {
-                this._destroy_preview();
-                return false;
-            }
-        }
-
-        return true;
     }
 
     _destroy_icon() {

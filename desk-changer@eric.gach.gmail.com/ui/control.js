@@ -35,13 +35,13 @@ class DeskChangerControlButtonControl extends St.Button {
 
 export const PreviewControl = GObject.registerClass(
     class DeskChangerPreviewControl extends St.Bin {
-        _init(width, daemon, callback) {
+        _init(size = {height: -1, width: -1}, daemon, callback) {
             super._init();
             this._file = null;
             this._callback = callback;
             this._daemon = daemon;
             this._texture = null;
-            this._width = width;
+            this._size = size;
             this._next_file_id = this._daemon.connectSignal('Preview', (proxy, name, [uri]) => {
                 Logger.debug(`DBUS::Preview(${uri})`);
                 this.set_wallpaper(uri);
@@ -91,17 +91,26 @@ export const PreviewControl = GObject.registerClass(
             Logger.debug('setting preview to %s'.format(file));
             try{
                 let scale_factor = St.ThemeContext.get_for_stage(global.stage).scale_factor;
-                let pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale(file, this._width * scale_factor, -1, true);
-                let height = Math.round(pixbuf.get_height() / (pixbuf.get_width() / this._width));
+                let pixbuf = GdkPixbuf.Pixbuf.new_from_file(file);
+                let { height, width } = this._size;
+                let original_height = pixbuf.get_height(), original_width = pixbuf.get_width();
+                pixbuf = null;
+                pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale(file, this._size.width, this._size.height, true);
+
+                if (height > 0 && width == -1)
+                    width = Math.floor(original_width / (original_height / height));
+                else if (width > 0 && height == -1)
+                    height = Math.floor(original_height / (original_width / width));
+
                 let image = new Clutter.Image();
                 image.set_data(
                     pixbuf.get_pixels(),
                     (pixbuf.get_has_alpha()? Cogl.PixelFormat.RGBA_8888 : Cogl.PixelFormat.RGB_888),
-                    this._width * scale_factor,
+                    width * scale_factor,
                     height * scale_factor,
                     pixbuf.get_rowstride()
                 );
-                this._texture = new Clutter.Actor({height: height * scale_factor, width: this._width * scale_factor});
+                this._texture = new Clutter.Actor({height: height * scale_factor, width: width * scale_factor});
                 this._texture.set_content(image);
                 this.add_actor(this._texture);
             } catch (e) {
