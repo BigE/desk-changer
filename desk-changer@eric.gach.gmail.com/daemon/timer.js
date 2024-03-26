@@ -1,10 +1,11 @@
 'use strict';
 
-const GLib = imports.gi.GLib;
-const GObject = imports.gi.GObject;
-const Signals = imports.signals;
+import GLib from "gi://GLib";
+import GObject from "gi://GObject";
 
-var Interval = GObject.registerClass({
+import { debug } from "../common/logging.js";
+
+export const Interval = GObject.registerClass({
     Properties: {
         interval: GObject.ParamSpec.uint('interval', 'Interval',
             'The interval at which the callback is triggered',
@@ -25,7 +26,7 @@ class DeskChangerTimerInterval extends GObject.Object {
         this._interval = parseInt(interval);
         super._init(params);
         this._timer = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, this._interval, this.__callback__.bind(this));
-        deskchanger.debug(`added interval(${this._interval}) timer ${this._timer}`);
+        debug(`added interval(${this._interval}) timer ${this._timer}`);
     }
 
     get callback() {
@@ -38,7 +39,7 @@ class DeskChangerTimerInterval extends GObject.Object {
 
     __callback__() {
         if (this._callback) {
-            deskchanger.debug('calling interval callback');
+            debug('calling interval callback');
             return Boolean(this._callback());
         }
 
@@ -46,12 +47,12 @@ class DeskChangerTimerInterval extends GObject.Object {
     }
 
     destroy() {
-        deskchanger.debug(`removing interval timer ${this._timer}`);
+        debug(`removing interval timer ${this._timer}`);
         GLib.source_remove(this._timer);
     }
 });
 
-var Hourly = GObject.registerClass(
+export const Hourly = GObject.registerClass(
 class DeskChangerTimerHourly extends Interval {
     _init(callback, params = {}) {
         this._done = false;
@@ -70,7 +71,7 @@ class DeskChangerTimerHourly extends Interval {
         if (this._timer_check(new Date())) {
             if (!this._done) {
                 this._done = true;
-                deskchanger.debug('calling hourly callback');
+                debug('calling hourly callback');
                 return super.__callback__();
             }
 
@@ -82,7 +83,7 @@ class DeskChangerTimerHourly extends Interval {
     }
 });
 
-var Daily = GObject.registerClass(
+export const Daily = GObject.registerClass(
 class DeskChangerTimerDaily extends Hourly {
     _timer_check(date) {
         if (super._timer_check(date) && date.getHours() === 0) {

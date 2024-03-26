@@ -1,5 +1,5 @@
 UUID = desk-changer@eric.gach.gmail.com
-VERSION = 35
+VERSION = 36
 
 ifeq ($(strip $(DESTDIR)),)
 	INSTALLBASE = $(HOME)/.local/share/gnome-shell/extensions
@@ -10,7 +10,10 @@ endif
 all: compile-resources compile-schemas
 
 compile-resources:
-	glib-compile-resources --target=./$(UUID)/resources/org.gnome.Shell.Extensions.DeskChanger.gresource --sourcedir=./resources ./resources/org.gnome.Shell.Extensions.DeskChanger.gresource.xml
+	glib-compile-resources \
+		--target=./$(UUID)/resources/org.gnome.Shell.Extensions.DeskChanger.gresource \
+		--sourcedir=./resources \
+		./resources/org.gnome.Shell.Extensions.DeskChanger.gresource.xml
 
 compile-schemas:
 	glib-compile-schemas ./$(UUID)/schemas/

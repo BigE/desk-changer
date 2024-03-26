@@ -1,16 +1,19 @@
-const Me = imports.misc.extensionUtils.getCurrentExtension();
-const Convenience = Me.imports.convenience;
-const DeskChangerPopupMenu = Me.imports.ui.popupMenu;
-const DeskChangerControl = Me.imports.ui.control;
+'use strict';
 
-const Gio = imports.gi.Gio;
-const GObject = imports.gi.GObject;
-const PanelMenu = imports.ui.panelMenu;
-const PopupMenu = imports.ui.popupMenu;
-const St = imports.gi.St;
-const Util = imports.misc.util;
+import { Extension } from 'resource:///org/gnome/shell/extensions/extension.js';
+import Gio from 'gi://Gio';
+import GObject from 'gi://GObject';
+import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
+import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
+import St from 'gi://St';
 
-var Button = GObject.registerClass(
+import DeskChanger from '../deskchanger.js';
+import Interface from '../daemon/interface.js';
+import * as DeskChangerLogging from '../common/logging.js';
+import * as DeskChangerControl from './control.js';
+import * as DeskChangerPopupMenu from './popupMenu.js';
+
+export const Button = GObject.registerClass(
 class DeskChangerPanelMenuButton extends PanelMenu.Button {
     _init(daemon) {
         super._init(0.0, 'DeskChanger');
@@ -26,12 +29,9 @@ class DeskChangerPanelMenuButton extends PanelMenu.Button {
         this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
 
         let menu_item = new PopupMenu.PopupMenuItem(_('DeskChanger Settings'));
-        menu_item.connect('activate', function () {
-            if ('openPrefs' in imports.misc.extensionUtils) {
-                imports.misc.extensionUtils.openPrefs();
-            } else {
-                Util.spawn(['gnome-shell-extension-prefs', Me.metadata.uuid]);
-            }
+        menu_item.connect('activate', () => {
+            const extensionObject = Extension.lookupByUUID(DeskChanger.metadata.uuid);
+            extensionObject.openPreferences();
         });
         this.menu.addMenuItem(menu_item);
     }
@@ -43,26 +43,26 @@ class DeskChangerPanelMenuButton extends PanelMenu.Button {
 }
 );
 
-let Icon = GObject.registerClass(
+export const Icon = GObject.registerClass(
 class DeskChangerPanelMenuIcon extends St.Bin {
     _init(daemon) {
         this._daemon = daemon;
-        this._gicon = Gio.icon_new_for_string(`resource://${deskchanger.app_path}/icons/wallpaper-icon.svg`);
+        this._gicon = Gio.icon_new_for_string(`resource://${DeskChanger.app_path}/icons/wallpaper-icon.svg`);
         super._init({
             style_class: 'panel-status-menu-box',
         });
         this._icon = null;
         this._preview = null;
-        this.update_child(this._daemon.Preview);
+        this.update_child();
 
-        this._preview_id = deskchanger.settings.connect('changed::icon-preview', (settings, key) => {
-            this.update_child(this._daemon.Preview);
+        this._preview_id = Interface.settings.connect('changed::icon-preview', (settings, key) => {
+            this.update_child();
         });
     }
 
     destroy() {
         if (this._preview_id) {
-            deskchanger.settings.disconnect(this._preview_id);
+            Interface.settings.disconnect(this._preview_id);
         }
 
         this._destroy_icon();
@@ -70,8 +70,10 @@ class DeskChangerPanelMenuIcon extends St.Bin {
         super.destroy();
     }
 
-    update_child(file) {
-        if (deskchanger.settings.icon_preview && this._create_preview(file)) {
+    update_child() {
+        if (Interface.settings.icon_preview) {
+            this._destroy_preview();
+            this._preview = new DeskChangerControl.PreviewControl({height: 32, width: -1}, this._daemon);
             this.set_child(this._preview);
             this._destroy_icon();
         } else if (!(this._icon)) {
@@ -82,22 +84,6 @@ class DeskChangerPanelMenuIcon extends St.Bin {
             this.set_child(this._icon);
             this._destroy_preview();
         }
-    }
-
-    _create_preview(file) {
-        this._destroy_preview();
-        this._preview = new DeskChangerControl.PreviewControl(34, this._daemon, this.update_child.bind(this));
-
-        if (!(this._preview.file)) {
-            if (typeof file === 'string') {
-                this._preview.set_wallpaper(file);
-            } else {
-                this._destroy_preview();
-                return false;
-            }
-        }
-
-        return true;
     }
 
     _destroy_icon() {

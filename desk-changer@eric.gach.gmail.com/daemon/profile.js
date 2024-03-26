@@ -1,12 +1,16 @@
 'use strict';
 
-const Gio = imports.gi.Gio;
-const GLib = imports.gi.GLib;
-const GObject = imports.gi.GObject;
+import Gio from "gi://Gio";
+import GLib from "gi://GLib";
+import GObject from "gi://GObject";
+
+import Interface from "./interface.js";
+import * as Logger from '../common/logging.js';
+import { getCaller } from "../common/utils.js";
 
 const MAX_QUEUE_LENGTH = 2;
 
-var Error = GObject.registerClass({
+export const Error = GObject.registerClass({
     GTypeName: 'DeskChangerProfileError',
     Properties: {
         'caller': GObject.ParamSpec.string('caller', 'Caller', 'Caller of the exception',
@@ -20,7 +24,7 @@ class DeskChangerProfileError extends GObject.Object {
         super._init();
         let args = Array.from(...arguments).slice(1);
 
-        this._caller = deskchanger.getCaller();
+        this._caller = getCaller();
         this._message = message.format(...args);
     }
 
@@ -34,7 +38,7 @@ class DeskChangerProfileError extends GObject.Object {
 }
 );
 
-var Profile = GObject.registerClass({
+export const Profile = GObject.registerClass({
     GTypeName: 'DeskChangerProfile',
     Properties: {
         'loaded': GObject.ParamSpec.boolean('loaded', 'Loaded', 'Boolean property to check if the profile is loaded',
@@ -98,20 +102,20 @@ class DeskChangerProfile extends GObject.Object {
         let wallpaper = null;
 
         if (!this.loaded && this._queue.length >= MAX_QUEUE_LENGTH) {
-            deskchanger.debug(`the queue for ${this._profile} already has ${this._queue.length} wallpapers, not adding more to the queue`);
+            Logger.debug(`the queue for ${this._profile} already has ${this._queue.length} wallpapers, not adding more to the queue`);
             return;
         }
 
-        deskchanger.debug(`filling queue for ${this._profile}`);
+        Logger.debug(`filling queue for ${this._profile}`);
         do {
-            if (deskchanger.settings.random) {
+            if (Interface.settings.random) {
                 do {
                     wallpaper = this._wallpapers[Math.floor(Math.random() * this._wallpapers.length)];
                     if (this._history.contains(wallpaper) && (this._wallpapers.length >= 128 || this._history.next === wallpaper)) {
-                        deskchanger.debug(`wallpaper ${wallpaper} exists in the history, skipping`);
+                        Logger.debug(`wallpaper ${wallpaper} exists in the history, skipping`);
                         wallpaper = null;
                     } else if (this._queue.contains(wallpaper) && this._wallpapers.length > 2) {
-                        deskchanger.debug(`wallpaper ${wallpaper} is already in the queue, skipping`);
+                        Logger.debug(`wallpaper ${wallpaper} is already in the queue, skipping`);
                         wallpaper = null;
                     }
                 } while (wallpaper === null);
@@ -136,10 +140,10 @@ class DeskChangerProfile extends GObject.Object {
      * @param {string} profile Profile name to load
      */
     load(profile=null) {
-        let _profile = profile || deskchanger.settings.current_profile,
-            profiles = deskchanger.settings.profiles;
+        let _profile = profile || Interface.settings.current_profile,
+            profiles = Interface.settings.profiles;
 
-        deskchanger.debug(`loading profile ${_profile}`);
+        Logger.debug(`loading profile ${_profile}`);
 
         if (!(_profile in profiles)) {
             throw new Error(`unable to load ${_profile} because it doesn't exist`);
@@ -150,8 +154,8 @@ class DeskChangerProfile extends GObject.Object {
             this._load_uri(_profile, uri, recursive, true);
         });
 
-        this._profiles_changed_id = deskchanger.settings.connect('changed::profiles', () => {
-            let _profiles = deskchanger.settings.profiles;
+        this._profiles_changed_id = Interface.settings.connect('changed::profiles', () => {
+            let _profiles = Interface.settings.profiles;
             if (profiles[_profile] === _profiles[_profile]) {
                 return;
             }
@@ -159,17 +163,17 @@ class DeskChangerProfile extends GObject.Object {
             this.reload();
         });
 
-        if (deskchanger.settings.remember_profile_state && _profile in deskchanger.settings.profile_state) {
-            deskchanger.debug(`restoring state for profile ${_profile}`);
-            let profile_state = deskchanger.settings.profile_state;
+        if (Interface.settings.remember_profile_state && _profile in Interface.settings.profile_state) {
+            Logger.debug(`restoring state for profile ${_profile}`);
+            let profile_state = Interface.settings.profile_state;
             this._queue.restore(profile_state[_profile]);
             delete profile_state[_profile];
-            deskchanger.settings.profile_state = profile_state;
+            Interface.settings.profile_state = profile_state;
         }
 
         this._profile = _profile;
         this.fill_queue();
-        deskchanger.debug(`loaded profile ${this._profile} with ${this._wallpapers.length} wallpapers`);
+        Logger.debug(`loaded profile ${this._profile} with ${this._wallpapers.length} wallpapers`);
         this.emit('loaded', true);
         this.emit('preview', this._queue.next);
         return true;
@@ -214,7 +218,7 @@ class DeskChangerProfile extends GObject.Object {
         let wallpaper = null;
 
         if (!this.loaded) {
-            deskchanger.debug('cannot load prev wallpaper, profile is not loaded');
+            Logger.debug('cannot load prev wallpaper, profile is not loaded');
             return null;
         }
 
@@ -230,30 +234,30 @@ class DeskChangerProfile extends GObject.Object {
     reload() {
         if (!this.loaded) return false;
 
-        deskchanger.debug(`reloading profile ${this._profile}`)
+        Logger.debug(`reloading profile ${this._profile}`)
         this.unload();
         this.load();
         return true;
     }
 
     unload(current=null) {
-        if (deskchanger.settings.remember_profile_state) {
-            deskchanger.debug(`storing profile state for ${this._profile}`);
-            let profile_state = deskchanger.settings.profile_state;
+        if (Interface.settings.remember_profile_state) {
+            Logger.debug(`storing profile state for ${this._profile}`);
+            let profile_state = Interface.settings.profile_state;
             profile_state[this._profile] = [this._queue.next, ];
             if (current) {
                 profile_state[this._profile].unshift(current);
             }
-            deskchanger.settings.profile_state = profile_state;
+            Interface.settings.profile_state = profile_state;
         }
 
         if (this._profiles_changed_id) {
-            deskchanger.settings.disconnect(this._profiles_changed_id);
+            Interface.settings.disconnect(this._profiles_changed_id);
         }
 
         this._monitors.forEach((monitor) => {
             monitor.cancel();
-            deskchanger.debug(`destroyed directory monitor`);
+            Logger.debug(`destroyed directory monitor`);
         });
 
         this._history.clear();
@@ -276,7 +280,7 @@ class DeskChangerProfile extends GObject.Object {
      * @param {Gio.FileMonitorEvent} event_type Event type flag
      */
     _directory_changed(_monitor, file, other_file, event_type) {
-        deskchanger.debug(`detected change of "${event_type}" for ${file.get_uri()}`);
+        Logger.debug(`detected change of "${event_type}" for ${file.get_uri()}`);
         if (event_type === Gio.FileMonitorEvent.CREATED) {
             // TODO: make the recursive check against the parent
             this._load_uri(this._profile, file.get_uri(), false);
@@ -286,7 +290,7 @@ class DeskChangerProfile extends GObject.Object {
 
             if (index >= 0) {
                 this._wallpapers.splice(index);
-                deskchanger.debug(`removed ${uri} from profile ${this._profile}`);
+                Logger.debug(`removed ${uri} from profile ${this._profile}`);
             }
         }
     }
@@ -304,12 +308,12 @@ class DeskChangerProfile extends GObject.Object {
     _load_directory(profile, location, recursive) {
         let enumerator, item;
 
-        deskchanger.debug(`attempting to load directory ${location.get_uri()} for profile ${profile}`);
+        Logger.debug(`attempting to load directory ${location.get_uri()} for profile ${profile}`);
 
         try {
             enumerator = location.enumerate_children('standard::*', Gio.FileQueryInfoFlags.NONE, null);
         } catch (e) {
-            deskchanger.error(e, `failed to load ${location.get_uri()} from profile ${profile}`);
+            Logger.error(e, `failed to load ${location.get_uri()} from profile ${profile}`);
             return;
         }
 
@@ -320,7 +324,7 @@ class DeskChangerProfile extends GObject.Object {
             }
         }
 
-        deskchanger.debug(`loading of directory ${location.get_uri()} for profile ${profile} is complete`);
+        Logger.debug(`loading of directory ${location.get_uri()} for profile ${profile} is complete`);
     }
 
     /**
@@ -339,13 +343,13 @@ class DeskChangerProfile extends GObject.Object {
      */
     _load_uri(profile, uri, recursive, top_level=false) {
         let location, info,
-            allowed_mime_types = deskchanger.settings.allowed_mime_types;
+            allowed_mime_types = Interface.settings.allowed_mime_types;
 
         try {
             location = Gio.File.new_for_uri(uri);
             info = location.query_info('standard::*', Gio.FileQueryInfoFlags.NONE, null);
         } catch (e) {
-            deskchanger.error(e, `failed to load uri ${uri} for profile ${profile}`);
+            Logger.error(e, `failed to load uri ${uri} for profile ${profile}`);
             return;
         }
 
@@ -357,29 +361,29 @@ class DeskChangerProfile extends GObject.Object {
                     monitor = location.monitor_directory(Gio.FileMonitorFlags.NONE, cancellable);
                 monitor.connect('changed', this._directory_changed.bind(this));
                 this._monitors.push(monitor);
-                deskchanger.debug(`added monitor for ${uri}`);
+                Logger.debug(`added monitor for ${uri}`);
             } catch (e) {
-                deskchanger.error(e, `failed to create monitor on ${uri}`);
+                Logger.error(e, `failed to create monitor on ${uri}`);
             }
 
             this._load_directory(profile, location, recursive);
         } else if (info.get_file_type() === Gio.FileType.REGULAR && allowed_mime_types.includes(info.get_content_type())) {
             // Load any files that are in our allowed mime types
             if (location.get_uri() in this._wallpapers) {
-                deskchanger.debug(`skipping duplicate file ${location.get_uri()} on profile ${profile}`);
+                Logger.debug(`skipping duplicate file ${location.get_uri()} on profile ${profile}`);
                 return;
             }
 
             this._wallpapers.push(location.get_uri());
-            deskchanger.debug(`loaded ${location.get_uri()} to profile ${profile}`);
+            Logger.debug(`loaded ${location.get_uri()} to profile ${profile}`);
         } else {
-            deskchanger.debug(`skipping unknown file type of ${info.get_content_type()} for profile ${profile}`);
+            Logger.debug(`skipping unknown file type of ${info.get_content_type()} for profile ${profile}`);
         }
     }
 }
 );
 
-var Queue = GObject.registerClass({
+export const Queue = GObject.registerClass({
     GTypeName: 'DeskChangerProfileQueue',
     Properties: {
         'length': GObject.ParamSpec.uint('length', 'Length', 'The current size of the queue',
@@ -408,7 +412,7 @@ class DeskChangerProfileQueue extends GObject.Object {
 
     clear() {
         this._queue = [];
-        deskchanger.debug('cleared queue object');
+        Logger.debug('cleared queue object');
     }
 
     contains(uri) {
@@ -418,7 +422,7 @@ class DeskChangerProfileQueue extends GObject.Object {
     dequeue() {
         if (this._queue.length === 0) return undefined;
         let uri = this._queue.shift();
-        deskchanger.debug(`dequed ${uri} from the queue`);
+        Logger.debug(`dequed ${uri} from the queue`);
         return uri;
     }
 
@@ -429,7 +433,7 @@ class DeskChangerProfileQueue extends GObject.Object {
             this._queue.push(uri);
         }
 
-        deskchanger.debug(`added ${uri} to the queue`);
+        Logger.debug(`added ${uri} to the queue`);
     }
 
     remove(uri) {
@@ -437,16 +441,16 @@ class DeskChangerProfileQueue extends GObject.Object {
 
         if (index >= 0) {
             this._queue.splice(index, 1);
-            deskchanger.debug(`removed ${uri} from the queue`);
+            Logger.debug(`removed ${uri} from the queue`);
             return true;
         }
 
-        deskchanger.debug(`${uri} was not found in the queue`);
+        Logger.debug(`${uri} was not found in the queue`);
         return false;
     }
 
     restore(queue) {
-        deskchanger.debug('restoring the queue state');
+        Logger.debug('restoring the queue state');
         this._queue = queue;
     }
 }
