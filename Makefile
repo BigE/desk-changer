@@ -1,5 +1,5 @@
 UUID = desk-changer@eric.gach.gmail.com
-VERSION = 35
+VERSION = 36
 
 ifeq ($(strip $(DESTDIR)),)
 	INSTALLBASE = $(HOME)/.local/share/gnome-shell/extensions
