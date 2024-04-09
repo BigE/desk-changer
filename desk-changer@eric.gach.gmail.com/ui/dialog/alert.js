@@ -2,7 +2,7 @@ import GObject from 'gi://GObject';
 import Gtk from 'gi://Gtk?version=4.0';
 
 const DialogAlert = GObject.registerClass({
-	Template: `file:///home/eric/Projects/desk-changer/resources/ui/dialog/alert.ui`,
+	Template: `resource:///org/gnome/Shell/Extensions/DeskChanger/ui/dialog/alert.ui`,
 },
 class DeskChangerDialogAlert extends Gtk.AlertDialog {
 	vfunc_constructed() {

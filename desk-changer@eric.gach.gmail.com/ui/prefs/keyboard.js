@@ -111,7 +111,7 @@ const KeyboardPage = GObject.registerClass({
 	InternalChildren: [
 		'keymap_listbox',
 	],
-	Template: `file:///home/eric/Projects/desk-changer/resources/ui/prefs/keyboard/page.ui`,
+	Template: `resource:///org/gnome/Shell/Extensions/DeskChanger/ui/prefs/keyboard/page.ui`,
 },
 class DeskChangerPreferencesKeyboardPage extends Adw.PreferencesPage {
 	constructor(params={}) {

@@ -19,7 +19,7 @@ const KeyboardShortcutRow = GObject.registerClass({
 			GObject.ParamFlags.READWRITE | GObject.ParamFlags.CONSTRUCT
 		),
 	},
-	Template: `file:///home/eric/Projects/desk-changer/resources/ui/prefs/keyboard/shortcutrow.ui`,
+	Template: `resource:///org/gnome/Shell/Extensions/DeskChanger/ui/prefs/keyboard/shortcutrow.ui`,
 },
 class DeskChangerPreferencesKeyboardShortcutRow extends Adw.ActionRow {
 	get keybind() {

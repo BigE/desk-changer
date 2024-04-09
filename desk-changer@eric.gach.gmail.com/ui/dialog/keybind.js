@@ -37,7 +37,7 @@ const KeybindDialog = GObject.registerClass({
 			GObject.ParamFlags.READWRITE | GObject.ParamFlags.CONSTRUCT
 		),
 	},
-	Template: `file:///home/eric/Projects/desk-changer/resources/ui/dialog/keybind.ui`,
+	Template: `resource:///org/gnome/Shell/Extensions/DeskChanger/ui/dialog/keybind.ui`,
 },
 class DeskChangerKeybindDialog extends Adw.Window {
 	get keybind_id() {

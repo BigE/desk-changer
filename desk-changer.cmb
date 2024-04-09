@@ -261,7 +261,7 @@
 	(15,30,"GtkLabel","wrap","True",None,None,None,None,None,None,None,None,None),
 	(15,30,"GtkLabel","wrap-mode","word-char",None,None,None,None,None,None,None,None,None),
 	(15,31,"GtkPicture","can-shrink","False",None,None,None,None,None,None,None,None,None),
-	(15,31,"GtkPicture","file","file:///home/eric/Projects/desk-changer/resources/enter-keyboard-shortcut.svg",None,None,None,None,None,None,None,None,None),
+	(15,31,"GtkPicture","file","resource:///org/gnome/Shell/Extensions/DeskChanger/enter-keyboard-shortcut.svg",None,None,None,None,None,None,None,None,None),
 	(15,31,"GtkWidget","halign","center",None,None,None,None,None,None,None,None,None),
 	(15,31,"GtkWidget","valign","center",None,None,None,None,None,None,None,None,None),
 	(15,32,"GtkLabel","label","Press Esc to cancel or Backspace to disable the keyboard shortcut.",None,None,None,None,None,None,None,None,None),

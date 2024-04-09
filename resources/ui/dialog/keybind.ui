@@ -35,7 +35,7 @@
                     <child>
                       <object class="GtkPicture">
                         <property name="can-shrink">False</property>
-                        <property name="file">file:///home/eric/Projects/desk-changer/resources/enter-keyboard-shortcut.svg</property>
+                        <property name="file">resource:///org/gnome/Shell/Extensions/DeskChanger/ui/dialog/keybind.ui</property>
                         <property name="halign">center</property>
                         <property name="valign">center</property>
                       </object>

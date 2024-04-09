@@ -19,7 +19,7 @@ const ProfilesPage = GObject.registerClass({
 		'remove_item_button',
 		'remove_profile_button',
 	],
-	Template: 'file:///home/eric/Projects/desk-changer/resources/ui/prefs/profiles.ui',
+	Template: 'resource:///org/gnome/Shell/Extensions/DeskChanger/ui/prefs/profiles.ui',
 },
 class DeskChangerPreferencesProfilesPage extends Adw.PreferencesPage {
 	constructor(params={}) {

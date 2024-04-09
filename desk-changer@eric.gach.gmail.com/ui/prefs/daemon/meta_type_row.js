@@ -8,7 +8,7 @@ const DaemonMetaTypeRow = GObject.registerClass({
 	InternalChildren: [
 		'delete_button',
 	],
-	Template: `file:///home/eric/Projects/desk-changer/resources/ui/prefs/daemon/meta_type_row.ui`,
+	Template: `resource:///org/gnome/Shell/Extensions/DeskChanger/ui/prefs/daemon/meta_type_row.ui`,
 },
 class DeskChangerPreferencesDaemonMetaTypeRow extends Adw.ActionRow {
 	_on_meta_row_delete_button_clicked(button) {
