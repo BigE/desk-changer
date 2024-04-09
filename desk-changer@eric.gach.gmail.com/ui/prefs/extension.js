@@ -11,7 +11,7 @@ const ExtensionPage = GObject.registerClass({
 		'icon_preview_switch',
 		'notifications_switch',
 	],
-	Template: `file:///home/eric/Projects/desk-changer/resources/ui/prefs/extension.ui`,
+	Template: `resource:///org/gnome/Shell/Extensions/DeskChanger/ui/prefs/extension.ui`,
 },
 class DeskChangerPreferencesExtensionPage extends Adw.PreferencesPage {
 	constructor(params={}) {

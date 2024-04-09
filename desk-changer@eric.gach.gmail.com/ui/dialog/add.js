@@ -3,7 +3,7 @@ import Gtk from 'gi://Gtk?version=4.0';
 import Interface from '../../daemon/interface.js';
 
 const DialogAdd = GObject.registerClass({
-	Template: `file:///home/eric/Projects/desk-changer/resources/ui/dialog/add.ui`,
+	Template: `resource:///org/gnome/Shell/Extensions/DeskChanger/ui/dialog/add.ui`,
 },
 class DeskChangerDialogAdd extends Gtk.FileDialog {
 	vfunc_constructed() {

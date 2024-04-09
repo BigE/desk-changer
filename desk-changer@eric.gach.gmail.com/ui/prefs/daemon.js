@@ -21,7 +21,7 @@ const DaemonPage = GObject.registerClass({
 		'rotation_custom_interval_spinner',
 		'rotation_mode_combo',
 	],
-	Template: `file:///home/eric/Projects/desk-changer/resources/ui/prefs/daemon.ui`,
+	Template: `resource:///org/gnome/Shell/Extensions/DeskChanger/ui/prefs/daemon.ui`,
 },
 class DeskChangerPreferencesDaemonPage extends Adw.PreferencesPage {
 	vfunc_realize(widget) {

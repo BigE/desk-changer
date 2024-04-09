@@ -9,7 +9,7 @@ const AboutPage = GObject.registerClass({
 		'url_label',
 		'version_label',
 	],
-	Template: `file:///home/eric/Projects/desk-changer/resources/ui/prefs/about.ui`,
+	Template: `resource:///org/gnome/Shell/Extensions/DeskChanger/ui/prefs/about.ui`,
 },
 class DeskChangerPreferencesAboutPage extends Adw.PreferencesPage {
 	vfunc_realize(widget) {

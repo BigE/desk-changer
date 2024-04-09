@@ -9,7 +9,7 @@ const NewDialog = GObject.registerClass({
 		'entry',
 		'save_button',
 	],
-	Template: `file:///home/eric/Projects/desk-changer/resources/ui/dialog/new.ui`,
+	Template: `resource:///org/gnome/Shell/Extensions/DeskChanger/ui/dialog/new.ui`,
 },
 class DeskChangerNewDialog extends Gtk.Window {
 	get cancel_button() {
