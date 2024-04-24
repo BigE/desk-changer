@@ -175,11 +175,11 @@ class DeskChangerPopupMenuPreviewMenuItem extends PopupMenu.PopupBaseMenuItem {
     _init(daemon) {
         super._init({reactive: true});
         this._box = new St.BoxLayout({vertical: true});
-        this.add_actor(this._box);
+        this.add_child(this._box);
         this._prefix = new St.Label({text: _('Open next wallpaper')});
-        this._box.add(this._prefix);
+        this._box.add_child(this._prefix);
         this._preview = new DeskChangerControl.PreviewControl({height: -1, width: 220}, daemon);
-        this._box.add(this._preview);
+        this._box.add_child(this._preview);
         this._activate_id = this.connect('activate', () => {
             if (this._preview.file) {
                 Logger.debug(`opening file ${this._preview.file}`);
