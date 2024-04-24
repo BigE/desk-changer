@@ -3,7 +3,7 @@ import Cogl from 'gi://Cogl';
 import GLib from 'gi://GLib';
 import GdkPixbuf from 'gi://GdkPixbuf';
 import GObject from 'gi://GObject';
-import St from 'gi://St?version=13';
+import St from 'gi://St?version=14';
 
 import * as Logger from '../common/logging.js';
 
@@ -112,7 +112,7 @@ export const PreviewControl = GObject.registerClass(
                 );
                 this._texture = new Clutter.Actor({height: height * scale_factor, width: width * scale_factor});
                 this._texture.set_content(image);
-                this.add_actor(this._texture);
+                this.add_child(this._texture);
             } catch (e) {
                 Logger.error(e, `Failed to set preview of ${file}`);
                 if (this._texture) {
