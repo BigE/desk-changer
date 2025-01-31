@@ -3,7 +3,7 @@ import Cogl from 'gi://Cogl';
 import GLib from 'gi://GLib';
 import GdkPixbuf from 'gi://GdkPixbuf';
 import GObject from 'gi://GObject';
-import St from 'gi://St?version=14';
+import St from 'gi://St';
 
 import * as Logger from '../common/logging.js';
 
