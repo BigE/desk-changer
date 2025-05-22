@@ -1,6 +1,7 @@
+<?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE schemalist SYSTEM "https://gitlab.gnome.org/GNOME/glib/-/raw/main/gio/gschema.dtd">
 <schemalist>
-	<schema id="org.gnome.Shell.Extensions.DeskChanger" path="/org/gnome/shell/extensions/desk-changer/">
+	<schema id="org.gnome.shell.extensions.desk-changer" path="/org/gnome/shell/extensions/desk-changer/">
 		<key name="allowed-mime-types" type="as">
 			<default><![CDATA[['application/xml', 'image/jpeg', 'image/png', 'image/webp', 'image/svg+xml']]]></default>
 			<description>
