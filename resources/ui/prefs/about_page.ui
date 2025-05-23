@@ -1,9 +1,10 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<!-- Created with Cambalache 0.17.0 -->
+<!-- Created with Cambalache 0.96.1 -->
 <interface>
-  <requires lib="gtk" version="4.12"/>
-  <requires lib="libadwaita" version="1.4"/>
-  <template class="AboutPage" parent="AdwPreferencesPage">
+  <!-- interface-name about_page.ui -->
+  <requires lib="gtk" version="4.18"/>
+  <requires lib="libadwaita" version="1.7"/>
+  <template class="DeskChangerUiPrefsAboutPage" parent="AdwPreferencesPage">
     <property name="icon-name">dialog-information-symbolic</property>
     <property name="title">About</property>
     <child>
@@ -20,7 +21,7 @@
               <object class="GtkImage">
                 <property name="hexpand">True</property>
                 <property name="hexpand-set">True</property>
-                <property name="resource">/org/gnome/Shell/Extensions/DeskChanger/icons/wallpaper-icon.svg</property>
+                <property name="resource">/org/gnome/shell/extensions/desk-changer/icons/wallpaper-icon.svg</property>
                 <property name="vexpand">True</property>
                 <property name="vexpand-set">True</property>
               </object>

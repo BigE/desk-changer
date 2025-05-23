@@ -4,7 +4,10 @@
   "name": "Desk Changer",
   "settings-schema": "org.gnome.shell.extensions.desk-changer",
   "shell-version": [
-    "45"
+    "45",
+    "46",
+    "47",
+    "48"
   ],
   "url": "https://github.com/BigE/desk-changer/",
   "uuid": "desk-changer@eric.gach.gmail.com",

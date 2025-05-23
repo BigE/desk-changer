@@ -1,6 +1,7 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<!-- Created with Cambalache 0.17.0 -->
+<!-- Created with Cambalache 0.96.1 -->
 <interface>
+  <!-- interface-name meta_type_row.ui -->
   <requires lib="gtk" version="4.12"/>
   <requires lib="libadwaita" version="1.2"/>
   <template class="DaemonMetaTypeRow" parent="AdwActionRow">
