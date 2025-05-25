@@ -3,6 +3,7 @@
 <gresources>
     <gresource prefix="/org/gnome/shell/extensions/desk-changer/">
         <file>icons/wallpaper-icon.svg</file>
+        <file>ui/dialog/new.ui</file>
         <file>ui/prefs/about_page.ui</file>
         <file>ui/prefs/extension_page.ui</file>
         <file>ui/prefs/keyboard/page.ui</file>
