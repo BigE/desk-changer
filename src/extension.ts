@@ -4,21 +4,26 @@ import * as Main from "resource:///org/gnome/shell/ui/main.js";
 
 import PanelMenuButton, {PanelMenuButtonType} from "./ui/panelMenu/button.js";
 import {APP_ID} from "./common/interface.js";
+import Service, {ServiceType} from "./service/index.js";
 
 export default class DeskChangerExtension extends Extension {
     #button?: PanelMenuButtonType;
     #logger?: Console;
     #resource?: Gio.Resource;
-    #settings?: Gio.Settings;
+    #service?: ServiceType;
     #session_changed_id?: number;
+    #settings?: Gio.Settings;
 
     enable() {
         this.#resource = Gio.Resource.load(`${this.path}/${APP_ID}.gresource`);
         Gio.resources_register(this.#resource);
 
-        // @ts-ignore
+        // @ts-expect-error
         this.#logger = this.getLogger();
         this.#settings = this.getSettings();
+        this.#service = new Service(this.#settings, this.#logger!);
+        if (this.#settings.get_boolean('auto-start'))
+            this.#service.Start();
 
         this._onSessionModeChanged(Main.sessionMode);
         this.#session_changed_id = Main.sessionMode.connect('updated', this._onSessionModeChanged.bind(this))
@@ -31,6 +36,8 @@ export default class DeskChangerExtension extends Extension {
         }
 
         this._removeIndicator();
+        this.#service?.destroy();
+        this.#service = undefined;
         this.#logger = undefined;
         this.#settings = undefined;
         if (this.#resource)

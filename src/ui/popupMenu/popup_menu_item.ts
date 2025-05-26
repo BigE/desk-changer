@@ -23,7 +23,7 @@ class DeskChangerUiPopupMenuPopupMenuItem extends PopupMenu.PopupMenuItem {
         this.#key_changed_id = this.#settings.connect(`changed::${key}`, () => this.setOrnament(
             (this.#settings!.get_string(key) === this.#value)? PopupMenu.Ornament.DOT : PopupMenu.Ornament.NONE
         ));
-        this.#activate_id = this.connect('activate', () => this.#settings!.set_string(this.#key, this.#value));
+        this.#activate_id = this.connect('activate', () => { this.#settings!.set_string(this.#key, this.#value) });
     }
 
     destroy() {

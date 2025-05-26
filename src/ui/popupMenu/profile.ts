@@ -14,10 +14,10 @@ class DeskChangerUiPopupMenuProfile extends PopupMenuMenuItemSubMenu {
         super(settings, 'Profile', 'current-profile', sensitive);
 
         this.#settings = settings;
+        this.#populate_profiles();
         this.#profiles_changed_id = this.#settings.connect('changed::profiles', () => {
             this.#populate_profiles();
         });
-        this.#populate_profiles();
     }
 
     destroy() {
