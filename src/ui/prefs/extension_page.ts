@@ -2,10 +2,10 @@ import Adw from "gi://Adw";
 import Gio from "gi://Gio";
 import Gtk from "gi://Gtk";
 
-import {ProfileType} from "../../common/profile/index.js";
+import Profile from "../../common/profile/index.js";
 
 type CurrentProfileComboType = Adw.ComboRow & {
-    selected_item: ProfileType | null;
+    selected_item: Profile | null;
 };
 
 export default class ExtensionPage extends Adw.PreferencesPage {
@@ -15,7 +15,7 @@ export default class ExtensionPage extends Adw.PreferencesPage {
     readonly #settings: Gio.Settings;
     #selected_changed_id?: number;
 
-    constructor(profiles: Gio.ListStore<ProfileType>, current_profile_index: number, settings: Gio.Settings) {
+    constructor(profiles: Gio.ListStore<Profile>, current_profile_index: number, settings: Gio.Settings) {
         super();
 
         // @ts-expect-error
@@ -45,7 +45,7 @@ export default class ExtensionPage extends Adw.PreferencesPage {
 
     _on_current_profile_combo_factory_bind(_widget: Gtk.SignalListItemFactory, item: Gtk.ListItem) {
         const label = item.get_child() as Gtk.Label,
-            profile = item.get_item<ProfileType>();
+            profile = item.get_item<Profile>();
 
         label.set_label(profile.name);
     }

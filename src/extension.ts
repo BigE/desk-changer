@@ -2,15 +2,15 @@ import Gio from "gi://Gio";
 import { Extension } from "resource:///org/gnome/shell/extensions/extension.js";
 import * as Main from "resource:///org/gnome/shell/ui/main.js";
 
-import PanelMenuButton, {PanelMenuButtonType} from "./ui/panelMenu/button.js";
+import PanelMenuButton from "./ui/panelMenu/button.js";
 import {APP_ID} from "./common/interface.js";
-import Service, {ServiceType} from "./service/index.js";
+import Service from "./service/index.js";
 
 export default class DeskChangerExtension extends Extension {
-    #button?: PanelMenuButtonType;
+    #button?: PanelMenuButton;
     #logger?: Console;
     #resource?: Gio.Resource;
-    #service?: ServiceType;
+    #service?: Service;
     #session_changed_id?: number;
     #settings?: Gio.Settings;
 

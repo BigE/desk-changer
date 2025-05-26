@@ -4,9 +4,9 @@ import GObject from "gi://GObject";
 import { ExtensionPreferences } from "resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js";
 
 import {APP_ID, APP_PATH} from "./common/interface.js";
-import Profile, {ProfileType} from "./common/profile/index.js";
-import ProfileItem, {ProfileItemType} from "./common/profile/item.js";
-import ProfileSettingsType from "./common/profile/settings.js";
+import Profile from "./common/profile/index.js";
+import ProfileItem from "./common/profile/item.js";
+import {SettingsProfileType} from "./common/settings.js";
 import _AboutPage from "./ui/prefs/about_page.js";
 import _ExtensionPage from "./ui/prefs/extension_page.js";
 import _KeyboardPage from "./ui/prefs/keyboard/page.js";
@@ -20,7 +20,7 @@ export let ProfilesPage: typeof _ProfilesPage | undefined;
 
 export default class DeskChangerPreferences extends ExtensionPreferences {
     #current_profile_index?: number;
-    #profiles?: Gio.ListStore<ProfileType>;
+    #profiles?: Gio.ListStore<Profile>;
     #profiles_page?: Adw.PreferencesPage;
     #resource?: Gio.Resource;
     #settings?: Gio.Settings;
@@ -94,11 +94,11 @@ export default class DeskChangerPreferences extends ExtensionPreferences {
     }
 
     #load_profiles() {
-        const profiles = Object.entries(this.#settings!.get_value("profiles").deepUnpack<ProfileSettingsType>());
+        const profiles = Object.entries(this.#settings!.get_value("profiles").deepUnpack<SettingsProfileType>());
         const current_profile = this.#settings!.get_string("current-profile");
 
         if (!this.#profiles)
-            this.#profiles = new Gio.ListStore<ProfileType>();
+            this.#profiles = new Gio.ListStore<Profile>();
 
         this.#profiles.remove_all();
         for (let i = 0; i < profiles.length; i++) {
@@ -107,7 +107,7 @@ export default class DeskChangerPreferences extends ExtensionPreferences {
             if (current_profile === name)
                 this.#current_profile_index = i;
 
-            const items = new Gio.ListStore<ProfileItemType>;
+            const items = new Gio.ListStore<ProfileItem>;
             _items.forEach(item => items.append(new ProfileItem(item[0], item[1])));
             this.#profiles.append(new Profile(name, items));
         }

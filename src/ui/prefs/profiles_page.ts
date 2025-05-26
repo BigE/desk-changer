@@ -3,20 +3,20 @@ import Gio from "gi://Gio";
 import GLib from "gi://GLib";
 import Gtk from "gi://Gtk";
 
-import Profile, {ProfileType} from "../../common/profile/index.js";
-import ProfileItem, {ProfileItemType} from "../../common/profile/item.js";
-import ProfileSettingsType, {ProfileSettingsItemType} from "../../common/profile/settings.js";
+import Profile from "../../common/profile/index.js";
+import ProfileItem from "../../common/profile/item.js";
+import {SettingsProfileType, SettingsProfileItemType} from "../../common/settings.js";
 import DeleteDialog from "../dialog/delete.js";
 
 type ComboRowProfilesType = Omit<Adw.ComboRow, 'get_model' | 'model' | 'selected_item'> & {
-    model: Gio.ListStore<ProfileType> | null;
-    selected_item: ProfileType;
-    get_model(): Gio.ListStore<ProfileType> | null;
+    model: Gio.ListStore<Profile> | null;
+    selected_item: Profile;
+    get_model(): Gio.ListStore<Profile> | null;
 };
 
-type LocationSelectionType = Omit<Gtk.SingleSelection<ProfileItemType>, 'selected_item'> & {
-    model: Gio.ListStore<ProfileItemType> | null;
-    selected_item: ProfileItemType;
+type LocationSelectionType = Omit<Gtk.SingleSelection<ProfileItem>, 'selected_item'> & {
+    model: Gio.ListStore<ProfileItem> | null;
+    selected_item: ProfileItem;
 };
 
 export default class DeskChangerUiPrefsProfilesPage extends Adw.PreferencesPage {
@@ -29,7 +29,7 @@ export default class DeskChangerUiPrefsProfilesPage extends Adw.PreferencesPage 
     private remove_profile_button: Gtk.Button;
     readonly #settings;
 
-    constructor(profiles: Gio.ListStore<ProfileType>, current_profile: number, settings: Gio.Settings) {
+    constructor(profiles: Gio.ListStore<Profile>, current_profile: number, settings: Gio.Settings) {
         super();
         this.#settings = settings;
 
@@ -51,7 +51,7 @@ export default class DeskChangerUiPrefsProfilesPage extends Adw.PreferencesPage 
         this.remove_profile_button.set_sensitive(profiles.get_n_items() > 1);
 
         this.#combo_row_profiles_selected_item_id = this.combo_row_profiles.connect('notify::selected-item', () => {
-            const profile = this.#find_profile_by_name(this.combo_row_profiles.get_selected_item<ProfileType>().name);
+            const profile = this.#find_profile_by_name(this.combo_row_profiles.get_selected_item<Profile>().name);
 
             if (profile)
                 this.locations_selection.set_model(profile.items);
@@ -105,7 +105,7 @@ export default class DeskChangerUiPrefsProfilesPage extends Adw.PreferencesPage 
             if (profile_name.length === 0)
                 return;
 
-            let profiles = this.#settings.get_value("profiles").deepUnpack<ProfileSettingsType>();
+            let profiles = this.#settings.get_value("profiles").deepUnpack<SettingsProfileType>();
 
             if (!(profile_name in profiles)) {
                 profiles[profile_name] = [];
@@ -137,10 +137,10 @@ export default class DeskChangerUiPrefsProfilesPage extends Adw.PreferencesPage 
     _on_dialog_add_items_response(items: Gio.ListModel<Gio.File>) {
         const length = items.get_n_items(),
             profile = this.#settings.get_string('current-profile');
-        let profiles = this.#settings.get_value("profiles").deepUnpack<ProfileSettingsType>();
+        let profiles = this.#settings.get_value("profiles").deepUnpack<SettingsProfileType>();
 
         for (let i = 0; i < length; i++) {
-            const item: ProfileSettingsItemType = [items.get_item(i)!.get_uri(), false];
+            const item: SettingsProfileItemType = [items.get_item(i)!.get_uri(), false];
             profiles[profile].push(item);
             (this.locations_selection.get_model()! as Gio.ListStore).append(new ProfileItem(item[0], item[1]));
         }
@@ -151,7 +151,7 @@ export default class DeskChangerUiPrefsProfilesPage extends Adw.PreferencesPage 
 
     _on_factory_row_profiles_bind(_widget: Gtk.SignalListItemFactory, item: Gtk.ListItem) {
         const label = item.get_child() as Gtk.Label,
-            profile = item.get_item<ProfileType>();
+            profile = item.get_item<Profile>();
 
         label.set_label(profile.name);
     }
@@ -162,13 +162,13 @@ export default class DeskChangerUiPrefsProfilesPage extends Adw.PreferencesPage 
 
     _on_locations_factory_bind(_widget: Gtk.SignalListItemFactory, item: Gtk.ListItem) {
         const row = item.get_child() as Adw.SwitchRow,
-            location = item.get_item<ProfileItemType>();
+            location = item.get_item<ProfileItem>();
 
         row.set_title(location.uri);
         row.set_active(location.recursive);
         row.connect('notify::active', (object: Adw.SwitchRow) => {
-            let profiles = this.#settings.get_value("profiles").deepUnpack<ProfileSettingsType>();
-            const profile = (this.combo_row_profiles.selected_item as ProfileType).name;
+            let profiles = this.#settings.get_value("profiles").deepUnpack<SettingsProfileType>();
+            const profile = (this.combo_row_profiles.selected_item as Profile).name;
             const index = profiles[profile].findIndex(element => element[0] === object.title);
 
             profiles[profile][index][1] = object.active;
@@ -200,7 +200,7 @@ export default class DeskChangerUiPrefsProfilesPage extends Adw.PreferencesPage 
         const dialog_response_id = dialog.connect('response', (_dialog, response) => {
             if (response === 'no') return;
 
-            let profiles = this.#settings.get_value("profiles").deepUnpack<ProfileSettingsType>();
+            let profiles = this.#settings.get_value("profiles").deepUnpack<SettingsProfileType>();
             delete profiles[this.combo_row_profiles.selected_item.name];
             this.#settings.set_value("profiles", new GLib.Variant("a{sa(sb)}", profiles));
             this.combo_row_profiles.get_model()!.remove(this.combo_row_profiles.get_selected());

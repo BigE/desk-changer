@@ -2,11 +2,16 @@ import Gio from "gi://Gio";
 import GObject from "gi://GObject";
 
 import PopupMenuItem from "./popup_menu_item.js";
-import PopupMenuMenuItemSubMenu from "./sub_menu.js";
-import ProfileSettingsType from "../../common/profile/settings.js";
+import PopupSubMenuMenuItem from "./popup_sub_menu_menu_item.js";
+import {SettingsProfileType} from "../../common/settings.js";
 
-const PopupMenuProfile = GObject.registerClass(
-class DeskChangerUiPopupMenuProfile extends PopupMenuMenuItemSubMenu {
+export default class PopupMenuProfile extends PopupSubMenuMenuItem {
+    static {
+        GObject.registerClass({
+            GTypeName: "DeskChangerUiPopupMenuProfile",
+        }, this);
+    }
+
     #profiles_changed_id?: number;
     #settings?: Gio.Settings;
 
@@ -32,12 +37,8 @@ class DeskChangerUiPopupMenuProfile extends PopupMenuMenuItemSubMenu {
 
     #populate_profiles() {
         this.menu.removeAll();
-        for (let index in this.#settings!.get_value('profiles').deepUnpack<ProfileSettingsType>()) {
+        for (let index in this.#settings!.get_value('profiles').deepUnpack<SettingsProfileType>()) {
             this.menu.addMenuItem(new PopupMenuItem(this.#settings!, index, index, 'current-profile'));
         }
     }
 }
-);
-
-export default PopupMenuProfile;
-export type PopupMenuProfileType = InstanceType<typeof PopupMenuItem>;

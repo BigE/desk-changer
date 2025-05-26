@@ -1,28 +1,31 @@
 import Gio from "gi://Gio";
 import GObject from "gi://GObject";
 
-import {ProfileItemType} from "./item.js";
+import ProfileItem from "./item.js";
 
-const Profile = GObject.registerClass(
-{
-    Properties: {
-        "items": GObject.param_spec_object(
-            "items", "Items",
-            "All items contained within the profile",
-            Gio.ListModel.$gtype, GObject.ParamFlags.READWRITE | GObject.ParamFlags.CONSTRUCT
-        ),
-        "name": GObject.param_spec_string(
-            "name", "Name",
-            "Name of the profile",
-            null, GObject.ParamFlags.READWRITE | GObject.ParamFlags.CONSTRUCT
-        ),
-    },
-},
-class DeskChangerCommonProfile extends GObject.Object {
-    private _items: Gio.ListStore<ProfileItemType>;
+export default class CommonProfile extends GObject.Object {
+    static {
+        GObject.registerClass({
+            GTypeName: "DeskChangerCommonProfile",
+            Properties: {
+                "items": GObject.param_spec_object(
+                    "items", "Items",
+                    "All items contained within the profile",
+                    Gio.ListModel.$gtype, GObject.ParamFlags.READWRITE | GObject.ParamFlags.CONSTRUCT
+                ),
+                    "name": GObject.param_spec_string(
+                    "name", "Name",
+                    "Name of the profile",
+                    null, GObject.ParamFlags.READWRITE | GObject.ParamFlags.CONSTRUCT
+                ),
+            },
+        }, this);
+    }
+
+    private _items: Gio.ListStore<ProfileItem>;
     private _name: string;
 
-    get items(): Gio.ListStore<ProfileItemType> {
+    get items(): Gio.ListStore<ProfileItem> {
         return this._items;
     }
 
@@ -30,7 +33,7 @@ class DeskChangerCommonProfile extends GObject.Object {
         return this._name;
     }
 
-    set items(value: Gio.ListStore<ProfileItemType>) {
+    set items(value: Gio.ListStore<ProfileItem>) {
         this._items = value;
         this.notify('items');
     }
@@ -40,14 +43,10 @@ class DeskChangerCommonProfile extends GObject.Object {
         this.notify('name');
     }
 
-    constructor(name: string, items: Gio.ListStore<ProfileItemType> | null = null) {
+    constructor(name: string, items: Gio.ListStore<ProfileItem> | null = null) {
         super();
 
         this._name = name;
-        this._items = items || new Gio.ListStore<ProfileItemType>();
+        this._items = items || new Gio.ListStore<ProfileItem>();
     }
 }
-);
-
-export default Profile;
-export type ProfileType = InstanceType<typeof Profile>;

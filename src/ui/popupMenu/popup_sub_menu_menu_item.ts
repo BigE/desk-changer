@@ -2,8 +2,13 @@ import Gio from "gi://Gio";
 import GObject from "gi://GObject";
 import * as PopupMenu from "resource:///org/gnome/shell/ui/popupMenu.js";
 
-const PopupMenuMenuItemSubMenu = GObject.registerClass(
-class DeskChangerUiPopupMenuMenuItemSubMenu extends PopupMenu.PopupSubMenuMenuItem {
+export default class PopupSubMenuMenuItem extends PopupMenu.PopupSubMenuMenuItem {
+    static {
+        GObject.registerClass({
+            GTypeName: "DeskChangerUiPopupMenuPopupSubMenuMenuItem",
+        }, this);
+    }
+
     #changed_id?: number;
     #settings?: Gio.Settings;
 
@@ -31,7 +36,3 @@ class DeskChangerUiPopupMenuMenuItemSubMenu extends PopupMenu.PopupSubMenuMenuIt
         this.label.text = label;
     }
 }
-);
-
-export default PopupMenuMenuItemSubMenu;
-export type PopupMenuMenuItemSubMenuType = InstanceType<typeof PopupMenuMenuItemSubMenu>;

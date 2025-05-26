@@ -3,13 +3,18 @@ import GObject from "gi://GObject";
 import * as PanelMenu from "resource:///org/gnome/shell/ui/panelMenu.js";
 import * as PopupMenu from "resource:///org/gnome/shell/ui/popupMenu.js";
 
-import PanelMenuIcon, {PanelMenuIconType} from "./icon.js";
+import PanelMenuIcon from "./icon.js";
 import PopupMenuProfile from "../popupMenu/profile.js";
 
-const PanelMenuButton = GObject.registerClass(
-class DeskChangerUiPanelMenuButton extends PanelMenu.Button {
+export default class PanelMenuButton extends PanelMenu.Button {
+    static {
+        GObject.registerClass({
+            GTypeName: "DeskChangerUiPanelMenuButton",
+        }, this);
+    }
+
     declare menu: PopupMenu.PopupMenu;
-    #icon?: PanelMenuIconType;
+    #icon?: PanelMenuIcon;
     #settings_menu_item?: PopupMenu.PopupMenuItem;
     #settings_activate_id?: number;
 
@@ -47,7 +52,3 @@ class DeskChangerUiPanelMenuButton extends PanelMenu.Button {
         super.destroy();
     }
 }
-);
-
-export default PanelMenuButton;
-export type PanelMenuButtonType = InstanceType<typeof PanelMenuButton>;

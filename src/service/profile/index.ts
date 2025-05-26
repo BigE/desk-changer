@@ -1,37 +1,40 @@
 import GObject from "gi://GObject";
 import Gio from "gi://Gio";
-import ProfileSettingsType, {ProfileSettingsItemType} from "../../common/profile/settings.js";
-import {AllowedMimeTypesType} from "../../common/settings.js";
+import {SettingsAllowedMimeTypesType, SettingsProfileItemType, SettingsProfileType} from "../../common/settings.js";
 import GLib from "gi://GLib";
 import ServiceProfileQueue from "./queue.js";
 
 export const MAX_QUEUE_LENGTH = 5;
 
-const ServiceProfile = GObject.registerClass(
-{
-    Properties: {
-        "loaded": GObject.param_spec_boolean(
-            "loaded", "Loaded",
-            "Check if the profile is loaded",
-            false, GObject.ParamFlags.READABLE
-        ),
-        "preview": GObject.param_spec_string(
-            "preview", "Preview",
-            "Preview of the next wallpaper in the queue",
-            null, GObject.ParamFlags.READABLE
-        ),
-    },
-    Signals: {
-        "loaded": { param_types: [GObject.TYPE_INT, GObject.TYPE_STRING] },
-        "unloaded": {},
-    },
-},
-class DeskChangerServiceProfile extends GObject.Object {
+
+export default class ServiceProfile extends GObject.Object {
+    static {
+        GObject.registerClass({
+            GTypeName: "DeskChangerServiceProfile",
+            Properties: {
+                "loaded": GObject.param_spec_boolean(
+                    "loaded", "Loaded",
+                    "Check if the profile is loaded",
+                    false, GObject.ParamFlags.READABLE
+                ),
+                "preview": GObject.param_spec_string(
+                    "preview", "Preview",
+                    "Preview of the next wallpaper in the queue",
+                    null, GObject.ParamFlags.READABLE
+                ),
+            },
+            Signals: {
+                "loaded": { param_types: [GObject.TYPE_INT, GObject.TYPE_STRING] },
+                "unloaded": {},
+            },
+        }, this);
+    }
+
     #history: ServiceProfileQueue;
     #loaded: boolean;
     #logger?: Console;
     #monitors: Gio.FileMonitor[];
-    #profile?: ProfileSettingsItemType[];
+    #profile?: SettingsProfileItemType[];
     readonly #profile_name: string;
     #queue: ServiceProfileQueue;
     #sequence: number;
@@ -108,7 +111,7 @@ class DeskChangerServiceProfile extends GObject.Object {
     }
 
     load() {
-        const profiles: ProfileSettingsType = this.#settings!.get_value("profiles").deepUnpack<ProfileSettingsType>();
+        const profiles: SettingsProfileType = this.#settings!.get_value("profiles").deepUnpack<SettingsProfileType>();
 
         if (!(this.#profile_name in profiles))
             throw new ReferenceError(`Profile ${this.#profile_name} does not exist`);
@@ -211,7 +214,7 @@ class DeskChangerServiceProfile extends GObject.Object {
     }
 
     #load_uri(uri: string, recursive: boolean, top_level: boolean = false) {
-        const allowed_mime_types = this.#settings!.get_value("allowed-mime-types").deepUnpack<AllowedMimeTypesType>();
+        const allowed_mime_types = this.#settings!.get_value("allowed-mime-types").deepUnpack<SettingsAllowedMimeTypesType>();
 
         try {
             const location = Gio.File.new_for_uri(uri);
@@ -239,7 +242,7 @@ class DeskChangerServiceProfile extends GObject.Object {
     }
 
     #reload() {
-        const profiles = this.#settings!.get_value("profiles").deepUnpack<ProfileSettingsType>();
+        const profiles = this.#settings!.get_value("profiles").deepUnpack<SettingsProfileType>();
 
         if (profiles[this.#profile_name] !== this.#profile) {
             this.unload();
@@ -266,7 +269,3 @@ class DeskChangerServiceProfile extends GObject.Object {
         this.#settings!.set_value("profile-states", new GLib.Variant('a{sas}', profile_states));
     }
 }
-);
-
-export default ServiceProfile;
-export type ServiceProfileType = InstanceType<typeof ServiceProfile>;

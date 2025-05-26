@@ -4,8 +4,13 @@ import St from "gi://St";
 
 import {APP_PATH} from "../../common/interface.js";
 
-const PanelMenuIcon = GObject.registerClass(
-class DeskChangerUiPanelMenuIcon extends St.Bin {
+export default class PanelMenuIcon extends St.Bin {
+    static {
+        GObject.registerClass({
+            GTypeName: "DeskChangerUiPanelMenuIcon",
+        }, this);
+    }
+
     #g_icon?: Gio.Icon;
     #icon?: St.Icon;
     #preview_id?: number;
@@ -43,7 +48,3 @@ class DeskChangerUiPanelMenuIcon extends St.Bin {
         this.#icon = undefined;
     }
 }
-);
-
-export default PanelMenuIcon;
-export type PanelMenuIconType = InstanceType<typeof PanelMenuIcon>;

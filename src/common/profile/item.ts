@@ -1,21 +1,25 @@
 import GObject from "gi://GObject";
 
-const ProfileItem = GObject.registerClass(
-{
-    Properties: {
-        "recursive": GObject.param_spec_boolean(
-            "recursive", "Recursive",
-            "Toggle to recursively load the URI",
-            false, GObject.ParamFlags.READWRITE | GObject.ParamFlags.CONSTRUCT
-        ),
-        "uri": GObject.param_spec_string(
-            "uri", "URI",
-            "URI to load into the profile",
-            null, GObject.ParamFlags.READWRITE | GObject.ParamFlags.CONSTRUCT
-        ),
+
+export default class CommonProfileItem extends GObject.Object {
+    static {
+        GObject.registerClass({
+            GTypeName: "DeskChangerCommonProfileItem",
+            Properties: {
+                "recursive": GObject.param_spec_boolean(
+                    "recursive", "Recursive",
+                    "Toggle to recursively load the URI",
+                    false, GObject.ParamFlags.READWRITE | GObject.ParamFlags.CONSTRUCT
+                ),
+                    "uri": GObject.param_spec_string(
+                    "uri", "URI",
+                    "URI to load into the profile",
+                    null, GObject.ParamFlags.READWRITE | GObject.ParamFlags.CONSTRUCT
+                ),
+            }
+        }, this);
     }
-},
-class DeskChangerCommonProfileItem extends GObject.Object {
+
     private _recursive: boolean;
     private _uri: string;
 
@@ -46,7 +50,3 @@ class DeskChangerCommonProfileItem extends GObject.Object {
         this._uri = uri;
     }
 }
-);
-
-export default ProfileItem;
-export type ProfileItemType = InstanceType<typeof ProfileItem>;

@@ -3,37 +3,41 @@ import GObject from "gi://GObject";
 
 import RotationModes from "../common/rotation_modes.js";
 import {SettingsRotationModes} from "../common/settings.js";
-import ServiceProfile, {ServiceProfileType} from "./profile/index.js";
+import ServiceProfile from "./profile/index.js";
 import ServiceTimer from "./timer/index.js";
 import ServiceTimerHourly from "./timer/hourly.js";
 import ServiceTimerDaily from "./timer/daily.js";
 
-const Service = GObject.registerClass(
-{
-    Properties: {
-        "Preview": GObject.param_spec_string(
-            "Preview", "Preview",
-            "A preview of the upcoming wallpaper in the queue",
-            null, GObject.ParamFlags.READABLE
-        ),
-        "Running": GObject.param_spec_boolean(
-            "Running", "Running",
-            "Check if the daemon is running",
-            false, GObject.ParamFlags.READABLE
-        )
-    },
-    Signals: {
-        "Changed": { param_types: [GObject.TYPE_STRING] },
-        "Start": {},
-        "Stop": {},
-    },
-},
-class DeskChangerService extends GObject.Object {
+
+export default class Service extends GObject.Object {
+    static {
+        GObject.registerClass({
+            GTypeName: "DeskChangerService",
+            Properties: {
+                "Preview": GObject.param_spec_string(
+                    "Preview", "Preview",
+                    "A preview of the upcoming wallpaper in the queue",
+                    null, GObject.ParamFlags.READABLE
+                ),
+                    "Running": GObject.param_spec_boolean(
+                    "Running", "Running",
+                    "Check if the daemon is running",
+                    false, GObject.ParamFlags.READABLE
+                )
+            },
+            Signals: {
+                "Changed": { param_types: [GObject.TYPE_STRING] },
+                "Start": {},
+                "Stop": {},
+            },
+        }, this);
+    }
+
     #background?: Gio.Settings;
     #current_profile_changed_id?: number;
     #interval_changed_id?: number;
     #logger?: Console;
-    #profile?: ServiceProfileType;
+    #profile?: ServiceProfile;
     #rotation_changed_id?: number;
     #running: boolean;
     #settings?: Gio.Settings;
@@ -66,7 +70,7 @@ class DeskChangerService extends GObject.Object {
     }
 
     LoadProfile(profile_name?: string) {
-        const profile: ServiceProfileType = new ServiceProfile(this.#settings!, this.#logger!, profile_name || this.#settings!.get_string('current-profile'));
+        const profile: ServiceProfile = new ServiceProfile(this.#settings!, this.#logger!, profile_name || this.#settings!.get_string('current-profile'));
 
         profile.load();
         if (this.#profile) {
@@ -183,7 +187,3 @@ class DeskChangerService extends GObject.Object {
         this.emit('Changed', uri);
     }
 }
-);
-
-export default Service;
-export type ServiceType = InstanceType<typeof Service>;
