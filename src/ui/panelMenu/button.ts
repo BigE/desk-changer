@@ -6,6 +6,8 @@ import * as PopupMenu from "resource:///org/gnome/shell/ui/popupMenu.js";
 import PanelMenuIcon from "./icon.js";
 import PopupMenuProfile from "../popupMenu/profile.js";
 import PreviewMenuItem from "../popupMenu/preview_menu_item.js";
+import ControlsMenuItem from "../popupMenu/controls_menu_item.js";
+import OpenCurrentMenuItem from "../popupMenu/open_current_menu_item.js";
 import Service from "../../service/index.js";
 
 export default class PanelMenuButton extends PanelMenu.Button {
@@ -30,9 +32,10 @@ export default class PanelMenuButton extends PanelMenu.Button {
         this.menu.addMenuItem(new PopupMenuProfile(settings));
         this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
         // controls
-        this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
         this.menu.addMenuItem(new PreviewMenuItem(service, logger));
-        // TODO: write controls once the service exists
+        this.menu.addMenuItem(new ControlsMenuItem(service, settings));
+        this.menu.addMenuItem(new OpenCurrentMenuItem());
+        this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
         // settings
         this.#settings_menu_item = new PopupMenu.PopupMenuItem("DeskChanger Settings");
         this.#settings_activate_id = this.#settings_menu_item.connect('activate', () => callback());
