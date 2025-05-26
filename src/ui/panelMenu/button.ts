@@ -5,6 +5,8 @@ import * as PopupMenu from "resource:///org/gnome/shell/ui/popupMenu.js";
 
 import PanelMenuIcon from "./icon.js";
 import PopupMenuProfile from "../popupMenu/profile.js";
+import PreviewMenuItem from "../popupMenu/preview_menu_item.js";
+import Service from "../../service/index.js";
 
 export default class PanelMenuButton extends PanelMenu.Button {
     static {
@@ -18,7 +20,7 @@ export default class PanelMenuButton extends PanelMenu.Button {
     #settings_menu_item?: PopupMenu.PopupMenuItem;
     #settings_activate_id?: number;
 
-    constructor(uuid: string, settings: Gio.Settings, callback: () => void) {
+    constructor(uuid: string, settings: Gio.Settings, service: Service, logger: Console, callback: () => void) {
         super(0.0, uuid);
 
         this.#icon = new PanelMenuIcon(settings);
@@ -29,6 +31,7 @@ export default class PanelMenuButton extends PanelMenu.Button {
         this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
         // controls
         this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
+        this.menu.addMenuItem(new PreviewMenuItem(service, logger));
         // TODO: write controls once the service exists
         // settings
         this.#settings_menu_item = new PopupMenu.PopupMenuItem("DeskChanger Settings");
@@ -37,15 +40,13 @@ export default class PanelMenuButton extends PanelMenu.Button {
     }
 
     destroy() {
-        if (this.#settings_menu_item) {
-            if (this.#settings_activate_id) {
-                this.#settings_menu_item.disconnect(this.#settings_activate_id);
-                this.#settings_activate_id = undefined;
-            }
-
-            this.#settings_menu_item.destroy();
-            this.#settings_menu_item = undefined;
+        if (this.#settings_activate_id) {
+            this.#settings_menu_item!.disconnect(this.#settings_activate_id);
+            this.#settings_activate_id = undefined;
         }
+
+        this.#settings_menu_item?.destroy();
+        this.#settings_menu_item = undefined;
 
         this.#icon?.destroy();
         this.#icon = undefined;

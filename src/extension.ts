@@ -46,7 +46,7 @@ export default class DeskChangerExtension extends Extension {
     }
 
     _addIndicator() {
-        this.#button = new PanelMenuButton(this.metadata.uuid, this.#settings!, this.openPreferences.bind(this));
+        this.#button = new PanelMenuButton(this.metadata.uuid, this.#settings!, this.#service!, this.#logger!, this.openPreferences.bind(this));
         Main.panel.addToStatusArea(this.metadata.uuid, this.#button);
     }
 
