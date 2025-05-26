@@ -20,6 +20,7 @@ export let ProfilesPage: typeof _ProfilesPage | undefined;
 
 export default class DeskChangerPreferences extends ExtensionPreferences {
     #current_profile_index?: number;
+    #extension_page?: Adw.PreferencesPage;
     #profiles?: Gio.ListStore<Profile>;
     #profiles_page?: Adw.PreferencesPage;
     #resource?: Gio.Resource;
@@ -75,15 +76,18 @@ export default class DeskChangerPreferences extends ExtensionPreferences {
 
         this.#load_profiles();
         this.#profiles_page = new ProfilesPage(this.#profiles!, this.#current_profile_index!, this.#settings!);
+        this.#extension_page = new ExtensionPage(this.#profiles!, this.#current_profile_index!, this.#settings!);
         window.add(this.#profiles_page);
         window.add(new KeyboardPage());
-        window.add(new ExtensionPage(this.#profiles!, this.#current_profile_index!, this.#settings!));
+        window.add(this.#extension_page);
         //window.add(new ServicePage());
         window.add(new AboutPage());
 
         window.connect('close-request', () => {
             // @ts-expect-error
             this.#profiles_page?.destroy();
+            // @ts-expect-error
+            this.#extension_page?.destroy();
             this.#profiles?.remove_all();
             this.#profiles = undefined;
             this.#settings = undefined;
