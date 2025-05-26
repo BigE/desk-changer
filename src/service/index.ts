@@ -38,6 +38,7 @@ export default class Service extends GObject.Object {
     #interval_changed_id?: number;
     #logger?: Console;
     #profile?: ServiceProfile;
+    #profile_notify_preview_id?: number;
     #rotation_changed_id?: number;
     #running: boolean;
     #settings?: Gio.Settings;
@@ -73,16 +74,29 @@ export default class Service extends GObject.Object {
         const profile: ServiceProfile = new ServiceProfile(this.#settings!, this.#logger!, profile_name || this.#settings!.get_string('current-profile'));
 
         profile.load();
+
+        // Unload the currently loaded profile
         if (this.#profile) {
+            if (this.#profile_notify_preview_id) {
+                this.#profile.disconnect(this.#profile_notify_preview_id);
+                this.#profile_notify_preview_id = undefined;
+            }
+
             this.#profile.destroy(this.#background?.get_string('picture-uri'));
             this.#profile = undefined;
         }
+
         this.#profile = profile;
-        this.#set_wallpaper(this.#profile.next());
-        // reset the timer since the wallpaper was just changed
-        if (this.#timer) {
-            this.#destroy_timer();
-            this.#create_timer();
+        this.#profile_notify_preview_id = this.#profile.connect('notify::preview', () => {
+            if (this.#running)
+                this.notify('Preview');
+        });
+
+        if (this.#running) {
+            // only set the wallpaper if we're already running
+            this.#set_wallpaper(this.#profile.next());
+            // restart the timer since the profile/wallpaper was just changed
+            this.#restart_timer();
         }
     }
 
@@ -115,9 +129,19 @@ export default class Service extends GObject.Object {
 
         if (!this.#profile)
             this.LoadProfile();
+
+        // create the timer
         this.#create_timer();
-        this.#current_profile_changed_id = this.#settings!.connect('changed::current-profile', () => this.LoadProfile(this.#settings!.get_string('current-profile')));
-        this.#rotation_changed_id = this.#settings!.connect('changed::rotation', () => this.#restart_timer());
+        // advance the wallpaper
+        this.#set_wallpaper(this.#profile!.next());
+        // connect signals to detect changes
+        this.#current_profile_changed_id = this.#settings!.connect('changed::current-profile', () => {
+            this.LoadProfile(this.#settings!.get_string('current-profile'))
+        });
+        this.#rotation_changed_id = this.#settings!.connect('changed::rotation', () => {
+            this.#restart_timer()
+        });
+        // fin.
         this.emit('Start');
     }
 
