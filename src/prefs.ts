@@ -60,7 +60,7 @@ export default class DeskChangerPreferences extends ExtensionPreferences {
             KeyboardPage = GObject.registerClass({
                 GTypeName: "DeskChangerUiPrefsKeyboardPage",
                 InternalChildren: ["keymap_listbox"],
-                Template: `resource://${APP_PATH}/ui/prefs/keyboard/page.ui`
+                Template: `resource://${APP_PATH}/ui/prefs/keyboard_page.ui`
             }, _KeyboardPage);
         }
 
