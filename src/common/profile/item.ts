@@ -32,13 +32,11 @@ export default class CommonProfileItem extends GObject.Object {
     }
 
     set recursive(value: boolean) {
-        console.log(value);
         this._recursive = value;
         this.notify('recursive');
     }
 
     set uri(value: string) {
-        console.log(value);
         this._uri = value;
         this.notify('uri');
     }

@@ -1,47 +1,51 @@
 import Adw from "gi://Adw";
-import Gio from "gi://Gio";
 import GObject from "gi://GObject";
 import Gtk from "gi://Gtk";
+import {SettingsKeybindType} from "../../../common/settings.js";
 
 export default class KeyboardShortcutRow extends Adw.ActionRow {
     static {
         GObject.registerClass({
             GTypeName: "DeskChangerUiPrefsKeyboardShortcutRow",
             Properties: {
+                "accelerator": GObject.param_spec_string(
+                    "accelerator", "Accelerator",
+                    "The Gtk.accelerator_name value for this row",
+                    null, GObject.ParamFlags.READWRITE
+                ),
                 "keybind": GObject.param_spec_string(
                     "keybind", "Keybind",
-                    "The keybind settings item that this row is bound to",
+                    "",
                     null, GObject.ParamFlags.READABLE
                 ),
             }
         }, this);
     }
 
+    #accelerator?: string;
     #accelerator_label?: Gtk.ShortcutLabel;
-    #destroy_id?: number;
+    #binding?: GObject.Binding;
     readonly #keybind: string;
     #reset_button?: Gtk.Button;
-    #settings?: Gio.Settings;
+
+    get accelerator(): string | null {
+        return this.#accelerator || null;
+    }
 
     get keybind() {
         return this.#keybind;
     }
 
-    constructor(settings: Gio.Settings, keybind: string, params?: Partial<Adw.ActionRow.ConstructorProps>) {
-        super(params);
-
-        this.#keybind = keybind;
-        this.#settings = settings;
-        this.#destroy_id = this.connect('destroy', () => this.destroy());
+    set accelerator(accelerator: string | null) {
+        this.#accelerator = accelerator || undefined;
+        this.notify('accelerator');
     }
 
-    destroy(): void {
-        if (this.#destroy_id) {
-            this.disconnect(this.#destroy_id);
-            this.#destroy_id = undefined;
-        }
+    constructor(keybind: SettingsKeybindType, accelerator?: string, params?: Partial<Adw.ActionRow.ConstructorProps>) {
+        super(params);
 
-        this.#settings = undefined;
+        this.#accelerator = accelerator;
+        this.#keybind = keybind;
     }
 
     vfunc_realize() {
@@ -52,6 +56,7 @@ export default class KeyboardShortcutRow extends Adw.ActionRow {
             throw new TypeError("No child available");
 
         this.#accelerator_label = new Gtk.ShortcutLabel({disabled_text: "Disabled"});
+        this.#binding = this.bind_property('accelerator', this.#accelerator_label, 'accelerator', GObject.BindingFlags.SYNC_CREATE);
         box.append(this.#accelerator_label);
         this.#reset_button = new Gtk.Button({label: "Reset"});
         box.append(new Gtk.Revealer({child: this.#reset_button, transition_type: Gtk.RevealerTransitionType.SLIDE_RIGHT}));
@@ -59,9 +64,14 @@ export default class KeyboardShortcutRow extends Adw.ActionRow {
     }
 
     vfunc_unrealize() {
-        super.vfunc_unrealize();
+        if (this.#binding) {
+            this.#binding.unbind();
+            this.#binding = undefined;
+        }
 
         this.#accelerator_label = undefined;
         this.#reset_button = undefined;
+
+        super.vfunc_unrealize();
     }
 }

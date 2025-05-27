@@ -7,7 +7,6 @@ import {APP_ID, APP_PATH} from "./common/interface.js";
 import Profile from "./common/profile/index.js";
 import ProfileItem from "./common/profile/item.js";
 import {SettingsProfileType} from "./common/settings.js";
-import _KeybindDialog from "./ui/dialog/keybind.js"
 import _AboutPage from "./ui/prefs/about_page.js";
 import _ExtensionPage from "./ui/prefs/extension_page.js";
 import _KeyboardPage from "./ui/prefs/keyboard/page.js";
@@ -16,7 +15,6 @@ import _ServicePage from "./ui/prefs/service_page.js";
 
 export let AboutPage: typeof _AboutPage | undefined;
 export let ExtensionPage: typeof _ExtensionPage | undefined;
-export let KeybindDialog: typeof _KeybindDialog | undefined;
 export let KeyboardPage: typeof _KeyboardPage | undefined;
 export let ProfilesPage: typeof _ProfilesPage | undefined;
 export let ServicePage: typeof _ServicePage | undefined;
@@ -110,6 +108,7 @@ export default class DeskChangerPreferences extends ExtensionPreferences {
         window.connect('close-request', () => {
             this.#extension_page?.destroy();
             this.#extension_page = undefined;
+            this.#keyboard_page?.destroy()
             this.#keyboard_page = undefined;
             this.#profiles_page?.destroy();
             this.#profiles_page = undefined;

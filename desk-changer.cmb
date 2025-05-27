@@ -7,10 +7,6 @@
   <ui template-class="DeskChangerUiPrefsExtensionPage" filename="resources/ui/prefs/extension_page.ui" sha256="fe6703b7fc1ce6fd356bc4c93e6467ea9b8eec802228a000670ed5b0ceb27d5d"/>
   <ui template-class="DeskChangerUiPrefsServicePage" filename="resources/ui/prefs/service_page.ui" sha256="c2529429dd4e6d6ddce9c4dd2a29d6d1df1d70f89c5333760095d43d80a57f69"/>
   <ui template-class="DeskChangerUiPrefsAboutPage" filename="resources/ui/prefs/about_page.ui" sha256="ef43b0d96aa77850d11610b624cfd9477f99ef1c62b4d1e009827b1008bf6c92"/>
-  <ui template-class="KeyboardShortcutRow" filename="resources/ui/prefs/keyboard/shortcutrow.ui" sha256="f865c984a9f22c01cbfd86fc89f099874a91e51b6ff599c17925c6b7228e815a"/>
   <ui template-class="DaemonMetaTypeRow" filename="resources/ui/prefs/daemon/meta_type_row.ui" sha256="4508f14adf3d3eba2a7c5406304e5584fab14f4bb34e730af481eed5e726e54d"/>
-  <ui template-class="DialogAdd" filename="resources/ui/dialog/add.ui" sha256="a42b8fed1f5513b65cce186156a15f68a2e6304234bbad544fba320950280bd3"/>
-  <ui template-class="DialogAlert" filename="resources/ui/dialog/alert.ui" sha256="a6afbe76f035f26c2e2b05ff47af0138219ea6a193bf4ae882a31139f29a6d71"/>
-  <ui template-class="NewDialog" filename="resources/ui/dialog/new.ui" sha256="359a6f13082559f4bba29b59c9a118a48ed0bd7dd75b748b5037b3ca49e99b14"/>
-  <ui template-class="KeybindDialog" filename="resources/ui/dialog/keybind.ui" sha256="3441b19477222d94f48c13a15a641e89e00dc2adaeaeb26aedc5e91d64dd7526"/>
+  <ui template-class="DeskChangerUiKeybindDialog" filename="resources/ui/dialog/keybind.ui" sha256="cbd5348e8f182bca708e313e356b18e5c2cd1a29fd10254b30d8a25840cd2ac1"/>
 </cambalache-project>

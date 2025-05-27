@@ -56,8 +56,8 @@
 			<range min="1" max="84600" />
 			<summary>Number of seconds between wallpaper changes</summary>
 		</key>
-		<key name="next-wallpaper" type="as">
-			<default><![CDATA[['']]]></default>
+		<key name="next-wallpaper" type="s">
+            <default>""</default>
 			<description>
 				Keyboard shortcut to cause the daemon to display the next wallpaper.
 			</description>
@@ -71,8 +71,8 @@
 			</description>
 			<summary>Display notifications with the extension</summary>
 		</key>
-		<key name="previous-wallpaper" type="as">
-			<default><![CDATA[['']]]></default>
+		<key name="previous-wallpaper" type="s">
+            <default>""</default>
 			<description>
 				Keyboard shortcut to cause the daemon to display the previous wallpaper.
 			</description>
