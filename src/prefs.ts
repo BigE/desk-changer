@@ -7,6 +7,7 @@ import {APP_ID, APP_PATH} from "./common/interface.js";
 import Profile from "./common/profile/index.js";
 import ProfileItem from "./common/profile/item.js";
 import {SettingsProfileType} from "./common/settings.js";
+import _KeybindDialog from "./ui/dialog/keybind.js"
 import _AboutPage from "./ui/prefs/about_page.js";
 import _ExtensionPage from "./ui/prefs/extension_page.js";
 import _KeyboardPage from "./ui/prefs/keyboard/page.js";
@@ -15,15 +16,19 @@ import _ServicePage from "./ui/prefs/service_page.js";
 
 export let AboutPage: typeof _AboutPage | undefined;
 export let ExtensionPage: typeof _ExtensionPage | undefined;
+export let KeybindDialog: typeof _KeybindDialog | undefined;
 export let KeyboardPage: typeof _KeyboardPage | undefined;
 export let ProfilesPage: typeof _ProfilesPage | undefined;
+export let ServicePage: typeof _ServicePage | undefined;
 
 export default class DeskChangerPreferences extends ExtensionPreferences {
     #current_profile_index?: number;
-    #extension_page?: Adw.PreferencesPage;
+    #extension_page?: _ExtensionPage;
+    #keyboard_page?: _KeyboardPage;
     #profiles?: Gio.ListStore<Profile>;
-    #profiles_page?: Adw.PreferencesPage;
+    #profiles_page?: _ProfilesPage;
     #resource?: Gio.Resource;
+    #service_page?: _ServicePage;
     #settings?: Gio.Settings;
 
     async fillPreferencesWindow(window: Adw.PreferencesWindow): Promise<void> {
@@ -56,6 +61,7 @@ export default class DeskChangerPreferences extends ExtensionPreferences {
         if (!KeyboardPage) {
             KeyboardPage = GObject.registerClass({
                 GTypeName: "DeskChangerUiPrefsKeyboardPage",
+                InternalChildren: ["keymap_listbox"],
                 Template: `resource://${APP_PATH}/ui/prefs/keyboard/page.ui`
             }, _KeyboardPage);
         }
@@ -74,20 +80,41 @@ export default class DeskChangerPreferences extends ExtensionPreferences {
             }, _ProfilesPage);
         }
 
+        if (!ServicePage) {
+            ServicePage = GObject.registerClass({
+                GTypeName: "DeskChangerUiPrefsServicePage",
+                InternalChildren: [
+                    'allowed_mime_types_listbox',
+                    'allowed_mime_types_reset_button',
+                    'daemon_auto_start_switch',
+                    'daemon_remember_profile_state_switch',
+                    'daemon_running_switch',
+                    'rotation_custom_interval_spinner',
+                    'rotation_mode_combo',
+                ],
+                Template: `resource://${APP_PATH}/ui/prefs/service_page.ui`,
+            }, _ServicePage);
+        }
+
         this.#load_profiles();
-        this.#profiles_page = new ProfilesPage(this.#profiles!, this.#current_profile_index!, this.#settings!);
-        this.#extension_page = new ExtensionPage(this.#profiles!, this.#current_profile_index!, this.#settings!);
+        this.#extension_page = new ExtensionPage(this.#profiles!, this.#current_profile_index!, this.#settings);
+        this.#keyboard_page = new KeyboardPage(this.#settings);
+        this.#profiles_page = new ProfilesPage(this.#profiles!, this.#current_profile_index!, this.#settings);
+        this.#service_page = new ServicePage(this.#settings);
         window.add(this.#profiles_page);
-        window.add(new KeyboardPage());
+        window.add(this.#keyboard_page);
         window.add(this.#extension_page);
-        //window.add(new ServicePage());
+        window.add(this.#service_page);
         window.add(new AboutPage());
 
         window.connect('close-request', () => {
-            // @ts-expect-error
-            this.#profiles_page?.destroy();
-            // @ts-expect-error
             this.#extension_page?.destroy();
+            this.#extension_page = undefined;
+            this.#keyboard_page = undefined;
+            this.#profiles_page?.destroy();
+            this.#profiles_page = undefined;
+            this.#service_page?.destroy();
+            this.#service_page = undefined;
             this.#profiles?.remove_all();
             this.#profiles = undefined;
             this.#settings = undefined;

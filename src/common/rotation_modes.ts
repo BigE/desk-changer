@@ -11,37 +11,37 @@ type RotationModesType = {
 
 const RotationModes: RotationModesType = {
     oneminute: {
-        label: "",
+        label: "One Minute",
         interval: 60,
         timer: "interval"
     },
     fiveminute: {
-        label: "",
+        label: "Five Minutes",
         interval: 300,
         timer: "interval"
     },
     thirtyminute: {
-        label: "",
+        label: "Thirty Minutes",
         interval: 1800,
         timer: "interval"
     },
     onehour: {
-        label: "",
+        label: "One Hour",
         interval: 3600,
         timer: "interval"
     },
     sixhour: {
-        label: "",
+        label: "Six Hours",
         interval: 21600,
         timer: "interval"
     },
     twelvehour: {
-        label: "",
+        label: "Twelve Hours",
         interval: 43200,
         timer: "interval"
     },
     twentyfourhour: {
-        label: "",
+        label: "24 Hours",
         interval: 86400,
         timer: "interval"
     },
@@ -50,11 +50,11 @@ const RotationModes: RotationModesType = {
         timer: "interval"
     },
     hourly: {
-        label: "",
-        timer: "daily"
+        label: "Hourly",
+        timer: "hourly"
     },
     daily: {
-        label: "",
+        label: "Daily",
         timer: "daily"
     },
     disabled: {

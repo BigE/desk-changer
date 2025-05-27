@@ -3,7 +3,7 @@
 <schemalist>
 	<schema id="org.gnome.shell.extensions.desk-changer" path="/org/gnome/shell/extensions/desk-changer/">
 		<key name="allowed-mime-types" type="as">
-			<default><![CDATA[['application/xml', 'image/jpeg', 'image/png', 'image/webp', 'image/svg+xml']]]></default>
+			<default><![CDATA[['application/xml', 'image/jpeg', 'image/jxl', 'image/png', 'image/webp', 'image/svg+xml']]]></default>
 			<description>
 				These are the mime types that the daemon will recognise as valid files to load and use for backgrounds.
 			</description>
@@ -71,7 +71,7 @@
 			</description>
 			<summary>Display notifications with the extension</summary>
 		</key>
-		<key name="prev-wallpaper" type="as">
+		<key name="previous-wallpaper" type="as">
 			<default><![CDATA[['']]]></default>
 			<description>
 				Keyboard shortcut to cause the daemon to display the previous wallpaper.
@@ -81,8 +81,8 @@
 		<key name="profiles" type="a{sa(sb)}">
 			<default>[{"default",[("file:///usr/share/backgrounds", true)]}]</default>
 			<description>
-				These are all the available profiles. By default it contains a single profile that will recursively
-				load /usr/share/backgrouds
+				These are all the available profiles. By default, it contains a single profile that will recursively
+				load /usr/share/backgrounds
 			</description>
 			<summary>All currently available profiles</summary>
 		</key>
