@@ -3,6 +3,8 @@ import Gio from "gi://Gio";
 import Gtk from "gi://Gtk";
 import RotationModeListStore, {RotationModeObject} from "./common/rotation_modes.js";
 import MetaTypeRow from "./common/meta_type_row.js";
+import {SettingsAllowedMimeTypesType} from "../../common/settings.js";
+import GLib from "gi://GLib";
 
 export default class ServicePage extends Adw.PreferencesPage {
     allowed_mime_types_listbox: Gtk.ListBox;
@@ -15,6 +17,7 @@ export default class ServicePage extends Adw.PreferencesPage {
     rotation_custom_interval_spinner: Adw.SpinRow;
     rotation_mode_combo: Adw.ComboRow;
     #rotation_mode_combo_notify_id?: number;
+    #rotation_position?: number;
     #settings?: Gio.Settings;
 
     constructor(settings: Gio.Settings, params?: Partial<Adw.PreferencesPage.ConstructorProps>) {
@@ -53,6 +56,9 @@ export default class ServicePage extends Adw.PreferencesPage {
         this.#rotation_mode_combo_notify_id = this.rotation_mode_combo.connect('notify::selected-item', () => {
             this.#settings?.set_string('rotation', this.rotation_mode_combo.get_selected_item<RotationModeObject>().mode);
         });
+
+        if (this.#rotation_position)
+            this.rotation_mode_combo.set_selected(this.#rotation_position);
     }
 
     vfunc_unrealize() {
@@ -75,6 +81,25 @@ export default class ServicePage extends Adw.PreferencesPage {
     }
 
     _on_allowed_mime_types_add_button_clicked() {
+        const dialog = new Adw.AlertDialog({
+            heading: "Add new MIME type",
+            title: "Allowed MIME types"
+        });
+        dialog.add_response("add", "Add");
+        dialog.add_response("close", "Cancel");
+        dialog.set_default_response("add");
+        dialog.set_close_response("close");
+        dialog.set_extra_child(new Adw.EntryRow({activates_default: true}));
+        dialog.choose(this.get_root(), null, (_dialog, result) => {
+            const response = dialog.choose_finish(result);
+            const new_mime_type = (dialog.get_extra_child() as Adw.EntryRow).get_text();
+
+            if (response === 'add' && new_mime_type) {
+                const allowed_mime_type = this.#settings!.get_value("allowed-mime-types").deepUnpack<SettingsAllowedMimeTypesType>();
+                allowed_mime_type.push(new_mime_type);
+                this.#settings!.set_value("allowed-mime-types", new GLib.Variant("as", allowed_mime_type));
+            }
+        });
     }
 
     _on_rotation_mode_combo_factory_bind(_widget: Gtk.SignalListItemFactory, item: Gtk.ListItem) {
@@ -87,7 +112,7 @@ export default class ServicePage extends Adw.PreferencesPage {
         label.set_label(rotation_mode.label);
 
         if (rotation_mode.mode === this.#settings?.get_string('rotation'))
-            this.rotation_mode_combo.set_selected(item.get_position());
+            this.#rotation_position = item.get_position();
     }
 
     _on_rotation_mode_combo_factory_setup(_widget: Gtk.SignalListItemFactory, item: Gtk.ListItem) {

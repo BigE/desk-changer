@@ -38,8 +38,12 @@ export default class MetaTypeRow extends Adw.ActionRow {
 
     #on_delete_button_clicked(): void {
         const mime_type = this.get_title();
-        const dialog = new Adw.AlertDialog({body: `Are you sure you want to remove the MIME type <b>${mime_type}<b>?`, body_use_markup: true});
+        const dialog = new Adw.AlertDialog({body: `Are you sure you want to remove the MIME type <b>${mime_type}</b>?`, body_use_markup: true});
 
+        dialog.add_response("yes", "Remove");
+        dialog.add_response("close", "Cancel");
+        dialog.set_default_response("yes");
+        dialog.set_close_response("close");
         dialog.choose(this.get_root(), null, (widget, response) => {
             const result = widget?.choose_finish(response);
 
