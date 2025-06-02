@@ -36,6 +36,24 @@ export default class Service extends GObject.Object {
         }, this);
     }
 
+    static getDBusInterfaceXML(): string {
+        return (new TextDecoder()).decode(Gio.resources_lookup_data(GLib.build_filenamev([
+            APP_PATH,
+            'service',
+            `${SERVICE_ID}.xml`
+        ]), Gio.ResourceLookupFlags.NONE).toArray());
+    }
+
+    static getDBusInterfaceInfo(): Gio.DBusInterfaceInfo {
+        const node_info = Gio.DBusNodeInfo.new_for_xml(Service.getDBusInterfaceXML());
+        const dbus_info = node_info.lookup_interface(SERVICE_ID);
+
+        if (!dbus_info)
+            throw new Error('DBUS: Failed to find interface info');
+
+        return dbus_info;
+    }
+
     #background?: Gio.Settings;
     #current_profile_changed_id?: number;
     #dbus?: Gio.DBusExportedObject;
@@ -218,23 +236,15 @@ export default class Service extends GObject.Object {
     }
 
     #expose_dbus() {
-        const resource_data = (new TextDecoder()).decode(Gio.resources_lookup_data(GLib.build_filenamev([
-            APP_PATH,
-            'service',
-            `${SERVICE_ID}.xml`
-        ]), Gio.ResourceLookupFlags.NONE).toArray());
-        const node_info = Gio.DBusNodeInfo.new_for_xml(resource_data);
-        const dbus_info = node_info.lookup_interface(SERVICE_ID);
-
-        if (!dbus_info) {
-            this.#logger?.error('DBUS: Failed to find interface info');
-            return;
+        try {
+            const dbus_info = Service.getDBusInterfaceInfo();
+            // wrapJSObject takes string|DBusInterfaceInfo
+            // @ts-expect-error
+            this.#dbus = Gio.DBusExportedObject.wrapJSObject(dbus_info, this);
+            this.#dbus.export(Gio.DBus.session, SERVICE_PATH);
+        } catch (e) {
+            this.#logger?.error(`DBUS: Failed to export object: ${e}`);
         }
-
-        // wrapJSObject takes string|DBusInterfaceInfo
-        // @ts-expect-error
-        this.#dbus = Gio.DBusExportedObject.wrapJSObject(dbus_info, this);
-        this.#dbus.export(Gio.DBus.session, SERVICE_PATH);
     }
 
     #restart_timer() {

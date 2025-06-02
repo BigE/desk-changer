@@ -5,6 +5,9 @@ import RotationModeListStore, {RotationModeObject} from "./common/rotation_modes
 import MetaTypeRow from "./common/meta_type_row.js";
 import {SettingsAllowedMimeTypesType} from "../../common/settings.js";
 import GLib from "gi://GLib";
+import Service from "../../service/index.js";
+import {SERVICE_ID, SERVICE_PATH} from "../../service/interface.js";
+import GObject from "gi://GObject";
 
 export default class ServicePage extends Adw.PreferencesPage {
     allowed_mime_types_listbox: Gtk.ListBox;
@@ -14,6 +17,8 @@ export default class ServicePage extends Adw.PreferencesPage {
     daemon_auto_start_switch: Adw.SwitchRow;
     daemon_remember_profile_state_switch: Adw.SwitchRow;
     daemon_running_switch: Adw.SwitchRow;
+    #proxy?: Gio.DBusProxy;
+    #proxy_preview_binding?: GObject.Binding;
     random_switch: Adw.SwitchRow;
     rotation_custom_interval_spinner: Adw.SpinRow;
     rotation_mode_combo: Adw.ComboRow;
@@ -41,9 +46,17 @@ export default class ServicePage extends Adw.PreferencesPage {
         this.rotation_custom_interval_spinner = this._rotation_custom_interval_spinner;
         // @ts-expect-error
         this.rotation_mode_combo = this._rotation_mode_combo;
+
+        try {
+            const proxyWrapper = Gio.DBusProxy.makeProxyWrapper(Service.getDBusInterfaceXML());
+            this.#proxy = proxyWrapper(Gio.DBus.session, SERVICE_ID, SERVICE_PATH);
+        } catch (e) {
+            console.error(e);
+        }
     }
 
     destroy(): void {
+        this.#proxy = undefined;
         this.#settings = undefined;
     }
 
@@ -54,6 +67,9 @@ export default class ServicePage extends Adw.PreferencesPage {
         this.#settings!.bind('remember-profile-state', this.daemon_remember_profile_state_switch, 'active', Gio.SettingsBindFlags.DEFAULT);
         this.#settings!.bind('random', this.random_switch, 'active', Gio.SettingsBindFlags.DEFAULT);
         this.#settings!.bind('interval', this.rotation_custom_interval_spinner, 'value', Gio.SettingsBindFlags.DEFAULT);
+        this.#proxy?.connect('g-properties-changed', (_proxy, _changed, _invalidated) => {
+            this.daemon_running_switch.set_active(Boolean(this.#proxy?.Preview));
+        });
         this.rotation_mode_combo.set_model(new RotationModeListStore());
         this.#load_mime_types();
 
@@ -66,6 +82,11 @@ export default class ServicePage extends Adw.PreferencesPage {
     }
 
     vfunc_unrealize() {
+        if (this.#proxy_preview_binding) {
+            this.#proxy_preview_binding.unbind();
+            this.#proxy_preview_binding = undefined;
+        }
+
         if (this.#button_add_clicked_id) {
             this.#button_add!.disconnect(this.#button_add_clicked_id);
             this.#button_add_clicked_id = undefined;
