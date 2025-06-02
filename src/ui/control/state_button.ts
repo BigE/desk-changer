@@ -3,6 +3,14 @@ import GObject from "gi://GObject";
 
 export type StateType = {[state: string]: string};
 
+/**
+ * State button control that provides switching between states
+ *
+ * The state property controls the state of the control. Setting this or using
+ * the set_state helper function will result in the icon being changed. When
+ * the button is clicked, the state property will be automatically updated to
+ * the state name that it was switched to.
+ */
 export default class ControlStateButton extends ControlButton {
     static {
         GObject.registerClass({

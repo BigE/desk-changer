@@ -9,6 +9,16 @@ import PreviewMenuItem from "../popupMenu/preview_menu_item.js";
 import ControlsMenuItem from "../popupMenu/controls_menu_item.js";
 import OpenCurrentMenuItem from "../popupMenu/open_current_menu_item.js";
 
+/**
+ * Main indicator button for DeskChanger
+ *
+ * This is an interface between the extension/settings/service and the menu it
+ * contains. All internal item properties that need to be bound to external
+ * objects are exposed and bound here so the extension itself can manage the
+ * binding between the necessary object. This also provides signals that expose
+ * internal control signals for binding back to the service as well as a signal
+ * to let the extension open the prefs with the built-in method.
+ */
 export default class PanelMenuButton extends PanelMenu.Button {
     static {
         GObject.registerClass({

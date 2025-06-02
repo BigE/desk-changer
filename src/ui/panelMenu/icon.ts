@@ -13,6 +13,15 @@ export namespace PanelMenuIcon {
     }
 }
 
+/**
+ * Icon object for the indicator button
+ *
+ * This object will automatically update its child based on the two properties
+ * that are exposed. The preview property should be set to the current preview
+ * URI and if preview_enabled is true, the child element will be automatically
+ * set to an icon preview of the URI. If preview_enabled is false then it will
+ * automatically use the icon provided in the resources file.
+ */
 export default class PanelMenuIcon extends St.Bin {
     static {
         GObject.registerClass({
@@ -20,7 +29,7 @@ export default class PanelMenuIcon extends St.Bin {
             Properties: {
                 "preview": GObject.param_spec_string(
                     "preview", "Preview",
-                    "The URI of  the current preview, NULL if empty",
+                    "The URI of the current preview, NULL if empty",
                     null, GObject.ParamFlags.READWRITE
                 ),
                 "preview_enabled": GObject.param_spec_boolean(

@@ -5,7 +5,6 @@ import * as PopupMenu from "resource:///org/gnome/shell/ui/popupMenu.js";
 import St from "gi://St";
 
 import ControlPreview from "../control/preview.js";
-import Clutter from "gi://Clutter";
 
 export namespace PreviewMenuItem {
     export interface ConstructorProps extends PopupMenu.PopupBaseMenuItem.ConstructorProps {
@@ -13,6 +12,16 @@ export namespace PreviewMenuItem {
     }
 }
 
+/**
+ * Preview menu item to display the next wallpaper
+ *
+ * This encompasses the preview control to create a menu item that shows the
+ * next wallpaper that is in the queue. The preview property is bound to the
+ * control preview_file property so that the preview automatically updates
+ * without any interaction here. When this menu item is selected, it will open
+ * the preview wallpaper. If no preview is available, this item will hide
+ * itself only to show again when a preview is set.
+ */
 export default class PreviewMenuItem extends PopupMenu.PopupBaseMenuItem {
     static {
         GObject.registerClass({

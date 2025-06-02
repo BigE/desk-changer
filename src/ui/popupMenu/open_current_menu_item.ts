@@ -2,6 +2,9 @@ import Gio from "gi://Gio";
 import GObject from "gi://GObject";
 import * as PopupMenu from "resource:///org/gnome/shell/ui/popupMenu.js"
 
+/**
+ * Simple menu item to open the current wallpaper
+ */
 export default class OpenCurrentMenuItem extends PopupMenu.PopupMenuItem {
     static {
         GObject.registerClass({

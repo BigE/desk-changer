@@ -17,6 +17,14 @@ export namespace ControlPreview {
     }
 }
 
+/**
+ * Preview control to show a preview of the next wallpaper
+ *
+ * This control holds a texture object that will display the preview of the
+ * next wallpaper. The preview control will watch the preview_file property for
+ * any changes. When a change happens, it will cause an internal update to the
+ * texture.
+ */
 export default class ControlPreview extends St.Bin {
     static {
         GObject.registerClass({

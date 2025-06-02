@@ -12,6 +12,16 @@ export namespace PopupMenuProfile {
     }
 }
 
+/**
+ * Profile menu item for the button menu
+ *
+ * The profile menu item is an implementation of PopupSubMenuMenuItem. This
+ * object will take the profile and profiles properties to set up the sub menu
+ * that shows the currently selected profile. The label for the sub menu will
+ * also update to show the current profile based on the profile property. When
+ * a sub menu is activated, the profile-activate signal will be emitted and
+ * the PopupMenuItem that triggered the event will be sent.
+ */
 export default class PopupMenuProfile extends PopupMenu.PopupSubMenuMenuItem {
     static {
         GObject.registerClass({

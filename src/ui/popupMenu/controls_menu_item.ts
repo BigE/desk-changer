@@ -10,6 +10,16 @@ export namespace ControlsMenuItem {
     }
 }
 
+/**
+ * Control menu item to give control over the service
+ *
+ * This menu item will provide controls for next, previous, and random that can
+ * be used to interact with the service and settings. When the random property
+ * is changed the icon will update accordingly and when the random control is
+ * clicked, the property will be updated. The next and previous controls both
+ * emit their respective next-clicked and previous-clicked signals when the
+ * control is clicked.
+ */
 export default class ControlsMenuItem extends PopupMenu.PopupBaseMenuItem {
     static {
         GObject.registerClass({

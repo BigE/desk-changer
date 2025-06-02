@@ -8,6 +8,15 @@ import {APP_ID} from "./common/interface.js";
 import Service from "./service/index.js";
 import PanelMenuButton from "./ui/panelMenu/button.js";
 
+/**
+ * DeskChanger - A simple wallpaper changer
+ *
+ * The base extension manages the service and the button. The service can stay
+ * running while the button is added/removed every time the lockscreen is
+ * shown. The extension manages the links and bindings between the button and
+ * the settings object. The service manages the wallpaper changes and timers
+ * that control the changes.
+ */
 export default class DeskChangerExtension extends Extension {
     #button?: PanelMenuButton;
     #logger?: Console;
@@ -21,6 +30,13 @@ export default class DeskChangerExtension extends Extension {
     #session_changed_id?: number;
     #settings?: Gio.Settings;
 
+    /**
+     * Enable the extension
+     *
+     * Since we're using unlock-dialog in the metadata, ensure we're creating
+     * objects if they don't exist because this could be called multiple times
+     * through the extensions lifetime.
+     */
     enable() {
         if (!this.#resource) {
             this.#resource = Gio.Resource.load(`${this.path}/${APP_ID}.gresource`);
@@ -77,6 +93,15 @@ export default class DeskChangerExtension extends Extension {
         }
     }
 
+    /**
+     * Add the indicator to the main panel
+     *
+     * This is where all the binding magic happens between the settings,
+     * service and the button itself. This should be called every time the
+     * screen is unlocked or the extension is enabled.
+     *
+     * @private
+     */
     #addIndicator() {
         if (!this.#settings)
             throw new TypeError("Settings object is required");
@@ -115,10 +140,22 @@ export default class DeskChangerExtension extends Extension {
         Main.panel.addToStatusArea(this.uuid, this.#button);
     }
 
+    /**
+     * Helper to simplify check currentMode and parentMode for a user session
+     *
+     * @param session
+     * @private
+     */
     #is_session_mode_user(session: any): boolean {
         return ('currentMode' in session && session.currentMode === 'user') || ('parentMode' in session && session.parentMode === 'user');
     }
 
+    /**
+     * Simple handler for enabling/disabling the button
+     *
+     * @param session
+     * @private
+     */
     #onSessionModeChanged(session: any) {
         if (this.#is_session_mode_user(session))
             this.#addIndicator();
@@ -126,6 +163,14 @@ export default class DeskChangerExtension extends Extension {
             this.#removeIndicator();
     }
 
+    /**
+     * Remove the button from the main panel
+     *
+     * This cleans up all the bindings that addIndicator created and
+     * empties the objects that were assigned. This should be called every
+     * time the screen is locked or the extension is disabled.
+     * @private
+     */
     #removeIndicator() {
         if (this.#service_preview_binding) {
             this.#service_preview_binding.unbind();
