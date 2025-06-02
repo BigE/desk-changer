@@ -36,19 +36,12 @@ export default class ControlsMenuItem extends PopupMenu.PopupBaseMenuItem {
         this.#prev_clicked_id = this.#prev.connect('clicked', () => {
             this.#service?.Previous();
         });
-        this.#random = new ControlStateButton([
-            {
-                icon: 'media-playlist-shuffle',
-                name: 'random',
-            },
-            {
-                icon: 'media-playlist-repeat',
-                name: 'ordered',
-            },
-        ]);
-        this.#random.set_state(settings.get_boolean('random')? 'random' : 'ordered');
-        this.#random_clicked_id = this.#random.connect('clicked', (state) => {
-            this.#settings?.set_boolean('random', (state.name === 'random'));
+        this.#random = new ControlStateButton({
+            random: 'media-playlist-shuffle',
+            ordered: 'media-playlist-repeat',
+        }, settings.get_boolean("random")? 'random' : 'ordered');
+        this.#random_clicked_id = this.#random.connect('notify::state', () => {
+            this.#settings?.set_boolean("random", (this.#random?.state === "random"));
         });
         this.#random_changed_id = this.#settings?.connect('changed::random', () => {
             this.#random?.set_state((this.#settings?.get_boolean('random')? 'random' : 'ordered'));

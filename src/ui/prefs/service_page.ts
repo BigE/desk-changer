@@ -14,6 +14,7 @@ export default class ServicePage extends Adw.PreferencesPage {
     daemon_auto_start_switch: Adw.SwitchRow;
     daemon_remember_profile_state_switch: Adw.SwitchRow;
     daemon_running_switch: Adw.SwitchRow;
+    random_switch: Adw.SwitchRow;
     rotation_custom_interval_spinner: Adw.SpinRow;
     rotation_mode_combo: Adw.ComboRow;
     #rotation_mode_combo_notify_id?: number;
@@ -35,6 +36,8 @@ export default class ServicePage extends Adw.PreferencesPage {
         // @ts-expect-error
         this.daemon_running_switch = this._daemon_running_switch;
         // @ts-expect-error
+        this.random_switch = this._random_switch;
+        // @ts-expect-error
         this.rotation_custom_interval_spinner = this._rotation_custom_interval_spinner;
         // @ts-expect-error
         this.rotation_mode_combo = this._rotation_mode_combo;
@@ -49,6 +52,7 @@ export default class ServicePage extends Adw.PreferencesPage {
 
         this.#settings!.bind('auto-start', this.daemon_auto_start_switch, 'active', Gio.SettingsBindFlags.DEFAULT);
         this.#settings!.bind('remember-profile-state', this.daemon_remember_profile_state_switch, 'active', Gio.SettingsBindFlags.DEFAULT);
+        this.#settings!.bind('random', this.random_switch, 'active', Gio.SettingsBindFlags.DEFAULT);
         this.#settings!.bind('interval', this.rotation_custom_interval_spinner, 'value', Gio.SettingsBindFlags.DEFAULT);
         this.rotation_mode_combo.set_model(new RotationModeListStore());
         this.#load_mime_types();

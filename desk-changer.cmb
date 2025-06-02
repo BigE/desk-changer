@@ -5,7 +5,7 @@
   <ui template-class="DeskChangerUiPrefsProfilesPage" filename="resources/ui/prefs/profiles_page.ui" sha256="28be020f061242d9996aacb85596b8aee8fd84f06335e8d3dad6c86a542be38b"/>
   <ui template-class="DeskChangerUiPrefsKeyboardPage" filename="resources/ui/prefs/keyboard_page.ui" sha256="7ae3eec048bc9aa770f441c90fd5e90cfb3a860af45be9ac3893da605cd956db"/>
   <ui template-class="DeskChangerUiPrefsExtensionPage" filename="resources/ui/prefs/extension_page.ui" sha256="fe6703b7fc1ce6fd356bc4c93e6467ea9b8eec802228a000670ed5b0ceb27d5d"/>
-  <ui template-class="DeskChangerUiPrefsServicePage" filename="resources/ui/prefs/service_page.ui" sha256="c2529429dd4e6d6ddce9c4dd2a29d6d1df1d70f89c5333760095d43d80a57f69"/>
+  <ui template-class="DeskChangerUiPrefsServicePage" filename="resources/ui/prefs/service_page.ui" sha256="24ec26f4f7610f3f275cc3bcbcae67600a6c43bcbaf9f2665b50fd489e27841d"/>
   <ui template-class="DeskChangerUiPrefsAboutPage" filename="resources/ui/prefs/about_page.ui" sha256="ef43b0d96aa77850d11610b624cfd9477f99ef1c62b4d1e009827b1008bf6c92"/>
   <ui template-class="DaemonMetaTypeRow" filename="resources/ui/prefs/daemon/meta_type_row.ui" sha256="4508f14adf3d3eba2a7c5406304e5584fab14f4bb34e730af481eed5e726e54d"/>
   <ui template-class="DeskChangerUiKeybindDialog" filename="resources/ui/dialog/keybind.ui" sha256="cbd5348e8f182bca708e313e356b18e5c2cd1a29fd10254b30d8a25840cd2ac1"/>

@@ -1,30 +1,55 @@
 import ControlButton from "./button.js";
 import GObject from "gi://GObject";
 
-export type StateType = {
-    name: string;
-    icon: string;
-}
+export type StateType = {[state: string]: string};
 
 export default class ControlStateButton extends ControlButton {
     static {
         GObject.registerClass({
             GTypeName: "DeskChangerUiControlStateButton",
+            Properties: {
+                "state": GObject.param_spec_string(
+                    "state", "State", "State name", null,
+                    GObject.ParamFlags.READWRITE
+                ),
+            },
         }, this);
     }
 
     #clicked_id?: number;
-    #state: number;
-    #states: StateType[];
+    #state?: string;
+    readonly #states: StateType;
 
-    constructor(states: StateType[]) {
-        if (states.length < 2)
+    get state() {
+        return this.#state || null;
+    }
+
+    set state(state: string|null) {
+        if (state)
+            this.set_state(state);
+        this.#state = state || undefined;
+        this.notify("state");
+    }
+
+    constructor(states: StateType, state: string) {
+        if (Object.entries(states).length < 2)
             throw new TypeError("There must be at least two states");
 
-        super(states[0].icon);
-        this.#state = 0;
+        super(states[state]);
+        this.#state = state;
         this.#states = states;
-        this.#clicked_id = this.connect('clicked', () => {});
+        this.#clicked_id = this.connect('clicked', () => {
+            const keys = Object.keys(this.#states);
+
+            if (!this.#state)
+                return this.state = keys[0];
+
+            let currentIndex = keys.indexOf(this.#state);
+            if (currentIndex === -1 || ++currentIndex >= keys.length)
+                return this.state = keys[0];
+
+            this.state = keys[currentIndex];
+        });
     }
 
     destroy() {
@@ -37,15 +62,12 @@ export default class ControlStateButton extends ControlButton {
     }
 
     set_state(state: string) {
-        if (this.#states[this.#state].name === state)
+        if (this.#state === state)
             return;
 
-        for (let i = 0; i < this.#states.length; i++) {
-            if (this.#states[i].name === state) {
-                return this.set_icon(this.#states[i].icon);
-            }
-        }
+        if (!(state in this.#states))
+            throw new TypeError(`State ${state} does not exist`)
 
-        throw new TypeError(`State ${state} does not exist`);
+        this.set_icon(this.#states[state]);
     }
 }

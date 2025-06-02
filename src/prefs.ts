@@ -34,13 +34,6 @@ export default class DeskChangerPreferences extends ExtensionPreferences {
         Gio.resources_register(this.#resource);
         this.#settings = this.getSettings();
 
-        /*
-        const ServicePage = GObject.registerClass({
-            GTypeName: "DeskChangerUiPrefsServicePage",
-            Template: `resource://${APP_PATH}/ui/prefs/service_page.ui`
-        }, _ServicePage);
-        */
-
         if (!AboutPage) {
             AboutPage = GObject.registerClass({
                 GTypeName: "DeskChangerUiPrefsAboutPage",
@@ -87,6 +80,7 @@ export default class DeskChangerPreferences extends ExtensionPreferences {
                     'daemon_auto_start_switch',
                     'daemon_remember_profile_state_switch',
                     'daemon_running_switch',
+                    'random_switch',
                     'rotation_custom_interval_spinner',
                     'rotation_mode_combo',
                 ],
@@ -123,6 +117,15 @@ export default class DeskChangerPreferences extends ExtensionPreferences {
         });
     }
 
+    /**
+     * Load the profiles into a Gio.ListStore
+     *
+     * This method takes all the profiles loaded into the settings and puts
+     * them in GObject.Object containers. This allows for easier interaction
+     * within the prefs.
+     *
+     * @private
+     */
     #load_profiles() {
         const profiles = Object.entries(this.#settings!.get_value("profiles").deepUnpack<SettingsProfileType>());
         const current_profile = this.#settings!.get_string("current-profile");

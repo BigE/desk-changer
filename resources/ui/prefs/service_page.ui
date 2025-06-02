@@ -36,6 +36,11 @@
             <property name="use-markup">False</property>
           </object>
         </child>
+        <child>
+          <object class="AdwSwitchRow" id="random_switch">
+            <property name="title">Random Wallpaper</property>
+          </object>
+        </child>
       </object>
     </child>
     <child>
