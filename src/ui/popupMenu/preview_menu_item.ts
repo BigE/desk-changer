@@ -1,9 +1,11 @@
+import Gio from "gi://Gio";
 import GObject from "gi://GObject";
 import Graphene from "gi://Graphene";
 import * as PopupMenu from "resource:///org/gnome/shell/ui/popupMenu.js";
 import St from "gi://St";
 
 import ControlPreview from "../control/preview.js";
+import Clutter from "gi://Clutter";
 
 export namespace PreviewMenuItem {
     export interface ConstructorProps extends PopupMenu.PopupBaseMenuItem.ConstructorProps {
@@ -25,6 +27,7 @@ export default class PreviewMenuItem extends PopupMenu.PopupBaseMenuItem {
         }, this);
     }
 
+    #activate_id?: number;
     #box?: St.BoxLayout;
     #prefix?: St.Label;
     #preview: string|null;
@@ -55,9 +58,18 @@ export default class PreviewMenuItem extends PopupMenu.PopupBaseMenuItem {
         this.#prefix = new St.Label({text: "Open next wallpaper"});
         this.#box.add_child(this.#prefix);
         this.#add_preview_control();
+        this.#activate_id = this.connect('activate', () => {
+            if (!this.#preview) return;
+            Gio.AppInfo.launch_default_for_uri(this.#preview, global.create_app_launch_context(0, -1));
+        });
     }
 
     destroy() {
+        if (this.#activate_id) {
+            this.disconnect(this.#activate_id);
+            this.#activate_id = undefined;
+        }
+
         this.#remove_preview_control();
         this.#prefix?.destroy();
         this.#prefix = undefined;
