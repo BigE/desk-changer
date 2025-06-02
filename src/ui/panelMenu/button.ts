@@ -17,16 +17,20 @@ export default class PanelMenuButton extends PanelMenu.Button {
         }, this);
     }
 
-    declare menu: PopupMenu.PopupMenu;
+    #controls?: ControlsMenuItem;
     #icon?: PanelMenuIcon;
+    declare menu: PopupMenu.PopupMenu;
+    #next_clicked_id?: number;
+    #previous_clicked_id?: number;
     #profile_menu_item?: PopupMenuProfile;
     #profile_menu_item_profile_activate_id?: number;
+    #random_notify_id?: number;
     #settings_menu_item?: PopupMenu.PopupMenuItem;
     #settings_activate_id?: number;
     #service_preview_binding?: GObject.Binding;
     #service_preview_menu_item_binding?: GObject.Binding;
 
-    constructor(uuid: string, settings: Gio.Settings, service: Service, callback: () => void) {
+    constructor(uuid: string, settings: Gio.Settings, service: Service, prefs_callback: () => void) {
         super(0.0, uuid);
 
         this.#icon = new PanelMenuIcon();
@@ -70,18 +74,46 @@ export default class PanelMenuButton extends PanelMenu.Button {
             GObject.BindingFlags.SYNC_CREATE
         );
         this.menu.addMenuItem(preview_menu_item);
-        this.menu.addMenuItem(new ControlsMenuItem(service, settings));
+        this.#controls = new ControlsMenuItem({random: settings.get_boolean("random")});
+        this.#random_notify_id = this.#controls.connect('notify::random', () => {
+            settings.set_boolean("random", Boolean(this.#controls?.random));
+        });
+        this.#next_clicked_id = this.#controls.connect('next-clicked', () => {
+            service.Next();
+        });
+        this.#previous_clicked_id = this.#controls.connect('previous-clicked', () => {
+            service.Previous();
+        })
+        this.menu.addMenuItem(this.#controls);
         this.menu.addMenuItem(new OpenCurrentMenuItem());
         // end controls
         this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
         // settings
         this.#settings_menu_item = new PopupMenu.PopupMenuItem("DeskChanger Settings");
-        this.#settings_activate_id = this.#settings_menu_item.connect('activate', () => callback());
+        this.#settings_activate_id = this.#settings_menu_item.connect('activate', () => prefs_callback());
         this.menu.addMenuItem(this.#settings_menu_item);
         // end settings
     }
 
     destroy() {
+        if (this.#previous_clicked_id) {
+            this.#controls!.disconnect(this.#previous_clicked_id);
+            this.#previous_clicked_id = undefined;
+        }
+
+        if (this.#next_clicked_id) {
+            this.#controls!.disconnect(this.#next_clicked_id);
+            this.#next_clicked_id = undefined;
+        }
+
+        if (this.#random_notify_id) {
+            this.#controls!.disconnect(this.#random_notify_id);
+            this.#random_notify_id = undefined;
+        }
+
+        this.#controls?.destroy();
+        this.#controls = undefined;
+
         if (this.#service_preview_menu_item_binding) {
             this.#service_preview_menu_item_binding.unbind();
             this.#service_preview_menu_item_binding = undefined;
