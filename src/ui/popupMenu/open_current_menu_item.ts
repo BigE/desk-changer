@@ -10,15 +10,13 @@ export default class OpenCurrentMenuItem extends PopupMenu.PopupMenuItem {
     }
 
     #activate_id?: number;
-    #background?: Gio.Settings;
 
     constructor() {
         super("Open current wallpaper");
 
-        this.#background = Gio.Settings.new("org.gnome.desktop.background");
         this.#activate_id = this.connect('activate', () => {
-            if (!this.#background) return;
-            Gio.AppInfo.launch_default_for_uri(this.#background.get_string('picture-uri'), global.create_app_launch_context(0, -1));
+            const background = Gio.Settings.new("org.gnome.desktop.background");
+            Gio.AppInfo.launch_default_for_uri(background.get_string('picture-uri'), global.create_app_launch_context(0, -1));
         });
     }
 
@@ -28,7 +26,6 @@ export default class OpenCurrentMenuItem extends PopupMenu.PopupMenuItem {
             this.#activate_id = undefined;
         }
 
-        this.#background = undefined;
         super.destroy();
     }
 }
