@@ -1,5 +1,7 @@
 import {Extension} from "resource:///org/gnome/shell/extensions/extension.js";
 import Gio from "gi://Gio";
+import GLib from "gi://GLib";
+import GObject from "gi://GObject";
 import * as Main from "resource:///org/gnome/shell/ui/main.js";
 
 import {APP_ID} from "./common/interface.js";
@@ -9,8 +11,13 @@ import PanelMenuButton from "./ui/panelMenu/button.js";
 export default class DeskChangerExtension extends Extension {
     #button?: PanelMenuButton;
     #logger?: Console;
+    #next_clicked_id?: number;
+    #open_prefs_id?: number;
+    #previous_clicked_id?: number;
     #resource?: Gio.Resource;
+    #source?: GLib.Source;
     #service?: Service;
+    #service_preview_binding?: GObject.Binding;
     #session_changed_id?: number;
     #settings?: Gio.Settings;
 
@@ -55,6 +62,8 @@ export default class DeskChangerExtension extends Extension {
         }
 
         this.#removeIndicator();
+        this.#source?.destroy();
+        this.#source = undefined;
 
         if (this.#is_session_mode_user(Main.sessionMode)) {
             this.#service?.destroy();
@@ -75,7 +84,34 @@ export default class DeskChangerExtension extends Extension {
         if (!this.#service)
             throw new TypeError("Service object is required");
 
-        this.#button = new PanelMenuButton(this.uuid, this.#settings, this.#service, this.openPreferences.bind(this));
+        this.#button = new PanelMenuButton(this.uuid);
+        // settings bindings
+        this.#settings.bind('current-profile', this.#button, 'profile', Gio.SettingsBindFlags.GET);
+        this.#settings.bind('icon-preview', this.#button, 'icon_preview_enabled', Gio.SettingsBindFlags.GET);
+        this.#settings.bind('random', this.#button, 'random', Gio.SettingsBindFlags.GET);
+        this.#settings.bind_with_mapping('profiles', this.#button, 'profiles', Gio.SettingsBindFlags.GET, (value, variant) => {
+            // according to the g_settings_bind_with_mapping the value is
+            // supposed to be an assignable reference here and then that gets
+            // set to the object property. however, there is no way to set the
+            // value here since it is passed in as null and that isn't a
+            // reference in JS. this is a dirty nasty hack.
+            this.#source = setTimeout(() => {
+                if (this.#button && this.#settings)
+                    this.#button.profiles = this.#settings.get_value("profiles");
+                this.#source?.destroy();
+                this.#source = undefined;
+            }, 50);
+
+            // this is what the C implementation expects?? but value is `null`
+            value = variant;
+            return true;
+        }, null);
+        // service bindings
+        this.#service_preview_binding = this.#service.bind_property('Preview', this.#button, 'preview', GObject.BindingFlags.SYNC_CREATE);
+        // signals
+        this.#next_clicked_id = this.#button.connect('next-clicked', () => { this.#service?.Next() });
+        this.#open_prefs_id = this.#button.connect('open-prefs', this.openPreferences.bind(this));
+        this.#previous_clicked_id = this.#button.connect('previous-clicked', () => { this.#service?.Previous() });
         Main.panel.addToStatusArea(this.uuid, this.#button);
     }
 
@@ -91,6 +127,26 @@ export default class DeskChangerExtension extends Extension {
     }
 
     #removeIndicator() {
+        if (this.#service_preview_binding) {
+            this.#service_preview_binding.unbind();
+            this.#service_preview_binding = undefined;
+        }
+
+        if (this.#next_clicked_id) {
+            this.#button!.disconnect(this.#next_clicked_id);
+            this.#next_clicked_id = undefined;
+        }
+
+        if (this.#open_prefs_id) {
+            this.#button!.disconnect(this.#open_prefs_id);
+            this.#open_prefs_id = undefined;
+        }
+
+        if (this.#previous_clicked_id) {
+            this.#button!.disconnect(this.#previous_clicked_id);
+            this.#previous_clicked_id = undefined;
+        }
+
         this.#button?.destroy();
         this.#button = undefined;
     }

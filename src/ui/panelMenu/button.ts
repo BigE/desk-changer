@@ -1,4 +1,4 @@
-import Gio from "gi://Gio";
+import GLib from "gi://GLib";
 import GObject from "gi://GObject";
 import * as PanelMenu from "resource:///org/gnome/shell/ui/panelMenu.js";
 import * as PopupMenu from "resource:///org/gnome/shell/ui/popupMenu.js";
@@ -8,140 +8,172 @@ import PopupMenuProfile from "../popupMenu/profile.js";
 import PreviewMenuItem from "../popupMenu/preview_menu_item.js";
 import ControlsMenuItem from "../popupMenu/controls_menu_item.js";
 import OpenCurrentMenuItem from "../popupMenu/open_current_menu_item.js";
-import Service from "../../service/index.js";
 
 export default class PanelMenuButton extends PanelMenu.Button {
     static {
         GObject.registerClass({
             GTypeName: "DeskChangerUiPanelMenuButton",
+            Properties: {
+                "icon_preview_enabled": GObject.param_spec_boolean(
+                    "icon_preview_enabled", "Icon preview enabled",
+                    "If enabled the icon will turn into a preview of the next wallpaper",
+                    false, GObject.ParamFlags.READWRITE
+                ),
+                "preview": GObject.param_spec_string(
+                    "preview", "Preview",
+                    "Preview URI to be passed into the menu",
+                    null, GObject.ParamFlags.READWRITE
+                ),
+                "profile": GObject.param_spec_string(
+                    "profile", "Profile",
+                    "Current profile selected",
+                    null, GObject.ParamFlags.READWRITE
+                ),
+                "profiles": GObject.param_spec_variant(
+                    "profiles", "Profiles",
+                    "Profiles object to provide into the menu",
+                    new GLib.VariantType('a{sa(sb)}'), null, GObject.ParamFlags.READWRITE
+                ),
+                "random": GObject.param_spec_boolean(
+                    "random", "Random",
+                    "Random flag for the controls in the menu",
+                    true, GObject.ParamFlags.READWRITE
+                ),
+            },
+            Signals: {
+                "next-clicked": [],
+                "open-prefs": [],
+                "previous-clicked": [],
+            },
         }, this);
     }
 
-    #controls?: ControlsMenuItem;
+    #bindings: GObject.Binding[];
+    #controls_menu_item?: ControlsMenuItem;
     #icon?: PanelMenuIcon;
+    #icon_preview_enabled: boolean;
     declare menu: PopupMenu.PopupMenu;
     #next_clicked_id?: number;
+    #preferences_activate_id?: number;
+    #preferences_menu_item?: PopupMenu.PopupMenuItem;
+    #preview?: string;
+    #preview_menu_item?: PreviewMenuItem;
     #previous_clicked_id?: number;
+    #profile?: string;
     #profile_menu_item?: PopupMenuProfile;
-    #profile_menu_item_profile_activate_id?: number;
-    #random_notify_id?: number;
-    #settings_menu_item?: PopupMenu.PopupMenuItem;
-    #settings_activate_id?: number;
-    #service_preview_binding?: GObject.Binding;
-    #service_preview_menu_item_binding?: GObject.Binding;
+    #profiles?: GLib.Variant<"a{sa(sb)}">;
+    #random: boolean;
 
-    constructor(uuid: string, settings: Gio.Settings, service: Service, prefs_callback: () => void) {
+    get icon_preview_enabled(): boolean {
+        return this.#icon_preview_enabled;
+    }
+
+    get preview(): string|null {
+        return this.#preview || null;
+    }
+
+    get profile(): string|null {
+        return this.#profile || null;
+    }
+
+    get profiles(): GLib.Variant<"a{sa(sb)}">|null {
+        return this.#profiles || null;
+    }
+
+    get random(): boolean {
+        return this.#random;
+    }
+
+    set icon_preview_enabled(value: boolean) {
+        this.#icon_preview_enabled = value;
+        this.notify('icon_preview_enabled');
+    }
+
+    set preview(value: string|null) {
+        this.#preview = value || undefined;
+        this.notify('preview');
+    }
+
+    set profile(value: string|null) {
+        this.#profile = value || undefined;
+        this.notify('profile');
+    }
+
+    set profiles(value: GLib.Variant<"a{sa(sb)}">|null) {
+        this.#profiles = value || undefined;
+        this.notify('profiles');
+    }
+
+    set random(value: boolean) {
+        this.#random = value;
+        this.notify('random');
+    }
+
+    constructor(uuid: string) {
         super(0.0, uuid);
 
+        this.#bindings = [];
+        this.#icon_preview_enabled = false;
+        this.#random = true;
+        // first set up the icon
         this.#icon = new PanelMenuIcon();
-        settings.bind('icon-preview', this.#icon, 'preview_enabled', Gio.SettingsBindFlags.GET);
-        this.#service_preview_binding = service.bind_property('Preview', this.#icon, 'preview', GObject.BindingFlags.SYNC_CREATE);
+        this.#bindings.push(this.bind_property('icon_preview_enabled', this.#icon, 'preview_enabled', GObject.BindingFlags.SYNC_CREATE));
+        this.#bindings.push(this.bind_property('preview', this.#icon, 'preview', GObject.BindingFlags.SYNC_CREATE));
         this.add_child(this.#icon);
-
-        // Now load in the menu itself
-        // profiles
-        this.#profile_menu_item = new PopupMenuProfile({profiles: settings.get_value("profiles")});
-        settings.bind('current-profile', this.#profile_menu_item, 'profile', Gio.SettingsBindFlags.GET);
-        settings.bind_with_mapping("profiles", this.#profile_menu_item, "profiles", Gio.SettingsBindFlags.GET, (value, variant) => {
-            // according to the g_settings_bind_with_mapping the value is
-            // supposed to be an assignable reference here and then that gets
-            // set to the object property. however, there is no way to set the
-            // value here since it is passed in as null and that isn't a
-            // reference in JS. this is a dirty nasty hack.
-            const source = setTimeout(() => {
-                if (!this.#profile_menu_item)
-                    return;
-                this.#profile_menu_item.profiles = settings.get_value("profiles");
-                source.destroy();
-            }, 50);
-            return true;
-        }, null);
-        this.#profile_menu_item_profile_activate_id = this.#profile_menu_item.connect(
-            'profile-activate',
-            (_menu: PopupMenuProfile, element: PopupMenu.PopupMenuItem, _event: any) => {
-                settings.set_string("current-profile", element.label.get_text());
-            }
-        );
+        // now add the menu items, profile first
+        this.#profile_menu_item = new PopupMenuProfile()
+        this.#bindings.push(this.bind_property('profile', this.#profile_menu_item, 'profile', GObject.BindingFlags.SYNC_CREATE));
+        this.#bindings.push(this.bind_property('profiles', this.#profile_menu_item, 'profiles', GObject.BindingFlags.SYNC_CREATE));
         this.menu.addMenuItem(this.#profile_menu_item);
-        // end profiles
         this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
-        // controls
-        const preview_menu_item = new PreviewMenuItem();
-        this.#service_preview_menu_item_binding = service.bind_property(
-            'Preview',
-            preview_menu_item,
-            'preview',
-            GObject.BindingFlags.SYNC_CREATE
-        );
-        this.menu.addMenuItem(preview_menu_item);
-        this.#controls = new ControlsMenuItem({random: settings.get_boolean("random")});
-        this.#random_notify_id = this.#controls.connect('notify::random', () => {
-            settings.set_boolean("random", Boolean(this.#controls?.random));
-        });
-        this.#next_clicked_id = this.#controls.connect('next-clicked', () => {
-            service.Next();
-        });
-        this.#previous_clicked_id = this.#controls.connect('previous-clicked', () => {
-            service.Previous();
-        })
-        this.menu.addMenuItem(this.#controls);
+        // this section is for controls
+        this.#preview_menu_item = new PreviewMenuItem();
+        this.#bindings.push(this.bind_property('preview', this.#preview_menu_item, 'preview', GObject.BindingFlags.SYNC_CREATE));
+        this.menu.addMenuItem(this.#preview_menu_item);
         this.menu.addMenuItem(new OpenCurrentMenuItem());
-        // end controls
+        this.#controls_menu_item = new ControlsMenuItem();
+        this.#bindings.push(this.bind_property('random', this.#controls_menu_item, 'random', GObject.BindingFlags.SYNC_CREATE));
+        this.#next_clicked_id = this.#controls_menu_item.connect('next-clicked', () => this.emit('next-clicked'));
+        this.#previous_clicked_id = this.#controls_menu_item.connect('previous-clicked', () => this.emit('previous-clicked'));
+        this.menu.addMenuItem(this.#controls_menu_item);
         this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
-        // settings
-        this.#settings_menu_item = new PopupMenu.PopupMenuItem("DeskChanger Settings");
-        this.#settings_activate_id = this.#settings_menu_item.connect('activate', () => prefs_callback());
-        this.menu.addMenuItem(this.#settings_menu_item);
-        // end settings
+        // preferences
+        this.#preferences_menu_item = new PopupMenu.PopupMenuItem('Preferences');
+        this.#preferences_activate_id = this.#preferences_menu_item.connect('activate', () => this.emit('open-prefs'));
+        this.menu.addMenuItem(this.#preferences_menu_item);
+        // fin.
     }
 
     destroy() {
-        if (this.#previous_clicked_id) {
-            this.#controls!.disconnect(this.#previous_clicked_id);
-            this.#previous_clicked_id = undefined;
+        for (const binding of this.#bindings) {
+            binding.unbind();
+        }
+
+        if (this.#preferences_activate_id) {
+            this.#preferences_menu_item!.disconnect(this.#preferences_activate_id);
+            this.#preferences_activate_id = undefined;
         }
 
         if (this.#next_clicked_id) {
-            this.#controls!.disconnect(this.#next_clicked_id);
+            this.#controls_menu_item!.disconnect(this.#next_clicked_id);
             this.#next_clicked_id = undefined;
         }
 
-        if (this.#random_notify_id) {
-            this.#controls!.disconnect(this.#random_notify_id);
-            this.#random_notify_id = undefined;
+        if (this.#previous_clicked_id) {
+            this.#controls_menu_item!.disconnect(this.#previous_clicked_id);
+            this.#previous_clicked_id = undefined;
         }
 
-        this.#controls?.destroy();
-        this.#controls = undefined;
-
-        if (this.#service_preview_menu_item_binding) {
-            this.#service_preview_menu_item_binding.unbind();
-            this.#service_preview_menu_item_binding = undefined;
-        }
-
-        if (this.#profile_menu_item_profile_activate_id) {
-            this.#profile_menu_item!.disconnect(this.#profile_menu_item_profile_activate_id);
-            this.#profile_menu_item_profile_activate_id = undefined;
-        }
-
-        this.#profile_menu_item?.destroy();
+        this.#bindings = [];
+        this.#preferences_menu_item?.destroy();
+        this.#preferences_menu_item = undefined;
+        this.#controls_menu_item?.destroy();
+        this.#controls_menu_item = undefined;
+        this.#preview_menu_item?.destroy();
+        this.#preview_menu_item = undefined;
+        this.#profile_menu_item?.destroy()
         this.#profile_menu_item = undefined;
-
-        if (this.#service_preview_binding) {
-            this.#service_preview_binding.unbind();
-            this.#service_preview_binding = undefined;
-        }
-
-        if (this.#settings_activate_id) {
-            this.#settings_menu_item!.disconnect(this.#settings_activate_id);
-            this.#settings_activate_id = undefined;
-        }
-
-        this.#settings_menu_item?.destroy();
-        this.#settings_menu_item = undefined;
-
         this.#icon?.destroy();
         this.#icon = undefined;
-        super.destroy();
     }
 }
