@@ -7,6 +7,11 @@ import ServiceProfileWallpaper from "./wallpaper.js";
 
 export const MAX_QUEUE_LENGTH = 5;
 
+export namespace ServiceProfile {
+    export interface ConstructorProps {
+        profile_name: string;
+    }
+}
 
 export default class ServiceProfile extends GObject.Object {
     static {
@@ -21,6 +26,11 @@ export default class ServiceProfile extends GObject.Object {
                 "preview": GObject.param_spec_string(
                     "preview", "Preview",
                     "Preview of the next wallpaper in the queue",
+                    null, GObject.ParamFlags.READABLE
+                ),
+                "profile_name": GObject.param_spec_string(
+                    "profile_name", "Profile name",
+                    "The profile name that this object represents",
                     null, GObject.ParamFlags.READABLE
                 ),
             },
@@ -53,7 +63,16 @@ export default class ServiceProfile extends GObject.Object {
         return this.#queue.get_item(0)?.wallpaper || null;
     }
 
-    constructor(settings: Gio.Settings, logger: Console, profile_name: string) {
+    get profile_name() {
+        return this.#profile_name;
+    }
+
+    constructor(settings: Gio.Settings, logger: Console, properties?: Partial<ServiceProfile.ConstructorProps>) {
+        const { profile_name } = properties || {};
+
+        if (!profile_name)
+            throw new TypeError("Profile name is required");
+
         super();
 
         this.#loaded = false;
@@ -106,7 +125,6 @@ export default class ServiceProfile extends GObject.Object {
                 }
             }
 
-            this.#logger?.log(`Added ${wallpaper} to the queue`);
             this.#queue.append(wallpaper);
         } while (this.#queue.get_n_items() < MAX_QUEUE_LENGTH);
     }
@@ -122,12 +140,12 @@ export default class ServiceProfile extends GObject.Object {
         this.#profile.forEach(item => this.#load_uri(item[0], item[1], true));
         // attempt to reload when the profiles change
         this.#settings!.connect('notify::profiles', this.#reload.bind(this));
-        // prepare the queue!
-        this.fill_queue();
 
         if (this.#settings!.get_boolean('remember-profile-state'))
             this.#restore_profile_state();
 
+        // prepare the queue!
+        this.fill_queue();
         this.#loaded = true;
         this.notify('loaded');
         this.emit('loaded', this.#wallpapers.length, this.#queue.next);
