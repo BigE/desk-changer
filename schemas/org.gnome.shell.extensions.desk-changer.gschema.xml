@@ -24,12 +24,6 @@
 			</description>
 			<summary>Currently loaded profile</summary>
 		</key>
-		<key name="debug" type="b">
-			<default>false</default>
-			<description>When enabled, the entire extension will output a lot more debugging information. This should
-			only be used when needed as it can greatly increase log size.</description>
-			<summary>Enable debugging output of the extension</summary>
-		</key>
 		<key name="icon-preview" type="b">
 			<default>false</default>
 			<description>
@@ -86,7 +80,7 @@
 			</description>
 			<summary>All currently available profiles</summary>
 		</key>
-		<key name="profile-state" type="a{sas}">
+		<key name="profile-states" type="a{sas}">
 			<default>[]</default>
 			<description>
 				This is the storage location of the profile's last state. By default, there are no states saved until

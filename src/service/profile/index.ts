@@ -3,6 +3,7 @@ import Gio from "gi://Gio";
 import {SettingsAllowedMimeTypesType, SettingsProfileItemType, SettingsProfileType} from "../../common/settings.js";
 import GLib from "gi://GLib";
 import ServiceProfileQueue from "./queue.js";
+import ServiceProfileWallpaper from "./wallpaper.js";
 
 export const MAX_QUEUE_LENGTH = 5;
 
@@ -256,16 +257,24 @@ export default class ServiceProfile extends GObject.Object {
         if (!(this.#profile_name in profile_states))
             return;
 
-        // TODO: restore the queue
+        const state = profile_states[this.#profile_name];
+        for (let i = 0; i < state.length && i < MAX_QUEUE_LENGTH; ++i) {
+            this.#queue.insert(i, new ServiceProfileWallpaper(state[i]));
+        }
         delete profile_states[this.#profile_name];
         this.#settings!.set_value("profile-states", new GLib.Variant('a{sas}', profile_states));
     }
 
     #save_profile_state(current_uri?: string) {
         let profile_states = this.#settings!.get_value("profile-states").deepUnpack<{[name: string]: string[]}>();
+        const n_items = this.#queue.get_n_items();
 
-        // TODO: save the queue
         profile_states[this.#profile_name] = (current_uri)? [current_uri] : [];
+        for (let i = 0; i < n_items && i < MAX_QUEUE_LENGTH; i++) {
+            const item = this.#queue.get_item(i);
+            if (item)
+                profile_states[this.#profile_name].push(item.wallpaper);
+        }
         this.#settings!.set_value("profile-states", new GLib.Variant('a{sas}', profile_states));
     }
 }
