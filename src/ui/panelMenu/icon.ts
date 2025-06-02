@@ -97,7 +97,7 @@ export default class PanelMenuIcon extends St.Bin {
 
     #create_preview() {
         this.#preview_control = new ControlPreview({preview_size: new Graphene.Size({height: 20, width: -1})});
-        this.#preview_file_binding = this.bind_property('preview_file', this.#preview_control, 'preview_file', GObject.BindingFlags.SYNC_CREATE);
+        this.#preview_file_binding = this.bind_property('preview', this.#preview_control, 'preview_file', GObject.BindingFlags.SYNC_CREATE);
         this.set_child(this.#preview_control);
         this.#destroy_icon();
     }
