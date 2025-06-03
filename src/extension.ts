@@ -111,9 +111,9 @@ export default class DeskChangerExtension extends Extension {
 
         this.#button = new PanelMenuButton(this.uuid);
         // settings bindings
-        this.#settings.bind('current-profile', this.#button, 'profile', Gio.SettingsBindFlags.GET);
+        this.#settings.bind('current-profile', this.#button, 'profile', Gio.SettingsBindFlags.DEFAULT);
         this.#settings.bind('icon-preview', this.#button, 'icon_preview_enabled', Gio.SettingsBindFlags.GET);
-        this.#settings.bind('random', this.#button, 'random', Gio.SettingsBindFlags.GET);
+        this.#settings.bind('random', this.#button, 'random', Gio.SettingsBindFlags.DEFAULT);
         this.#settings.bind_with_mapping('profiles', this.#button, 'profiles', Gio.SettingsBindFlags.GET, (value, variant) => {
             // according to the g_settings_bind_with_mapping the value is
             // supposed to be an assignable reference here and then that gets
@@ -169,6 +169,7 @@ export default class DeskChangerExtension extends Extension {
      * This cleans up all the bindings that addIndicator created and
      * empties the objects that were assigned. This should be called every
      * time the screen is locked or the extension is disabled.
+     *
      * @private
      */
     #removeIndicator() {

@@ -70,6 +70,7 @@ export default class PanelMenuButton extends PanelMenu.Button {
     #preview_menu_item?: PreviewMenuItem;
     #previous_clicked_id?: number;
     #profile?: string;
+    #profile_activate_id?: number;
     #profile_menu_item?: PopupMenuProfile;
     #profiles?: GLib.Variant<"a{sa(sb)}">;
     #random: boolean;
@@ -134,6 +135,9 @@ export default class PanelMenuButton extends PanelMenu.Button {
         this.#profile_menu_item = new PopupMenuProfile()
         this.#bindings.push(this.bind_property('profile', this.#profile_menu_item, 'profile', GObject.BindingFlags.SYNC_CREATE));
         this.#bindings.push(this.bind_property('profiles', this.#profile_menu_item, 'profiles', GObject.BindingFlags.SYNC_CREATE));
+        this.#profile_activate_id = this.#profile_menu_item.connect('profile-activate', (_element: PopupMenuProfile, menu_item: PopupMenu.PopupMenuItem) => {
+            this.profile = menu_item.label.get_text();
+        });
         this.menu.addMenuItem(this.#profile_menu_item);
         this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
         // this section is for controls
@@ -157,6 +161,11 @@ export default class PanelMenuButton extends PanelMenu.Button {
     destroy() {
         for (const binding of this.#bindings) {
             binding.unbind();
+        }
+
+        if (this.#profile_activate_id) {
+            this.#profile_menu_item!.disconnect(this.#profile_activate_id);
+            this.#profile_activate_id = undefined;
         }
 
         if (this.#preferences_activate_id) {
