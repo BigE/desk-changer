@@ -64,6 +64,7 @@ export default class PanelMenuButton extends PanelMenu.Button {
     #icon_preview_enabled: boolean;
     declare menu: PopupMenu.PopupMenu;
     #next_clicked_id?: number;
+    #open_current_menu_item?: OpenCurrentMenuItem;
     #preferences_activate_id?: number;
     #preferences_menu_item?: PopupMenu.PopupMenuItem;
     #preview?: string;
@@ -144,7 +145,8 @@ export default class PanelMenuButton extends PanelMenu.Button {
         this.#preview_menu_item = new PreviewMenuItem();
         this.#bindings.push(this.bind_property('preview', this.#preview_menu_item, 'preview', GObject.BindingFlags.SYNC_CREATE));
         this.menu.addMenuItem(this.#preview_menu_item);
-        this.menu.addMenuItem(new OpenCurrentMenuItem());
+        this.#open_current_menu_item = new OpenCurrentMenuItem();
+        this.menu.addMenuItem(this.#open_current_menu_item);
         this.#controls_menu_item = new ControlsMenuItem();
         this.#bindings.push(this.bind_property('random', this.#controls_menu_item, 'random', GObject.BindingFlags.SYNC_CREATE));
         this.#next_clicked_id = this.#controls_menu_item.connect('next-clicked', () => this.emit('next-clicked'));
@@ -162,6 +164,8 @@ export default class PanelMenuButton extends PanelMenu.Button {
         for (const binding of this.#bindings) {
             binding.unbind();
         }
+
+        this.#bindings = [];
 
         if (this.#profile_activate_id) {
             this.#profile_menu_item!.disconnect(this.#profile_activate_id);
@@ -183,7 +187,8 @@ export default class PanelMenuButton extends PanelMenu.Button {
             this.#previous_clicked_id = undefined;
         }
 
-        this.#bindings = [];
+        this.#open_current_menu_item?.destroy();
+        this.#open_current_menu_item = undefined;
         this.#preferences_menu_item?.destroy();
         this.#preferences_menu_item = undefined;
         this.#controls_menu_item?.destroy();
@@ -192,7 +197,9 @@ export default class PanelMenuButton extends PanelMenu.Button {
         this.#preview_menu_item = undefined;
         this.#profile_menu_item?.destroy()
         this.#profile_menu_item = undefined;
+        this.menu.removeAll();
         this.#icon?.destroy();
         this.#icon = undefined;
+        super.destroy();
     }
 }

@@ -5,7 +5,7 @@ import RotationModeListStore, {RotationModeObject} from "./common/rotation_modes
 import MetaTypeRow from "./common/meta_type_row.js";
 import {SettingsAllowedMimeTypesType} from "../../common/settings.js";
 import GLib from "gi://GLib";
-import Service from "../../service/index.js";
+import ServiceDBus from "../../service/dbus.js";
 import {SERVICE_ID, SERVICE_PATH} from "../../service/interface.js";
 import GObject from "gi://GObject";
 
@@ -17,6 +17,7 @@ export default class ServicePage extends Adw.PreferencesPage {
     daemon_auto_start_switch: Adw.SwitchRow;
     daemon_remember_profile_state_switch: Adw.SwitchRow;
     daemon_running_switch: Adw.SwitchRow;
+    #is_in_callback = false;
     #proxy?: Gio.DBusProxy;
     #proxy_preview_binding?: GObject.Binding;
     random_switch: Adw.SwitchRow;
@@ -48,8 +49,9 @@ export default class ServicePage extends Adw.PreferencesPage {
         this.rotation_mode_combo = this._rotation_mode_combo;
 
         try {
-            const proxyWrapper = Gio.DBusProxy.makeProxyWrapper(Service.getDBusInterfaceXML());
-            this.#proxy = proxyWrapper(Gio.DBus.session, SERVICE_ID, SERVICE_PATH);
+            const DBusProxyWrapper = Gio.DBusProxy.makeProxyWrapper(ServiceDBus.ServiceDBus.getDBusInterfaceXML())
+            // @ts-expect-error
+            this.#proxy = new DBusProxyWrapper(Gio.DBus.session, SERVICE_ID, SERVICE_PATH);
         } catch (e) {
             console.error(e);
         }
@@ -67,8 +69,33 @@ export default class ServicePage extends Adw.PreferencesPage {
         this.#settings!.bind('remember-profile-state', this.daemon_remember_profile_state_switch, 'active', Gio.SettingsBindFlags.DEFAULT);
         this.#settings!.bind('random', this.random_switch, 'active', Gio.SettingsBindFlags.DEFAULT);
         this.#settings!.bind('interval', this.rotation_custom_interval_spinner, 'value', Gio.SettingsBindFlags.DEFAULT);
-        this.#proxy?.connect('g-properties-changed', (_proxy, _changed, _invalidated) => {
-            this.daemon_running_switch.set_active(Boolean(this.#proxy?.Preview));
+        this.daemon_running_switch.set_sensitive(Boolean(this.#proxy?.g_name_owner));
+        this.daemon_running_switch.set_active(Boolean(this.#proxy?.Running));
+        this.#proxy?.connect('notify::g-name-owner', () => {
+            this.daemon_running_switch.set_sensitive(Boolean(this.#proxy?.g_name_owner));
+        });
+        this.#proxy?.connect('g-properties-changed', () => {
+            if (!this.#proxy) return;
+            this.#is_in_callback = true;
+            this.daemon_running_switch.set_active(Boolean(this.#proxy.Running));
+        });
+        this.daemon_running_switch.connect('notify::active', () => {
+            if (this.#is_in_callback || !this.#proxy) {
+                this.#is_in_callback = false;
+                return;
+            }
+
+            try {
+                this.#is_in_callback = true;
+                if (this.daemon_running_switch.get_active())
+                    this.#proxy.StartSync();
+                else
+                    this.#proxy.StopSync();
+            } catch (e) {
+                console.error(e);
+            }
+
+            this.daemon_running_switch.set_active(Boolean(this.#proxy.Running));
         });
         this.rotation_mode_combo.set_model(new RotationModeListStore());
         this.#load_mime_types();
