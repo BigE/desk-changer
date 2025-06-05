@@ -7,6 +7,8 @@ import * as Main from "resource:///org/gnome/shell/ui/main.js";
 import {APP_ID} from "./common/interface.js";
 import Service from "./service/index.js";
 import PanelMenuButton from "./ui/panelMenu/button.js";
+import RotationModes from "./common/rotation_modes.js";
+import {SettingsRotationModes} from "./common/settings.js";
 
 /**
  * DeskChanger - A simple wallpaper changer
@@ -25,10 +27,12 @@ export default class DeskChangerExtension extends Extension {
     #previous_clicked_id?: number;
     #resource?: Gio.Resource;
     #source?: GLib.Source;
-    #service?: Service.Service;
+    #service?: Service;
+    #service_notifications: number[] = [];
     #service_preview_binding?: GObject.Binding;
     #session_changed_id?: number;
     #settings?: Gio.Settings;
+    #settings_notifications: number[] = [];
 
     /**
      * Enable the extension
@@ -50,7 +54,7 @@ export default class DeskChangerExtension extends Extension {
             this.#settings = this.getSettings();
 
         if (!this.#service)
-            this.#service = new Service.Service({ logger: this.#logger, settings: this.#settings });
+            this.#service = new Service({ logger: this.#logger, settings: this.#settings });
 
         if (!this.#service.is_dbus_name_owned())
             this.#service.own_name();
@@ -80,7 +84,8 @@ export default class DeskChangerExtension extends Extension {
             this.#session_changed_id = undefined;
         }
 
-        this.#removeIndicator();
+        // call this to clean up the indicator and notifications
+        this.#sessionModeUnlockDialog();
         this.#source?.destroy();
         this.#source = undefined;
 
@@ -143,6 +148,61 @@ export default class DeskChangerExtension extends Extension {
         Main.panel.addToStatusArea(this.uuid, this.#button);
     }
 
+    #bindNotifications() {
+        if (this.#service) {
+            this.#service_notifications.push(this.#service.connect(
+                'Changed',
+                (_sender: any, uri: string) =>
+                    this.#sendNotification(this.gettext("Wallpaper changed: %s").format(uri)))
+            );
+        }
+
+        if (this.#settings) {
+            this.#settings_notifications.push(this.#settings.connect(
+                'changed::current-profile',
+                (settings: Gio.Settings) => this.#sendNotification(
+                    this.gettext("Profile changed to %s").format(settings.get_string("current-profile"))
+                )
+            ));
+
+            this.#settings_notifications.push(this.#settings.connect("changed::notifications", (settings: Gio.Settings) => {
+                this.#sendNotification(((settings.get_boolean("notifications")) ?
+                        _("Notifications are now enabled") :
+                        _("Notifications are now disabled")
+                ), true);
+            }));
+
+            this.#settings_notifications.push(this.#settings.connect('changed::random', (settings: Gio.Settings) => {
+                this.#sendNotification(((settings.get_boolean("random"))?
+                        _("Wallpapers will be shown in a random order") :
+                        _("Wallpapers will be shown in the order they were loaded")
+                ));
+            }));
+
+            this.#settings_notifications.push(this.#settings.connect('changed::rotation', (settings: Gio.Settings) => {
+                let message;
+                const rotation = RotationModes[settings.get_string('rotation') as SettingsRotationModes];
+
+                switch (rotation.timer) {
+                    case 'interval':
+                        message = _("Rotation will occur at a set interval of %d seconds".format(rotation.interval));
+                        break;
+                    case 'hourly':
+                        message = _('Rotation will occur at the beginning of every hour');
+                        break;
+                    case 'daily':
+                        message = _('Rotation will occur at the beginning of every day');
+                        break;
+                    default:
+                        message = _('Rotation has been disabled');
+                        break;
+                }
+
+                this.#sendNotification(message);
+            }));
+        }
+    }
+
     /**
      * Helper to simplify check currentMode and parentMode for a user session
      *
@@ -161,9 +221,9 @@ export default class DeskChangerExtension extends Extension {
      */
     #onSessionModeChanged(session: any) {
         if (this.#is_session_mode_user(session))
-            this.#addIndicator();
+            this.#sessionModeUser();
         else if ('currentMode' in session && session.currentMode === 'unlock-dialog')
-            this.#removeIndicator();
+            this.#sessionModeUnlockDialog();
     }
 
     /**
@@ -198,5 +258,36 @@ export default class DeskChangerExtension extends Extension {
 
         this.#button?.destroy();
         this.#button = undefined;
+    }
+
+    #sendNotification(message: string, force: boolean = false) {
+        if (!this.#settings?.get_boolean('notifications') && !force)
+            return;
+
+        Main.notify(this.metadata.name, message);
+    }
+
+    #sessionModeUser() {
+        this.#addIndicator();
+        this.#bindNotifications();
+    }
+
+    #sessionModeUnlockDialog() {
+        this.#removeIndicator();
+        this.#unbindNotifications();
+    }
+
+    #unbindNotifications() {
+        for (const notification_id of this.#service_notifications) {
+            this.#service!.disconnect(notification_id);
+        }
+
+        this.#service_notifications = [];
+
+        for (const notification_id of this.#settings_notifications) {
+            this.#settings!.disconnect(notification_id);
+        }
+
+        this.#settings_notifications = [];
     }
 }
