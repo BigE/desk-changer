@@ -25,7 +25,7 @@ export default class DeskChangerExtension extends Extension {
     #previous_clicked_id?: number;
     #resource?: Gio.Resource;
     #source?: GLib.Source;
-    #service?: Service;
+    #service?: Service.Service;
     #service_preview_binding?: GObject.Binding;
     #session_changed_id?: number;
     #settings?: Gio.Settings;
@@ -50,7 +50,10 @@ export default class DeskChangerExtension extends Extension {
             this.#settings = this.getSettings();
 
         if (!this.#service)
-            this.#service = new Service(this.#settings, this.#logger);
+            this.#service = new Service.Service({ logger: this.#logger, settings: this.#settings });
+
+        if (!this.#service.is_dbus_name_owned())
+            this.#service.own_name();
 
         if (this.#settings.get_boolean('auto-start') && !this.#service.Running)
             this.#service.Start();
