@@ -5,8 +5,7 @@ import RotationModeListStore, {RotationModeObject} from "./common/rotation_modes
 import MetaTypeRow from "./common/meta_type_row.js";
 import {SettingsAllowedMimeTypesType} from "../../common/settings.js";
 import GLib from "gi://GLib";
-import ServiceDBus from "../../service/dbus.js";
-import {SERVICE_ID, SERVICE_PATH} from "../../service/interface.js";
+import Service from "../../service/index.js";
 import GObject from "gi://GObject";
 
 export default class ServicePage extends Adw.PreferencesPage {
@@ -49,9 +48,9 @@ export default class ServicePage extends Adw.PreferencesPage {
         this.rotation_mode_combo = this._rotation_mode_combo;
 
         try {
-            const DBusProxyWrapper = Gio.DBusProxy.makeProxyWrapper(ServiceDBus.ServiceDBus.getDBusInterfaceXML())
+            const DBusProxyWrapper = Gio.DBusProxy.makeProxyWrapper(Service.getDBusInterfaceXML())
             // @ts-expect-error
-            this.#proxy = new DBusProxyWrapper(Gio.DBus.session, SERVICE_ID, SERVICE_PATH);
+            this.#proxy = new DBusProxyWrapper(Gio.DBus.session, Service.SERVICE_ID, Service.SERVICE_PATH);
         } catch (e) {
             console.error(e);
         }

@@ -5,11 +5,11 @@ import GObject from "gi://GObject";
 import {APP_PATH} from "../common/interface.js";
 import { ServiceRunner } from "./runner.js";
 
-export namespace ServiceDBus {
+export namespace Service {
     export interface ConstructorProps extends ServiceRunner.ConstructorProps {}
 }
 
-export class ServiceDBus extends ServiceRunner {
+export default class Service extends ServiceRunner {
     #dbus?: Gio.DBusExportedObject;
     #dbus_id?: number;
     #dbus_name_owned: boolean;
@@ -35,13 +35,13 @@ export class ServiceDBus extends ServiceRunner {
         return (new TextDecoder()).decode(Gio.resources_lookup_data(GLib.build_filenamev([
             APP_PATH,
             'service',
-            `${ServiceDBus.SERVICE_ID}.xml`
+            `${Service.SERVICE_ID}.xml`
         ]), Gio.ResourceLookupFlags.NONE).toArray());
     }
 
     static getDBusInterfaceInfo(): Gio.DBusInterfaceInfo {
-        const node_info = Gio.DBusNodeInfo.new_for_xml(ServiceDBus.getDBusInterfaceXML());
-        const dbus_info = node_info.lookup_interface(ServiceDBus.SERVICE_ID);
+        const node_info = Gio.DBusNodeInfo.new_for_xml(Service.getDBusInterfaceXML());
+        const dbus_info = node_info.lookup_interface(Service.SERVICE_ID);
 
         if (!dbus_info)
             throw new Error('DBUS: Failed to find interface info');
@@ -59,16 +59,16 @@ export class ServiceDBus extends ServiceRunner {
         return this.#dbus_name_owned;
     }
 
-    constructor(properties: ServiceDBus.ConstructorProps) {
+    constructor(properties: Service.ConstructorProps) {
         super(properties);
         this.#dbus_name_owned = false;
         this.#signals = [];
 
-        const dbus_info = ServiceDBus.getDBusInterfaceInfo();
+        const dbus_info = Service.getDBusInterfaceInfo();
         // wrapJSObject takes string|DBusInterfaceInfo
         // @ts-expect-error
         this.#dbus = Gio.DBusExportedObject.wrapJSObject(dbus_info, this);
-        this.#dbus.export(Gio.DBus.session, ServiceDBus.SERVICE_PATH);
+        this.#dbus.export(Gio.DBus.session, Service.SERVICE_PATH);
     }
 
     destroy() {
@@ -100,7 +100,7 @@ export class ServiceDBus extends ServiceRunner {
     own_name() {
         if (!this.#dbus_id) {
             this.#dbus_id = Gio.DBus.session.own_name(
-                ServiceDBus.SERVICE_ID,
+                Service.SERVICE_ID,
                 Gio.BusNameOwnerFlags.REPLACE,
                 this.#on_name_acquired.bind(this),
                 this.#on_name_lost.bind(this)
