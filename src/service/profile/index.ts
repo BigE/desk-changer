@@ -138,6 +138,10 @@ export default class ServiceProfile extends GObject.Object {
         this.#profile = profiles[this.#profile_name];
         // load each item in the profile - this is the top level
         this.#profile.forEach(item => this.#load_uri(item[0], item[1], true));
+
+        if (!this.#wallpapers.length)
+            throw new RangeError(`No wallpapers were loaded for ${this.#profile_name}`);
+
         // attempt to reload when the profiles change
         this.#settings!.connect('notify::profiles', this.#reload.bind(this));
 

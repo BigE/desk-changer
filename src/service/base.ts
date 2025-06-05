@@ -87,11 +87,20 @@ export namespace ServiceBase {
         }
 
         LoadProfile(profile_name?: string) {
+            if (profile_name && this.#profile && this.#profile.profile_name === profile_name)
+                return;
+
             const profile: ServiceProfile = new ServiceProfile(this.#settings!, this.#logger!, {
                 profile_name: profile_name || this.#settings!.get_string('current-profile')
             });
 
-            profile.load();
+            try {
+                profile.load();
+            } catch (e) {
+                if (this.#profile)
+                    this.#settings?.set_string('current-profile', this.#profile.profile_name);
+                throw e;
+            }
 
             // Unload the currently loaded profile
             if (this.#profile) {
