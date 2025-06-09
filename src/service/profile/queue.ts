@@ -24,12 +24,6 @@ export default class ServiceProfileQueue extends Gio.ListStore<ServiceProfileWal
         super({item_type: ServiceProfileWallpaper.$gtype});
     }
 
-    append(item: ServiceProfileWallpaper | string) {
-        if (typeof item === "string")
-            return super.append(new ServiceProfileWallpaper(item));
-        super.append(item);
-    }
-
     dequeue(): ServiceProfileWallpaper {
         const item = this.get_item(0);
 
@@ -38,17 +32,5 @@ export default class ServiceProfileQueue extends Gio.ListStore<ServiceProfileWal
 
         this.remove(0);
         return item;
-    }
-
-    find(item: ServiceProfileWallpaper | string): [boolean, number] {
-        if (typeof item === "string")
-            return super.find(new ServiceProfileWallpaper(item));
-        return super.find(item);
-    }
-
-    insert(position: number, item: ServiceProfileWallpaper | string) {
-        if (typeof item === "string")
-            return super.insert(position, new ServiceProfileWallpaper(item));
-        super.insert(position, item);
     }
 }

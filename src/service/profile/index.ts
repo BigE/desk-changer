@@ -1,7 +1,8 @@
-import GObject from "gi://GObject";
 import Gio from "gi://Gio";
-import {SettingsAllowedMimeTypesType, SettingsProfileItemType, SettingsProfileType} from "../../common/settings.js";
 import GLib from "gi://GLib";
+import GObject from "gi://GObject";
+
+import {SettingsAllowedMimeTypesType, SettingsProfileItemType, SettingsProfileType} from "../../common/settings.js";
 import ServiceProfileQueue from "./queue.js";
 import ServiceProfileWallpaper from "./wallpaper.js";
 
@@ -50,7 +51,7 @@ export default class ServiceProfile extends GObject.Object {
     #queue: ServiceProfileQueue;
     #sequence: number;
     #settings?: Gio.Settings;
-    #wallpapers: string[];
+    #wallpapers: ServiceProfileWallpaper[];
 
     get loaded() {
         return this.#loaded;
@@ -102,22 +103,28 @@ export default class ServiceProfile extends GObject.Object {
         }
 
         do {
-            let wallpaper: string | undefined;
+            let wallpaper: ServiceProfileWallpaper | undefined;
 
             if (random) {
+                let i = 0;
+
                 do {
                     wallpaper = this.#wallpapers[Math.floor(Math.random() * this.#wallpapers.length)];
                     const [in_history, _history_position] = this.#history.find(wallpaper);
                     const [in_queue, _queue_position] = this.#queue.find(wallpaper);
 
-                    if (in_history && (this.#wallpapers.length >= 128 || this.#history.next === wallpaper)) {
-                        this.#logger?.debug(`Wallpaper ${wallpaper} exists in history`);
+                    this.#logger?.debug(in_history, _history_position, in_queue, _queue_position);
+                    if (in_history && (this.#wallpapers.length >= 128 || this.#history.next === wallpaper.wallpaper)) {
+                        this.#logger?.debug(`Wallpaper ${wallpaper.wallpaper} exists in history`);
                         wallpaper = undefined;
                     } else if (in_queue && this.#wallpapers.length > MAX_QUEUE_LENGTH) {
-                        this.#logger?.debug(`Wallpaper ${wallpaper} is already in the queue`);
+                        this.#logger?.debug(`Wallpaper ${wallpaper.wallpaper} is already in the queue`);
                         wallpaper = undefined;
                     }
-                } while (wallpaper === undefined);
+                } while (wallpaper === undefined && ++i < this.#wallpapers.length);
+
+                if (!wallpaper)
+                    throw new TypeError('Loading random wallpaper queue failed');
             } else {
                 wallpaper = this.#wallpapers[this.#sequence++];
                 if (this.#sequence >= this.#wallpapers.length) {
@@ -126,6 +133,7 @@ export default class ServiceProfile extends GObject.Object {
             }
 
             this.#queue.append(wallpaper);
+            this.#logger?.debug(`Added ${wallpaper} to the queue`);
         } while (this.#queue.get_n_items() < MAX_QUEUE_LENGTH);
     }
 
@@ -161,11 +169,13 @@ export default class ServiceProfile extends GObject.Object {
 
 
         const wallpaper = this.#queue.dequeue().wallpaper;
+        let position;
+
         this.fill_queue();
         this.notify('preview');
 
-        if (current)
-            this.#history.insert(0, current);
+        if (current && (position = this.#wallpapers.findIndex(wallpaper => wallpaper.wallpaper === current)))
+            this.#history.insert(0, this.#wallpapers[position]);
 
         return wallpaper;
     }
@@ -175,9 +185,11 @@ export default class ServiceProfile extends GObject.Object {
             throw new Error(`Profile ${this.#profile_name} is not loaded`);
 
         const wallpaper = this.#history.dequeue().wallpaper;
+        let position: number;
 
-        if (current) {
-            this.#queue.insert(0, current);
+        // make sure the wallpaper is actually a part of this profile
+        if (current && (position = this.#wallpapers.findIndex(wallpaper => wallpaper.wallpaper === current))) {
+            this.#queue.insert(0, this.#wallpapers[position]);
             this.notify('preview');
         }
 
@@ -197,12 +209,12 @@ export default class ServiceProfile extends GObject.Object {
         this.emit('unloaded');
     }
 
-    #directory_changed(_monitor: Gio.FileMonitor, file: Gio.File, other_file: Gio.File, event_type: Gio.FileMonitorEvent, recursive: boolean) {
+    #directory_changed(_monitor: Gio.FileMonitor, file: Gio.File, _other_file: Gio.File, event_type: Gio.FileMonitorEvent, recursive: boolean) {
         if (event_type === Gio.FileMonitorEvent.CREATED) {
             this.#load_uri(file.get_uri(), recursive);
         } else if (event_type === Gio.FileMonitorEvent.DELETED) {
             const uri = file.get_uri();
-            const index = this.#wallpapers.indexOf(uri);
+            const index = this.#wallpapers.findIndex(wallpaper => wallpaper.wallpaper === uri);
 
             if (index >= 0) {
                 this.#wallpapers.splice(index, 1);
@@ -254,7 +266,7 @@ export default class ServiceProfile extends GObject.Object {
                     return;
                 }
 
-                this.#wallpapers.push(uri);
+                this.#wallpapers.push(new ServiceProfileWallpaper(uri));
                 this.#logger?.debug(`Added ${uri} to ${this.#profile_name}`);
             } else {
                 this.#logger?.debug(`Skipped over unsupported mime ${info.get_content_type()} for ${uri}`);
