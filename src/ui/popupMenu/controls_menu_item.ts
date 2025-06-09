@@ -58,6 +58,7 @@ export default class ControlsMenuItem extends PopupMenu.PopupBaseMenuItem {
 
     constructor(properties?: Partial<ControlsMenuItem.ConstructorProps>) {
         const { random, ...props } = properties || {};
+        props.reactive ??= false;
         super(props);
 
         this.#random = random || true;

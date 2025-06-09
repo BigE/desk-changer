@@ -126,22 +126,22 @@ export default class DeskChangerUiPrefsProfilesPage extends Adw.PreferencesPage 
 
         dialog.set_title("Add Profile");
         dialog.set_body("Enter your new profile name below");
-        dialog.set_extra_child(new Adw.EntryRow());
+        dialog.set_extra_child(entry);
         entry.set_activates_default(true);
         dialog.add_response('add', 'Add');
+        dialog.set_default_response('add');
         dialog.choose(this.get_root(), null, () => {
             dialog.disconnect(dialog_response_id);
         });
     }
 
     _on_dialog_add_items_response(items: Gio.ListModel<Gio.File>) {
-        const length = items.get_n_items(),
-            profile = this.#settings.get_string('current-profile');
+        const length = items.get_n_items();
         let profiles = this.#settings.get_value("profiles").deepUnpack<SettingsProfileType>();
 
         for (let i = 0; i < length; i++) {
             const item: SettingsProfileItemType = [items.get_item(i)!.get_uri(), false];
-            profiles[profile].push(item);
+            profiles[this.combo_row_profiles.selected_item.name].push(item);
             (this.locations_selection.get_model()! as Gio.ListStore).append(new ProfileItem(item[0], item[1]));
         }
 
