@@ -72,7 +72,7 @@ export default class PopupMenuProfile extends PopupMenu.PopupSubMenuMenuItem {
     constructor(parameters?: Partial<PopupMenuProfile.ConstructorProps>) {
         const { profile, profiles } = parameters || {};
 
-        super("Profile");
+        super(_("Profile"));
 
         this.#profile = profile || null;
         this.#update_label_text();
@@ -106,9 +106,9 @@ export default class PopupMenuProfile extends PopupMenu.PopupSubMenuMenuItem {
 
     #update_label_text() {
         if (this.#profile)
-            this.label.set_text(`Profile: ${this.#profile}`);
+            this.label.set_text(_("Profile: %s").format(this.#profile));
         else
-            this.label.set_text("Profile");
+            this.label.set_text(_("Profile"));
     }
 
     #update_selected_item(old_value: string|null, new_value: string|null) {

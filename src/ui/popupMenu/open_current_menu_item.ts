@@ -15,7 +15,7 @@ export default class OpenCurrentMenuItem extends PopupMenu.PopupMenuItem {
     #activate_id?: number;
 
     constructor() {
-        super("Open current wallpaper");
+        super(_("Open current wallpaper"));
 
         this.#activate_id = this.connect('activate', () => {
             const background = Gio.Settings.new("org.gnome.desktop.background");

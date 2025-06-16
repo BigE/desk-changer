@@ -72,7 +72,7 @@ export default class ServiceProfile extends GObject.Object {
         const { profile_name } = properties || {};
 
         if (!profile_name)
-            throw new TypeError("Profile name is required");
+            throw new TypeError(_("Profile name is required"));
 
         super();
 
@@ -124,7 +124,7 @@ export default class ServiceProfile extends GObject.Object {
                 } while (wallpaper === undefined && ++i < this.#wallpapers.length);
 
                 if (!wallpaper)
-                    throw new TypeError('Loading random wallpaper queue failed');
+                    throw new TypeError(_('Loading random wallpaper queue failed'));
             } else {
                 wallpaper = this.#wallpapers[this.#sequence++];
                 if (this.#sequence >= this.#wallpapers.length) {
@@ -141,14 +141,14 @@ export default class ServiceProfile extends GObject.Object {
         const profiles: SettingsProfileType = this.#settings!.get_value("profiles").deepUnpack<SettingsProfileType>();
 
         if (!(this.#profile_name in profiles))
-            throw new ReferenceError(`Profile ${this.#profile_name} does not exist`);
+            throw new ReferenceError(_("Profile %s does not exist").format(this.#profile_name));
 
         this.#profile = profiles[this.#profile_name];
         // load each item in the profile - this is the top level
         this.#profile.forEach(item => this.#load_uri(item[0], item[1], true));
 
         if (!this.#wallpapers.length)
-            throw new RangeError(`No wallpapers were loaded for ${this.#profile_name}`);
+            throw new RangeError(_("No wallpapers were loaded for %s").format(this.#profile_name));
 
         // attempt to reload when the profiles change
         this.#settings!.connect('notify::profiles', this.#reload.bind(this));
@@ -165,7 +165,7 @@ export default class ServiceProfile extends GObject.Object {
 
     next(current?: string) {
         if (!this.#loaded)
-            throw new Error(`Profile ${this.#profile_name} is not loaded`);
+            throw new Error(_("Profile %s is not loaded").format(this.#profile_name));
 
 
         const wallpaper = this.#queue.dequeue().wallpaper;
@@ -182,7 +182,7 @@ export default class ServiceProfile extends GObject.Object {
 
     previous(current?: string) {
         if (!this.#loaded)
-            throw new Error(`Profile ${this.#profile_name} is not loaded`);
+            throw new Error(_("Profile %s is not loaded").format(this.#profile_name));
 
         const wallpaper = this.#history.dequeue().wallpaper;
         let position: number;

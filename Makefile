@@ -3,7 +3,7 @@ DOMAIN=eric.gach.gmail.com
 UUID=$(NAME)@$(DOMAIN)
 VERSION=36
 
-.PHONY: yarn_install
+.PHONY: all pack install clean pot update-translation
 
 ifeq ($(strip $(DESTDIR)),)
 	INSTALLBASE = $(HOME)/.local/share/gnome-shell/extensions
@@ -11,7 +11,7 @@ else
 	INSTALLBASE = $(DESTDIR)/usr/share/gnome-shell/extensions
 endif
 
-all: dist/extension.js
+all: dist/extension.js update-translations
 
 .yarn/install-state.gz:
 	@yarn install
@@ -45,8 +45,11 @@ install: $(UUID).zip
 clean:
 	@rm -Rf dist $(UUID).zip .yarn/install-state.gz
 
-pot:
-	@xgettext --package-name=DeskChanger --package-version=$(VERSION) -k --keyword=_ -o ./po/desk-changer.pot -D ./ $(UUID)/_deskchanger.js $(UUID)/convenience.js $(UUID)/extension.js $(UUID)/prefs.js $(UUID)/service.js $(UUID)/common/utils.js $(UUID)/daemon/interface.js $(UUID)/daemon/profile.js $(UUID)/daemon/server.js $(UUID)/daemon/timer.js $(UUID)/ui/control.js $(UUID)/ui/panelMenu.js $(UUID)/ui/popupMenu.js resources/ui/prefs.ui resources/ui/rotation.ui
+pot: po/xgettext.txt
+	@xgettext --package-name=$(NAME) --package-version=$(VERSION) -k --keyword=_ -o ./po/desk-changer.pot -D ./ -f ./po/xgettext.txt
 
-update-translation: all
-	@(cd po && ./compile.sh ../desk-changer@eric.gach.gmail.com/locale)
+po/desk-changer.pot: pot
+
+update-translations: po/desk-changer.pot dist
+	@(cd po && ./compile.sh ../dist/locale)
+

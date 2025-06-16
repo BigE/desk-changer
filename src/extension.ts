@@ -161,7 +161,7 @@ export default class DeskChangerExtension extends Extension {
             this.#settings_notifications.push(this.#settings.connect(
                 'changed::current-profile',
                 (settings: Gio.Settings) => this.#sendNotification(
-                    this.gettext("Profile changed to %s").format(settings.get_string("current-profile"))
+                    _("Profile changed to %s").format(settings.get_string("current-profile"))
                 )
             ));
 

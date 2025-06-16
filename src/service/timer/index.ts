@@ -28,7 +28,7 @@ export default class ServiceTimer extends GObject.Object {
         super();
 
         if (interval < 1 || interval > 86400)
-            throw new Error("Interval must be between 1 and 86400");
+            throw new Error(_("Interval must be between 1 and 86400"));
 
         this.#callback = callback;
         this.#interval = interval;

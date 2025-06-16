@@ -64,7 +64,7 @@ export default class PreviewMenuItem extends PopupMenu.PopupBaseMenuItem {
         this.#preview = preview || null;
         this.#box = new St.BoxLayout({vertical: true});
         this.add_child(this.#box);
-        this.#prefix = new St.Label({text: "Open next wallpaper"});
+        this.#prefix = new St.Label({text: _("Open next wallpaper")});
         this.#box.add_child(this.#prefix);
         this.#add_preview_control();
         this.#activate_id = this.connect('activate', () => {

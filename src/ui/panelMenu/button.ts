@@ -154,7 +154,7 @@ export default class PanelMenuButton extends PanelMenu.Button {
         this.menu.addMenuItem(this.#controls_menu_item);
         this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
         // preferences
-        this.#preferences_menu_item = new PopupMenu.PopupMenuItem('Preferences');
+        this.#preferences_menu_item = new PopupMenu.PopupMenuItem(_('Preferences'));
         this.#preferences_activate_id = this.#preferences_menu_item.connect('activate', () => this.emit('open-prefs'));
         this.menu.addMenuItem(this.#preferences_menu_item);
         // fin.

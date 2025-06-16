@@ -44,7 +44,7 @@ export default class Service extends ServiceRunner {
         const dbus_info = node_info.lookup_interface(Service.SERVICE_ID);
 
         if (!dbus_info)
-            throw new Error('DBUS: Failed to find interface info');
+            throw new Error(_('DBUS: Failed to find interface info'));
 
         return dbus_info;
     }

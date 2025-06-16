@@ -132,7 +132,7 @@ export class ServiceRunner extends GObject.Object {
 
     Next() {
         if (!this.#running || !this.#profile)
-            throw new Error("Service isn't running");
+            throw new Error(_("Service isn't running"));
 
         const wallpaper = this.#profile.next(this.#background!.get_string('picture-uri'));
         this.#set_wallpaper(wallpaper);
@@ -155,7 +155,7 @@ export class ServiceRunner extends GObject.Object {
 
     Start() {
         if (this.#running)
-            throw new Error();
+            throw new Error(_("Service is already running"));
 
         if (!this.#profile)
             this.LoadProfile();
@@ -177,7 +177,7 @@ export class ServiceRunner extends GObject.Object {
 
     Stop() {
         if (!this.#running)
-            throw new Error();
+            throw new Error(_("Service isn't running"));
 
         if (this.#current_profile_changed_id) {
             this.#settings!.disconnect(this.#current_profile_changed_id);
@@ -195,7 +195,7 @@ export class ServiceRunner extends GObject.Object {
 
     #create_timer() {
         if (this.#timer)
-            throw new TypeError('Timer already exists');
+            throw new TypeError(_('Timer already exists'));
 
         const rotation = this.#settings!.get_string('rotation') as SettingsRotationModes;
 

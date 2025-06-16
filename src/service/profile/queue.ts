@@ -28,7 +28,7 @@ export default class ServiceProfileQueue extends Gio.ListStore<ServiceProfileWal
         const item = this.get_item(0);
 
         if (!item)
-            throw new TypeError('Failed to grab next queue item');
+            throw new TypeError(_("Failed to grab next queue item"));
 
         this.remove(0);
         return item;
