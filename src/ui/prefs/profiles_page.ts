@@ -5,7 +5,7 @@ import Gtk from "gi://Gtk";
 
 import Profile from "../../common/profile/index.js";
 import ProfileItem from "../../common/profile/item.js";
-import {SettingsProfileType, SettingsProfileItemType} from "../../common/settings.js";
+import {SettingsProfileType, SettingsProfileItemType, SettingsProfileState} from "../../common/settings.js";
 import DeleteDialog from "../dialog/delete.js";
 
 type ComboRowProfilesType = Omit<Adw.ComboRow, 'get_model' | 'model' | 'selected_item'> & {
@@ -16,7 +16,7 @@ type ComboRowProfilesType = Omit<Adw.ComboRow, 'get_model' | 'model' | 'selected
 
 type LocationSelectionType = Omit<Gtk.SingleSelection<ProfileItem>, 'selected_item'> & {
     model: Gio.ListStore<ProfileItem> | null;
-    selected_item: ProfileItem;
+    selected_item: ProfileItem | null;
 };
 
 export default class DeskChangerUiPrefsProfilesPage extends Adw.PreferencesPage {
@@ -172,6 +172,7 @@ export default class DeskChangerUiPrefsProfilesPage extends Adw.PreferencesPage 
             const index = profiles[profile].findIndex(element => element[0] === object.title);
 
             profiles[profile][index][1] = object.active;
+            this.combo_row_profiles.selected_item.items.get_item(index)!.recursive = object.active;
             this.#settings.set_value("profiles", new GLib.Variant('a{sa(sb)}', profiles));
         });
     }
@@ -181,9 +182,26 @@ export default class DeskChangerUiPrefsProfilesPage extends Adw.PreferencesPage 
     }
 
     _on_remove_item_button_clicked() {
+        if (!this.locations_selection.selected_item)
+            return;
+
         const dialog = new DeleteDialog();
         const dialog_response_id = dialog.connect('response', (_dialog, response) => {
             if (response === 'no') return;
+
+            let profiles = this.#settings.get_value("profiles").deepUnpack<SettingsProfileType>();
+            let profile = profiles[this.combo_row_profiles.selected_item.name];
+            const index = profile.findIndex(element =>
+                element[0] === this.locations_selection.selected_item!.uri &&
+                element[1] === this.locations_selection.selected_item!.recursive);
+
+            if (index === -1) return;
+
+            profile.splice(index, 1);
+            this.combo_row_profiles.selected_item.items.remove(index);
+            profiles[this.combo_row_profiles.selected_item.name] = profile;
+            this.#settings.set_value("profiles", new GLib.Variant("a{sa(sb)}", profiles));
+            this.remove_item_button.set_sensitive(this.combo_row_profiles.selected_item.items.get_n_items() > 1);
         });
 
         dialog.set_title(`Remove profile item`);
@@ -196,22 +214,21 @@ export default class DeskChangerUiPrefsProfilesPage extends Adw.PreferencesPage 
     }
 
     _on_remove_profile_button_clicked() {
-        const dialog = new Adw.AlertDialog();
+        const dialog = new DeleteDialog();
         const dialog_response_id = dialog.connect('response', (_dialog, response) => {
             if (response === 'no') return;
 
             let profiles = this.#settings.get_value("profiles").deepUnpack<SettingsProfileType>();
             delete profiles[this.combo_row_profiles.selected_item.name];
             this.#settings.set_value("profiles", new GLib.Variant("a{sa(sb)}", profiles));
+            let profile_states = this.#settings.get_value("profile-states").deepUnpack<SettingsProfileState>();
+            delete profile_states[this.combo_row_profiles.selected_item.name];
+            this.#settings.set_value("profile-states", new GLib.Variant("a{sas}", profile_states));
             this.combo_row_profiles.get_model()!.remove(this.combo_row_profiles.get_selected());
         });
 
         dialog.set_title("Remove profile");
         dialog.set_body(`Are you sure you want to completely remove the profile ${this.combo_row_profiles.selected_item.name}?`);
-        dialog.add_response('yes', 'Yes');
-        dialog.add_response('no', 'No');
-        dialog.set_default_response('no');
-        dialog.set_close_response('no');
         dialog.choose(this.get_root(), null, () => {
             dialog.disconnect(dialog_response_id);
         });
