@@ -2,6 +2,7 @@
 <!DOCTYPE gresources SYSTEM "https://gitlab.gnome.org/GNOME/glib/-/raw/main/gio/gresource.dtd">
 <gresources>
     <gresource prefix="/org/gnome/shell/extensions/desk-changer/">
+        <file>com.feralinteractive.GameMode.xml</file>
         <file>enter-keyboard-shortcut.svg</file>
         <file>icons/wallpaper-icon.svg</file>
         <file>service/org.gnome.Shell.Extensions.DeskChanger.Service.xml</file>

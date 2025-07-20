@@ -7,6 +7,7 @@ import ServiceProfile from "./profile/index.js";
 import ServiceTimer from "./timer/index.js";
 import ServiceTimerHourly from "./timer/hourly.js";
 import ServiceTimerDaily from "./timer/daily.js";
+import GameMode from "./gamemode.js";
 
 export namespace ServiceRunner {
     export interface ConstructorProps {
@@ -20,6 +21,11 @@ export class ServiceRunner extends GObject.Object {
         GObject.registerClass({
             GTypeName: "DeskChangerService",
             Properties: {
+                "GameMode": GObject.param_spec_boolean(
+                    "GameMode", "GameMode",
+                    "Check if GameMode is currently enabled",
+                    false, GObject.ParamFlags.READABLE
+                ),
                 "Profile": GObject.param_spec_string(
                     "Profile", "Profile",
                     "The currently loaded profile name",
@@ -46,6 +52,7 @@ export class ServiceRunner extends GObject.Object {
 
     #background?: Gio.Settings;
     #current_profile_changed_id?: number;
+    #gamemode?: GameMode;
     #interval_changed_id?: number;
     #logger?: Console;
     #profile?: ServiceProfile;
@@ -54,6 +61,10 @@ export class ServiceRunner extends GObject.Object {
     #running: boolean;
     #settings?: Gio.Settings;
     #timer?: ServiceTimer;
+
+    get GameMode() {
+        return this.#gamemode?.enabled || false;
+    }
 
     get Preview() {
         return this.#profile?.preview || null;
@@ -72,6 +83,7 @@ export class ServiceRunner extends GObject.Object {
 
         super();
 
+        this.#gamemode = new GameMode();
         this.#logger = logger;
         this.#settings = settings;
         this.#running = false;
@@ -82,7 +94,11 @@ export class ServiceRunner extends GObject.Object {
         if (this.#running)
             this.Stop();
 
+        if (this.#gamemode)
+            this.#gamemode.destroy();
+
         this.#background = undefined;
+        this.#gamemode = undefined;
         this.#logger = undefined;
         this.#settings = undefined;
     }
@@ -201,14 +217,14 @@ export class ServiceRunner extends GObject.Object {
 
         if (RotationModes[rotation].timer === 'interval') {
             const interval = RotationModes[rotation].interval || this.#settings!.get_int('interval');
-            this.#timer = new ServiceTimer(interval, () => Boolean(this.Next()));
+            this.#timer = new ServiceTimer(interval, this.#timer_rotation_callback.bind(this));
             if (rotation === 'interval') {
                 this.#interval_changed_id = this.#settings!.connect('changed::interval', this.#restart_timer.bind(this));
             }
         } else if (RotationModes[rotation].timer === 'daily') {
-            this.#timer = new ServiceTimerHourly(() => Boolean(this.Next()));
+            this.#timer = new ServiceTimerHourly(this.#timer_rotation_callback.bind(this));
         } else if (RotationModes[rotation].timer === 'hourly') {
-            this.#timer = new ServiceTimerDaily(() => Boolean(this.Next()));
+            this.#timer = new ServiceTimerDaily(this.#timer_rotation_callback.bind(this));
         }
 
         this.#running = true;
@@ -239,5 +255,15 @@ export class ServiceRunner extends GObject.Object {
         this.#background!.set_string('picture-uri', uri);
         this.#background!.set_string('picture-uri-dark', uri);
         this.emit('Changed', uri);
+    }
+
+    #timer_rotation_callback() {
+        if (this.#settings?.get_boolean("gamemode-monitor") && this.GameMode) {
+            this.#logger?.debug("Skipping timer rotation, GameMode is enabled");
+            // skip rotation, but keep the timer running
+            return true;
+        }
+
+        return Boolean(this.Next());
     }
 }

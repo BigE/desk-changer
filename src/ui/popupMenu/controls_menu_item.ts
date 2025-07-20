@@ -1,5 +1,6 @@
 import GObject from "gi://GObject";
 import * as PopupMenu from "resource:///org/gnome/shell/ui/popupMenu.js";
+import St from "gi://St";
 
 import ControlButton from "../control/button.js";
 import ControlStateButton from "../control/state_button.js";
@@ -38,6 +39,7 @@ export default class ControlsMenuItem extends PopupMenu.PopupBaseMenuItem {
         }, this);
     }
 
+    #content_box?: St.BoxLayout;
     #next?: ControlButton;
     #next_clicked_id?: number;
     #prev?: ControlButton;
@@ -61,6 +63,7 @@ export default class ControlsMenuItem extends PopupMenu.PopupBaseMenuItem {
         props.reactive ??= false;
         super(props);
 
+        this.#content_box = new St.BoxLayout();
         this.#random = random || true;
         this.#next = new ControlButton('media-skip-forward');
         this.#next_clicked_id = this.#next.connect('clicked', () => this.emit("next-clicked"));
@@ -74,9 +77,12 @@ export default class ControlsMenuItem extends PopupMenu.PopupBaseMenuItem {
             this.random = (this.#random_control?.state === "random");
         });
 
-        this.add_child(this.#prev);
-        this.add_child(this.#random_control);
-        this.add_child(this.#next);
+        this.#content_box.add_child(this.#prev);
+        this.#content_box.add_child(this.#random_control);
+        this.#content_box.add_child(this.#next);
+        this.add_child(new St.Bin({ x_expand: true }));
+        this.add_child(this.#content_box);
+        this.add_child(new St.Bin({ x_expand: true }));
     }
 
     destroy() {
@@ -101,6 +107,8 @@ export default class ControlsMenuItem extends PopupMenu.PopupBaseMenuItem {
         this.#prev = undefined;
         this.#random_control?.destroy();
         this.#random_control = undefined;
+        this.#content_box?.destroy();
+        this.#content_box = undefined;
         super.destroy();
     }
 }

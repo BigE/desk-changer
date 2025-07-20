@@ -24,6 +24,14 @@
 			</description>
 			<summary>Currently loaded profile</summary>
 		</key>
+        <key name="gamemode-monitor" type="b">
+            <default>true</default>
+            <description>
+                When enabled the daemon will check for GameMode via DBus. If GameMode is available and clients are
+                detected, rotation will be suspended.
+            </description>
+            <summary>Disable rotation when GameMode is detected</summary>
+        </key>
 		<key name="icon-preview" type="b">
 			<default>false</default>
 			<description>

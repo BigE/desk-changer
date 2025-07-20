@@ -37,6 +37,11 @@
           </object>
         </child>
         <child>
+          <object class="AdwSwitchRow" id="gamemode_switch">
+            <property name="title">GameMode Monitor</property>
+          </object>
+        </child>
+        <child>
           <object class="AdwSwitchRow" id="random_switch">
             <property name="title">Random Wallpaper</property>
           </object>

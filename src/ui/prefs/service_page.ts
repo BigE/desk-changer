@@ -1,12 +1,13 @@
 import Adw from "gi://Adw";
 import Gio from "gi://Gio";
+import GLib from "gi://GLib";
+import GObject from "gi://GObject";
 import Gtk from "gi://Gtk";
+
 import RotationModeListStore, {RotationModeObject} from "./common/rotation_modes.js";
 import MetaTypeRow from "./common/meta_type_row.js";
 import {SettingsAllowedMimeTypesType} from "../../common/settings.js";
-import GLib from "gi://GLib";
 import Service from "../../service/index.js";
-import GObject from "gi://GObject";
 
 export default class ServicePage extends Adw.PreferencesPage {
     allowed_mime_types_listbox: Gtk.ListBox;
@@ -16,6 +17,7 @@ export default class ServicePage extends Adw.PreferencesPage {
     daemon_auto_start_switch: Adw.SwitchRow;
     daemon_remember_profile_state_switch: Adw.SwitchRow;
     daemon_running_switch: Adw.SwitchRow;
+    gamemode_switch: Adw.SwitchRow;
     #is_in_callback = false;
     #proxy?: Gio.DBusProxy;
     #proxy_preview_binding?: GObject.Binding;
@@ -41,6 +43,8 @@ export default class ServicePage extends Adw.PreferencesPage {
         // @ts-expect-error
         this.daemon_running_switch = this._daemon_running_switch;
         // @ts-expect-error
+        this.gamemode_switch = this._gamemode_switch;
+        // @ts-expect-error
         this.random_switch = this._random_switch;
         // @ts-expect-error
         this.rotation_custom_interval_spinner = this._rotation_custom_interval_spinner;
@@ -65,6 +69,7 @@ export default class ServicePage extends Adw.PreferencesPage {
         super.vfunc_realize();
 
         this.#settings!.bind('auto-start', this.daemon_auto_start_switch, 'active', Gio.SettingsBindFlags.DEFAULT);
+        this.#settings!.bind('gamemode-monitor', this.gamemode_switch, 'active', Gio.SettingsBindFlags.DEFAULT);
         this.#settings!.bind('remember-profile-state', this.daemon_remember_profile_state_switch, 'active', Gio.SettingsBindFlags.DEFAULT);
         this.#settings!.bind('random', this.random_switch, 'active', Gio.SettingsBindFlags.DEFAULT);
         this.#settings!.bind('interval', this.rotation_custom_interval_spinner, 'value', Gio.SettingsBindFlags.DEFAULT);

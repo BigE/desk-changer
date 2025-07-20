@@ -112,6 +112,9 @@ export default class Service extends ServiceRunner {
         this.#dbus_name_owned = true;
 
         // expose the property changes
+        this.#signals.push(this.connect("notify::GameMode", () => {
+            this.dbus?.emit_property_changed("GameMode", new GLib.Variant('b', this.GameMode));
+        }));
         this.#signals.push(this.connect("notify::Preview", () => {
             this.dbus?.emit_property_changed('Preview', new GLib.Variant('s', this.Preview));
         }));

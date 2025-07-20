@@ -80,6 +80,7 @@ export default class DeskChangerPreferences extends ExtensionPreferences {
                     'daemon_auto_start_switch',
                     'daemon_remember_profile_state_switch',
                     'daemon_running_switch',
+                    'gamemode_switch',
                     'random_switch',
                     'rotation_custom_interval_spinner',
                     'rotation_mode_combo',

@@ -18,6 +18,7 @@
         <method name="Start" />
         <method name="Stop" />
         <!-- Properties -->
+        <property name="GameMode" type="b" access="read" />
         <property name="Preview" type="s" access="read" />
         <property name="Running" type="b" access="read" />
         <!-- Signals -->
