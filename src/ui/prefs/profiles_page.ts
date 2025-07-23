@@ -2,6 +2,7 @@ import Adw from "gi://Adw";
 import Gio from "gi://Gio";
 import GLib from "gi://GLib";
 import Gtk from "gi://Gtk";
+import { gettext as _ } from "resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js"
 
 import Profile from "../../common/profile/index.js";
 import ProfileItem from "../../common/profile/item.js";
@@ -171,12 +172,12 @@ export default class DeskChangerUiPrefsProfilesPage extends Adw.PreferencesPage 
         box.append(new Gtk.Label({
             halign: Gtk.Align.START,
             hexpand: true,
-            label: "<b>Profile Name</b>",
+            label: _("<b>Location</b>"),
             use_markup: true,
         }));
         box.append(new Gtk.Label({
             halign: Gtk.Align.END,
-            label: "<b>Recursive</b>",
+            label: _("<b>Recursive</b>"),
             use_markup: true,
         }));
         item.set_child(box);

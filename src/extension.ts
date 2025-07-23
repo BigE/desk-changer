@@ -34,6 +34,11 @@ export default class DeskChangerExtension extends Extension {
     #settings?: Gio.Settings;
     #settings_notifications: number[] = [];
 
+    constructor(metadata: any) {
+        super(metadata);
+        this.initTranslations(this.uuid);
+    }
+
     /**
      * Enable the extension
      *

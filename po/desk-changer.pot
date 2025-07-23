@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: desk-changer 36\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-06-16 01:05-0500\n"
+"POT-Creation-Date: 2025-07-23 11:40-0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -65,19 +65,19 @@ msgstr ""
 msgid "Profiles"
 msgstr ""
 
-#: resources/ui/prefs/profiles_page.ui:43
+#: resources/ui/prefs/profiles_page.ui:48
 msgid "Add Item(s)"
 msgstr ""
 
-#: resources/ui/prefs/profiles_page.ui:57
+#: resources/ui/prefs/profiles_page.ui:62
 msgid "Remove Item"
 msgstr ""
 
-#: resources/ui/prefs/profiles_page.ui:88
+#: resources/ui/prefs/profiles_page.ui:93
 msgid "Add Profile"
 msgstr ""
 
-#: resources/ui/prefs/profiles_page.ui:94
+#: resources/ui/prefs/profiles_page.ui:99
 msgid "Remove Profile"
 msgstr ""
 
@@ -85,19 +85,19 @@ msgstr ""
 msgid "Custom Interval"
 msgstr ""
 
-#: resources/ui/prefs/service_page.ui:48
+#: resources/ui/prefs/service_page.ui:53
 msgid "Daemon"
 msgstr ""
 
-#: resources/ui/prefs/service_page.ui:56
+#: resources/ui/prefs/service_page.ui:61
 msgid "Remember Profile State"
 msgstr ""
 
-#: resources/ui/prefs/service_page.ui:62
+#: resources/ui/prefs/service_page.ui:67
 msgid "Currently Running"
 msgstr ""
 
-#: resources/ui/prefs/service_page.ui:80
+#: resources/ui/prefs/service_page.ui:85
 msgid "Allowed MIME Types"
 msgstr ""
 
@@ -138,15 +138,15 @@ msgstr ""
 msgid "DBUS: Failed to find interface info"
 msgstr ""
 
-#: src/service/runner.ts:135 src/service/runner.ts:180
+#: src/service/runner.ts:151 src/service/runner.ts:196
 msgid "Service isn't running"
 msgstr ""
 
-#: src/service/runner.ts:158
+#: src/service/runner.ts:174
 msgid "Service is already running"
 msgstr ""
 
-#: src/service/runner.ts:198
+#: src/service/runner.ts:214
 msgid "Timer already exists"
 msgstr ""
 
@@ -200,4 +200,12 @@ msgstr ""
 
 #: src/ui/popupMenu/open_current_menu_item.ts:18
 msgid "Open current wallpaper"
+msgstr ""
+
+#: src/ui/prefs/profiles_page.ts:175
+msgid "<b>Location</b>"
+msgstr ""
+
+#: src/ui/prefs/profiles_page.ts:180
+msgid "<b>Recursive</b>"
 msgstr ""

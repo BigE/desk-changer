@@ -14,3 +14,4 @@ src/ui/panelMenu/button.ts
 src/ui/popupMenu/profile.ts
 src/ui/popupMenu/preview_menu_item.ts
 src/ui/popupMenu/open_current_menu_item.ts
+src/ui/prefs/profiles_page.ts
