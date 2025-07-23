@@ -1,0 +1,100 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!-- Created with Cambalache 0.96.1 -->
+<interface>
+  <!-- interface-name service_page.ui -->
+  <requires lib="gtk" version="4.18"/>
+  <requires lib="libadwaita" version="1.7"/>
+  <template class="DeskChangerUiPrefsServicePage" parent="AdwPreferencesPage">
+    <property name="icon-name">application-x-executable-symbolic</property>
+    <property name="title">Daemon</property>
+    <child>
+      <object class="AdwPreferencesGroup">
+        <property name="title">Rotation Options</property>
+        <child>
+          <object class="AdwComboRow" id="rotation_mode_combo">
+            <property name="factory">
+              <object class="GtkSignalListItemFactory">
+                <signal name="bind" handler="_on_rotation_mode_combo_factory_bind"/>
+                <signal name="setup" handler="_on_rotation_mode_combo_factory_setup"/>
+              </object>
+            </property>
+            <property name="title">Mode</property>
+          </object>
+        </child>
+        <child>
+          <object class="AdwSpinRow" id="rotation_custom_interval_spinner">
+            <property name="adjustment">
+              <object class="GtkAdjustment">
+                <property name="lower">1.0</property>
+                <property name="page-increment">10.0</property>
+                <property name="step-increment">1.0</property>
+                <property name="upper">86400.0</property>
+                <property name="value">500.0</property>
+              </object>
+            </property>
+            <property name="title" translatable="yes">Custom Interval</property>
+            <property name="use-markup">False</property>
+          </object>
+        </child>
+        <child>
+          <object class="AdwSwitchRow" id="gamemode_switch">
+            <property name="title">GameMode Monitor</property>
+          </object>
+        </child>
+        <child>
+          <object class="AdwSwitchRow" id="random_switch">
+            <property name="title">Random Wallpaper</property>
+          </object>
+        </child>
+      </object>
+    </child>
+    <child>
+      <object class="AdwPreferencesGroup">
+        <property name="title" translatable="yes">Daemon</property>
+        <child>
+          <object class="AdwSwitchRow" id="daemon_auto_start_switch">
+            <property name="title">Auto Start</property>
+          </object>
+        </child>
+        <child>
+          <object class="AdwSwitchRow" id="daemon_remember_profile_state_switch">
+            <property name="title" translatable="yes">Remember Profile State</property>
+            <property name="use-markup">False</property>
+          </object>
+        </child>
+        <child>
+          <object class="AdwSwitchRow" id="daemon_running_switch">
+            <property name="title" translatable="yes">Currently Running</property>
+            <property name="use-markup">False</property>
+          </object>
+        </child>
+      </object>
+    </child>
+    <child>
+      <object class="AdwPreferencesGroup">
+        <property name="header-suffix">
+          <object class="GtkButton" id="allowed_mime_types_reset_button">
+            <property name="label">Reset</property>
+            <property name="visible">False</property>
+            <signal name="clicked" handler="_on_allowed_mime_types_reset_button_clicked"/>
+            <style>
+              <class name="error"/>
+            </style>
+          </object>
+        </property>
+        <property name="title" translatable="yes">Allowed MIME Types</property>
+        <child>
+          <object class="GtkListBox" id="allowed_mime_types_listbox">
+            <property name="selection-mode">none</property>
+            <child>
+              <object class="GtkListBoxRow"/>
+            </child>
+            <style>
+              <class name="boxed-list"/>
+            </style>
+          </object>
+        </child>
+      </object>
+    </child>
+  </template>
+</interface>

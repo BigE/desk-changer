@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE schemalist SYSTEM "https://gitlab.gnome.org/GNOME/glib/-/raw/main/gio/gschema.dtd">
+<schemalist>
+	<schema id="org.gnome.shell.extensions.desk-changer" path="/org/gnome/shell/extensions/desk-changer/">
+		<key name="allowed-mime-types" type="as">
+			<default><![CDATA[['application/xml', 'image/jpeg', 'image/jxl', 'image/png', 'image/webp', 'image/svg+xml']]]></default>
+			<description>
+				These are the mime types that the daemon will recognise as valid files to load and use for backgrounds.
+			</description>
+			<summary>Allowed mime types for loading backgrounds</summary>
+		</key>
+		<key name="auto-start" type="b">
+			<default>true</default>
+			<description>
+				When enabled, the daemon will be automatically started when the extension is loaded. If it is already
+				running or this is disabled, no action will be taken.
+			</description>
+			<summary>Automatically start the daemon when the extension loads</summary>
+		</key>
+		<key name="current-profile" type="s">
+			<default>"default"</default>
+			<description>
+				This is the current profile that the daemon will load.
+			</description>
+			<summary>Currently loaded profile</summary>
+		</key>
+        <key name="gamemode-monitor" type="b">
+            <default>true</default>
+            <description>
+                When enabled the daemon will check for GameMode via DBus. If GameMode is available and clients are
+                detected, rotation will be suspended.
+            </description>
+            <summary>Disable rotation when GameMode is detected</summary>
+        </key>
+		<key name="icon-preview" type="b">
+			<default>false</default>
+			<description>
+				If this is enabled and the daemon is running, the icon of the extension will change to a small
+				preview of the next wallpaper to be displayed.
+			</description>
+			<summary>Show preview of next wallpaper for extension icon</summary>
+		</key>
+		<key name="integrate-system-menu" type="b">
+			<default>false</default>
+			<description>
+				If this is enabled the extension will integrate itself in with the system menu and display a compressed
+				version of controls there. If it is disabled, the extension will have its own icon and show all
+				available functionality.
+			</description>
+			<summary>Integrate the extension in with the system menu</summary>
+		</key>
+		<key name="interval" type="i">
+			<default>300</default>
+			<description>
+				When timer is enabled, the interval is the amount of time in seconds between the daemon switching the
+				wallpaper to the next available wallpaper. Default is 300 seconds or 5 minutes
+			</description>
+			<range min="1" max="84600" />
+			<summary>Number of seconds between wallpaper changes</summary>
+		</key>
+		<key name="next-wallpaper" type="s">
+            <default>""</default>
+			<description>
+				Keyboard shortcut to cause the daemon to display the next wallpaper.
+			</description>
+			<summary>Change to next wallpaper</summary>
+		</key>
+		<key name="notifications" type="b">
+			<default>true</default>
+			<description>
+				Display a notification each time an event happens with desk-changer. This does not stop the extension
+				from reporting errors.
+			</description>
+			<summary>Display notifications with the extension</summary>
+		</key>
+		<key name="previous-wallpaper" type="s">
+            <default>""</default>
+			<description>
+				Keyboard shortcut to cause the daemon to display the previous wallpaper.
+			</description>
+			<summary>Change to previous wallpaper</summary>
+		</key>
+		<key name="profiles" type="a{sa(sb)}">
+			<default>[{"default",[("file:///usr/share/backgrounds", true)]}]</default>
+			<description>
+				These are all the available profiles. By default, it contains a single profile that will recursively
+				load /usr/share/backgrounds
+			</description>
+			<summary>All currently available profiles</summary>
+		</key>
+		<key name="profile-states" type="a{sas}">
+			<default>[]</default>
+			<description>
+				This is the storage location of the profile's last state. By default, there are no states saved until
+				a new profile is loaded.
+			</description>
+			<summary>Profile's last saved state</summary>
+		</key>
+		<key name="random" type="b">
+			<default>true</default>
+			<description>
+				If set to true the daemon will randomize the order in which the wallpapers are displayed
+			</description>
+			<summary>Display wallpapers in a random order</summary>
+		</key>
+		<key name="remember-profile-state" type="b">
+			<default>false</default>
+			<description>
+				When enabled, the daemon will remember its current and next wallpaper for the current profile when the
+				profile is changed. This means returning back to the profile will restore the previous background plus
+				the next in queue.
+			</description>
+			<summary>Remember profile last wallpaper on load</summary>
+		</key>
+		<key name="rotation" type="s">
+			<choices>
+				<choice value="disabled" />
+				<choice value="hourly" />
+				<choice value="daily" />
+				<choice value="oneminute" />
+				<choice value="fiveminute" />
+				<choice value="thirtyminute" />
+				<choice value="onehour" />
+				<choice value="sixhour" />
+				<choice value="twelvehour" />
+				<choice value="twentyfourhour" />
+				<choice value="interval" />
+			</choices>
+			<default>"fiveminute"</default>
+			<description>
+				Choose how the rotation is handled by the daemon. The fiveminute choice is the default. It enables a 
+				timer that uses the interval value to change the wallpaper ever 300 seconds or 5 minutes. For hourly
+				and daily, the wallpaper will be changed at the beginning of every hour of the day. When disabled,
+				rotation is not done by the	daemon, but only by user interaction with the extension.
+			</description>
+			<summary>Different options to control when the wallpaper is changed</summary>
+		</key>
+	</schema>
+</schemalist>

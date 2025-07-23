@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE gresources SYSTEM "https://gitlab.gnome.org/GNOME/glib/-/raw/main/gio/gresource.dtd">
+<gresources>
+    <gresource prefix="/org/gnome/shell/extensions/desk-changer/">
+        <file>com.feralinteractive.GameMode.xml</file>
+        <file>enter-keyboard-shortcut.svg</file>
+        <file>icons/wallpaper-icon.svg</file>
+        <file>service/org.gnome.Shell.Extensions.DeskChanger.Service.xml</file>
+        <file>ui/dialog/keybind.ui</file>
+        <file>ui/prefs/about_page.ui</file>
+        <file>ui/prefs/extension_page.ui</file>
+        <file>ui/prefs/keyboard_page.ui</file>
+        <file>ui/prefs/profiles_page.ui</file>
+        <file>ui/prefs/service_page.ui</file>
+    </gresource>
+</gresources>

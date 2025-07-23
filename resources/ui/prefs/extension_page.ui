@@ -1,0 +1,39 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!-- Created with Cambalache 0.96.1 -->
+<interface>
+  <!-- interface-name extension_page.ui -->
+  <requires lib="gtk" version="4.0"/>
+  <requires lib="libadwaita" version="1.7"/>
+  <template class="DeskChangerUiPrefsExtensionPage" parent="AdwPreferencesPage">
+    <property name="icon-name">applications-system-symbolic</property>
+    <property name="title" translatable="yes">Extension</property>
+    <child>
+      <object class="AdwPreferencesGroup">
+        <property name="title" translatable="yes">Extension Settings</property>
+        <child>
+          <object class="AdwComboRow" id="current_profile_combo">
+            <property name="factory">
+              <object class="GtkSignalListItemFactory">
+                <signal name="bind" handler="_on_current_profile_combo_factory_bind"/>
+                <signal name="setup" handler="_on_current_profile_combo_factory_setup"/>
+              </object>
+            </property>
+            <property name="title" translatable="yes">Current Profile</property>
+          </object>
+        </child>
+        <child>
+          <object class="AdwSwitchRow" id="icon_preview_switch">
+            <property name="title" translatable="yes">Icon as Preview</property>
+            <property name="use-markup">False</property>
+          </object>
+        </child>
+        <child>
+          <object class="AdwSwitchRow" id="notifications_switch">
+            <property name="title" translatable="yes">Notifications</property>
+            <property name="use-markup">False</property>
+          </object>
+        </child>
+      </object>
+    </child>
+  </template>
+</interface>

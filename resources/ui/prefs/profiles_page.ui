@@ -1,0 +1,104 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!-- Created with Cambalache 0.96.1 -->
+<interface>
+  <!-- interface-name profiles_page.ui -->
+  <requires lib="gtk" version="4.18"/>
+  <requires lib="libadwaita" version="1.7"/>
+  <template class="DeskChangerUiPrefsProfilesPage" parent="AdwPreferencesPage">
+    <property name="icon-name">view-list-symbolic</property>
+    <property name="title" translatable="yes">Profiles</property>
+    <child>
+      <object class="AdwPreferencesGroup">
+        <property name="title">Locations</property>
+        <child>
+          <object class="GtkListView" id="locations_listview">
+            <property name="factory">
+              <object class="GtkSignalListItemFactory" id="locations_factory">
+                <signal name="bind" handler="_on_locations_factory_bind"/>
+                <signal name="setup" handler="_on_locations_factory_setup"/>
+              </object>
+            </property>
+            <property name="model">
+              <object class="GtkSingleSelection" id="locations_selection">
+                <property name="autoselect">False</property>
+                <property name="can-unselect">True</property>
+              </object>
+            </property>
+            <property name="vexpand">True</property>
+            <property name="vexpand-set">True</property>
+            <style>
+              <class name="boxed-list"/>
+            </style>
+          </object>
+        </child>
+        <child>
+          <object class="GtkBox">
+            <property name="hexpand">True</property>
+            <property name="margin-bottom">10</property>
+            <property name="margin-top">10</property>
+            <property name="spacing">5</property>
+            <child>
+              <object class="GtkButton" id="add_item_button">
+                <property name="halign">start</property>
+                <property name="label" translatable="yes">Add Item(s)</property>
+                <signal name="clicked" handler="_on_add_item_button_clicked"/>
+              </object>
+            </child>
+            <child>
+              <object class="GtkButton" id="add_folder_button">
+                <property name="halign">start</property>
+                <property name="hexpand">True</property>
+                <property name="label">Add Folder(s)</property>
+                <signal name="clicked" handler="_on_add_folder_button_clicked"/>
+              </object>
+            </child>
+            <child>
+              <object class="GtkButton" id="remove_item_button">
+                <property name="label" translatable="yes">Remove Item</property>
+                <property name="sensitive">False</property>
+                <signal name="clicked" handler="_on_remove_item_button_clicked"/>
+              </object>
+            </child>
+          </object>
+        </child>
+      </object>
+    </child>
+    <child>
+      <object class="AdwPreferencesGroup">
+        <property name="title">Profile</property>
+        <child>
+          <object class="AdwComboRow" id="combo_row_profiles">
+            <property name="factory">
+              <object class="GtkSignalListItemFactory" id="factory_row_profiles">
+                <signal name="bind" handler="_on_factory_row_profiles_bind"/>
+                <signal name="setup" handler="_on_factory_row_profiles_setup"/>
+              </object>
+            </property>
+            <property name="title">Edit Profile</property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkBox">
+            <property name="halign">end</property>
+            <property name="margin-bottom">10</property>
+            <property name="margin-top">10</property>
+            <property name="spacing">5</property>
+            <child>
+              <object class="GtkButton" id="add_profile_button">
+                <property name="label" translatable="yes">Add Profile</property>
+                <signal name="clicked" handler="_on_add_profile_button_clicked"/>
+              </object>
+            </child>
+            <child>
+              <object class="GtkButton" id="remove_profile_button">
+                <property name="label" translatable="yes">Remove Profile</property>
+                <property name="sensitive">False</property>
+                <signal name="clicked" handler="_on_remove_profile_button_clicked"/>
+              </object>
+            </child>
+          </object>
+        </child>
+      </object>
+    </child>
+  </template>
+</interface>
