@@ -1,6 +1,7 @@
 import Gio from "gi://Gio";
 import GObject from "gi://GObject";
 import Graphene from "gi://Graphene";
+import { gettext as _ } from "resource:///org/gnome/shell/extensions/extension.js"
 import * as PopupMenu from "resource:///org/gnome/shell/ui/popupMenu.js";
 import St from "gi://St";
 
