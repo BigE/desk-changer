@@ -160,6 +160,28 @@ export default class DeskChangerUiPrefsProfilesPage extends Adw.PreferencesPage 
         item.set_child(new Gtk.Label());
     }
 
+    _on_locations_header_factory_setup(_widget: Gtk.SignalListItemFactory, item: Gtk.ListItem) {
+        const box = new Gtk.Box({
+            margin_end: 12,
+            margin_start: 12,
+            orientation: Gtk.Orientation.HORIZONTAL,
+            spacing: 6,
+        });
+
+        box.append(new Gtk.Label({
+            halign: Gtk.Align.START,
+            hexpand: true,
+            label: "<b>Profile Name</b>",
+            use_markup: true,
+        }));
+        box.append(new Gtk.Label({
+            halign: Gtk.Align.END,
+            label: "<b>Recursive</b>",
+            use_markup: true,
+        }));
+        item.set_child(box);
+    }
+
     _on_locations_factory_bind(_widget: Gtk.SignalListItemFactory, item: Gtk.ListItem) {
         const row = item.get_child() as Adw.SwitchRow,
             location = item.get_item<ProfileItem>();

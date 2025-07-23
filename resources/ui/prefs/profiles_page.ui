@@ -18,6 +18,11 @@
                 <signal name="setup" handler="_on_locations_factory_setup"/>
               </object>
             </property>
+            <property name="header-factory">
+              <object class="GtkSignalListItemFactory" id="locations_header_factory">
+                <signal name="setup" handler="_on_locations_header_factory_setup"/>
+              </object>
+            </property>
             <property name="model">
               <object class="GtkSingleSelection" id="locations_selection">
                 <property name="autoselect">False</property>

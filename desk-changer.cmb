@@ -2,7 +2,7 @@
 <!DOCTYPE cambalache-project SYSTEM "cambalache-project.dtd">
 <!-- Created with Cambalache 0.96.1 -->
 <cambalache-project version="0.96.0" target_tk="gtk-4.0">
-  <ui template-class="DeskChangerUiPrefsProfilesPage" filename="resources/ui/prefs/profiles_page.ui" sha256="28be020f061242d9996aacb85596b8aee8fd84f06335e8d3dad6c86a542be38b"/>
+  <ui template-class="DeskChangerUiPrefsProfilesPage" filename="resources/ui/prefs/profiles_page.ui" sha256="a2e0808e7f7d83977fd492206770fc72224cb9758b51836d08ff9eca94cc7359"/>
   <ui template-class="DeskChangerUiPrefsKeyboardPage" filename="resources/ui/prefs/keyboard_page.ui" sha256="7ae3eec048bc9aa770f441c90fd5e90cfb3a860af45be9ac3893da605cd956db"/>
   <ui template-class="DeskChangerUiPrefsExtensionPage" filename="resources/ui/prefs/extension_page.ui" sha256="fe6703b7fc1ce6fd356bc4c93e6467ea9b8eec802228a000670ed5b0ceb27d5d"/>
   <ui template-class="DeskChangerUiPrefsServicePage" filename="resources/ui/prefs/service_page.ui" sha256="2178abeed677f77971fd69895728149489529487cf830bf3afc795b36392bbdf"/>
