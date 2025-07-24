@@ -3,13 +3,13 @@ DOMAIN=eric.gach.gmail.com
 UUID=$(NAME)@$(DOMAIN)
 VERSION=36
 
-.PHONY: all pack install clean pot update-translation
-
 ifeq ($(strip $(DESTDIR)),)
-	INSTALLBASE = $(HOME)/.local/share/gnome-shell/extensions
+	INSTALL_DIR = $(HOME)/.local/share/gnome-shell/extensions
 else
-	INSTALLBASE = $(DESTDIR)/usr/share/gnome-shell/extensions
+	INSTALL_DIR = $(DESTDIR)/share/gnome-shell/extensions
 endif
+
+.PHONY: all pack install clean pot update-translation
 
 all: dist/extension.js update-translations
 
@@ -37,16 +37,16 @@ $(UUID).zip: dist
 
 pack: $(UUID).zip
 
-install: $(UUID).zip
-	@touch $(INSTALLBASE)/$(UUID)
-	@rm -Rf $(INSTALLBASE)/$(UUID)
-	@mv dist $(INSTALLBASE)/$(UUID)
+install: dist
+	@touch $(INSTALL_DIR)/$(UUID)
+	@rm -Rf $(INSTALL_DIR)/$(UUID)
+	@cp -r dist $(INSTALL_DIR)/$(UUID)
 
 clean:
 	@rm -Rf dist $(UUID).zip .yarn/install-state.gz
 
 pot: po/xgettext.txt
-	@xgettext --package-name=$(NAME) --package-version=$(VERSION) -k --keyword=_ -o ./po/desk-changer.pot -D ./ -f ./po/xgettext.txt
+	@xgettext --package-name=$(NAME) --package-version=$(VERSION) -k --keyword=_ --keyword=gettext -o ./po/desk-changer.pot -f ./po/xgettext.txt
 
 po/desk-changer.pot: pot
 
