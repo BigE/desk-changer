@@ -16,6 +16,11 @@ export default class ServiceProfileQueue extends Gio.ListStore<ServiceProfileWal
         }, this);
     }
 
+    get items() {
+        return Array.from({ length: this.n_items }, (_, index) => this.get_item(index))
+            .filter(value => value !== null && value !== undefined);
+    }
+
     get next(): string | null {
         return this.get_item(0)?.wallpaper || null;
     }

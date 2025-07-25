@@ -8,6 +8,7 @@ import ServiceTimer from "./timer/index.js";
 import ServiceTimerHourly from "./timer/hourly.js";
 import ServiceTimerDaily from "./timer/daily.js";
 import GameMode from "./gamemode.js";
+import GLib from "gi://GLib";
 
 export namespace ServiceRunner {
     export interface ConstructorProps {
@@ -26,9 +27,21 @@ export class ServiceRunner extends GObject.Object {
                     "Check if GameMode is currently enabled",
                     false, GObject.ParamFlags.READABLE
                 ),
+                "History": GObject.param_spec_variant(
+                    "History", "History",
+                    "History of the currently loaded profile",
+                    new GLib.VariantType('as'),
+                    null, GObject.ParamFlags.READABLE
+                ),
                 "Profile": GObject.param_spec_string(
                     "Profile", "Profile",
                     "The currently loaded profile name",
+                    null, GObject.ParamFlags.READABLE
+                ),
+                "Queue": GObject.param_spec_variant(
+                    "Queue", "Queue",
+                    "Queue of the currently loaded profile",
+                    new GLib.VariantType('as'),
                     null, GObject.ParamFlags.READABLE
                 ),
                 "Preview": GObject.param_spec_string(
@@ -66,12 +79,20 @@ export class ServiceRunner extends GObject.Object {
         return this.#gamemode?.enabled || false;
     }
 
+    get History() {
+        return this.#profile?.history || [];
+    }
+
     get Preview() {
         return this.#profile?.preview || null;
     }
 
     get Profile() {
         return this.#profile?.profile_name || null;
+    }
+
+    get Queue() {
+        return this.#profile?.queue || [];
     }
 
     get Running() {
@@ -103,7 +124,7 @@ export class ServiceRunner extends GObject.Object {
         this.#settings = undefined;
     }
 
-    LoadProfile(profile_name?: string) {
+    Load(profile_name?: string) {
         if (profile_name && this.#profile && this.#profile.profile_name === profile_name)
             return;
 
@@ -174,7 +195,7 @@ export class ServiceRunner extends GObject.Object {
             throw new Error(_("Service is already running"));
 
         if (!this.#profile)
-            this.LoadProfile();
+            this.Load();
 
         // create the timer
         this.#create_timer();
@@ -182,7 +203,7 @@ export class ServiceRunner extends GObject.Object {
         this.#set_wallpaper(this.#profile!.next());
         // connect signals to detect changes
         this.#current_profile_changed_id = this.#settings!.connect('changed::current-profile', () => {
-            this.LoadProfile(this.#settings!.get_string('current-profile'))
+            this.Load(this.#settings!.get_string('current-profile'))
         });
         this.#rotation_changed_id = this.#settings!.connect('changed::rotation', () => {
             this.#restart_timer()

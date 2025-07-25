@@ -5,7 +5,7 @@
 <node>
     <interface name="org.gnome.Shell.Extensions.DeskChanger.Service">
         <!-- Methods -->
-        <method name="LoadProfile">
+        <method name="Load">
             <arg type="s" name="profile_name" direction="in" />
         </method>
         <method name="Next">
@@ -19,7 +19,10 @@
         <method name="Stop" />
         <!-- Properties -->
         <property name="GameMode" type="b" access="read" />
+        <property name="History" type="as" access="read" />
         <property name="Preview" type="s" access="read" />
+        <property name="Profile" type="s" access="read" />
+        <property name="Queue" type="as" access="read" />
         <property name="Running" type="b" access="read" />
         <!-- Signals -->
         <signal name="Changed">

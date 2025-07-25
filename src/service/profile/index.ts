@@ -19,6 +19,12 @@ export default class ServiceProfile extends GObject.Object {
         GObject.registerClass({
             GTypeName: "DeskChangerServiceProfile",
             Properties: {
+                "history": GObject.param_spec_variant(
+                    "history", "History",
+                    "History of the loaded profile",
+                    new GLib.VariantType('as'),
+                    null, GObject.ParamFlags.READABLE
+                ),
                 "loaded": GObject.param_spec_boolean(
                     "loaded", "Loaded",
                     "Check if the profile is loaded",
@@ -32,6 +38,12 @@ export default class ServiceProfile extends GObject.Object {
                 "profile_name": GObject.param_spec_string(
                     "profile_name", "Profile name",
                     "The profile name that this object represents",
+                    null, GObject.ParamFlags.READABLE
+                ),
+                "queue": GObject.param_spec_variant(
+                    "queue", "Queue",
+                    "Queue of the loaded profile",
+                    new GLib.VariantType('as'),
                     null, GObject.ParamFlags.READABLE
                 ),
             },
@@ -53,6 +65,10 @@ export default class ServiceProfile extends GObject.Object {
     #settings?: Gio.Settings;
     #wallpapers: ServiceProfileWallpaper[];
 
+    get history() {
+        return this.#history.items.map(value => value.wallpaper);
+    }
+
     get loaded() {
         return this.#loaded;
     }
@@ -66,6 +82,10 @@ export default class ServiceProfile extends GObject.Object {
 
     get profile_name() {
         return this.#profile_name;
+    }
+
+    get queue() {
+        return this.#queue.items.map(value => value.wallpaper);
     }
 
     constructor(settings: Gio.Settings, logger: Console, properties?: Partial<ServiceProfile.ConstructorProps>) {
