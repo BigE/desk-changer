@@ -7,6 +7,7 @@ import {APP_PATH} from "../common/interface.js";
 export default class GameMode extends GObject.Object {
     #client_count_changed_id?: number;
     #enabled: boolean;
+    #logger?: Console;
     #proxy?: Gio.DBusProxy;
 
     static readonly GAMEMODE_DBUS_IFACE = "com.feralinteractive.GameMode";
@@ -39,10 +40,11 @@ export default class GameMode extends GObject.Object {
         return this.#enabled;
     }
 
-    constructor() {
+    constructor(logger: Console) {
         super();
 
         this.#enabled = false;
+        this.#logger = logger;
         const node_info = Gio.DBusNodeInfo.new_for_xml(GameMode.getDBusInterfaceXML());
         Gio.DBusProxy.new(
             Gio.DBus.session,
@@ -64,6 +66,7 @@ export default class GameMode extends GObject.Object {
         }
 
         this.#client_count_changed_id = undefined;
+        this.#logger = undefined;
         this.#proxy = undefined;
     }
 
@@ -80,7 +83,7 @@ export default class GameMode extends GObject.Object {
         try {
             this.#proxy = Gio.DBusProxy.new_finish(res);
         } catch (e) {
-            console.error("failed to create proxy for GameMode: {}".format(e));
+            this.#logger?.error("failed to create proxy for GameMode: {}".format(e));
             return;
         }
 

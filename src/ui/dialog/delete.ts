@@ -8,8 +8,8 @@ export default class DeleteDialog extends Adw.AlertDialog {
         }, this);
     }
 
-    constructor() {
-        super();
+    constructor(params?: Partial<Adw.AlertDialog.ConstructorProps>) {
+        super(params);
 
         this.add_response('no', 'No');
         this.add_response('yes', 'Yes');

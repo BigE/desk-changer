@@ -6,6 +6,9 @@ export default class MetaTypeRow extends Adw.ActionRow {
     static {
         GObject.registerClass({
             GTypeName: "DeskChangerUiPrefsCommonMetaTypeRow",
+            Signals: {
+                "delete-clicked": {},
+            },
         }, this);
     }
 
@@ -21,7 +24,7 @@ export default class MetaTypeRow extends Adw.ActionRow {
             return;
 
         this.#delete_button = new Gtk.Button({icon_name: "user-trash-symbolic"});
-        this.#delete_clicked_id = this.#delete_button.connect('clicked', this.#on_delete_button_clicked.bind(this));
+        this.#delete_clicked_id = this.#delete_button.connect('clicked', () => this.emit('delete-clicked'));
         box.append(this.#delete_button);
     }
 
@@ -34,20 +37,5 @@ export default class MetaTypeRow extends Adw.ActionRow {
         }
 
         this.#delete_button = undefined;
-    }
-
-    #on_delete_button_clicked(): void {
-        const mime_type = this.get_title();
-        const dialog = new Adw.AlertDialog({body: `Are you sure you want to remove the MIME type <b>${mime_type}</b>?`, body_use_markup: true});
-
-        dialog.add_response("yes", "Remove");
-        dialog.add_response("close", "Cancel");
-        dialog.set_default_response("yes");
-        dialog.set_close_response("close");
-        dialog.choose(this.get_root(), null, (widget, response) => {
-            const result = widget?.choose_finish(response);
-
-            console.log(result);
-        });
     }
 }

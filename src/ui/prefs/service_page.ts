@@ -8,6 +8,7 @@ import RotationModeListStore, {RotationModeObject} from "./common/rotation_modes
 import MetaTypeRow from "./common/meta_type_row.js";
 import {SettingsAllowedMimeTypesType} from "../../common/settings.js";
 import Service from "../../service/index.js";
+import DeleteDialog from "../dialog/delete.js";
 
 export default class ServicePage extends Adw.PreferencesPage {
     allowed_mime_types_listbox: Gtk.ListBox;
@@ -19,6 +20,8 @@ export default class ServicePage extends Adw.PreferencesPage {
     daemon_running_switch: Adw.SwitchRow;
     gamemode_switch: Adw.SwitchRow;
     #is_in_callback = false;
+    #logger?: Console;
+    #mime_rows: {mime_row: MetaTypeRow, signal_id: number}[]
     #proxy?: Gio.DBusProxy;
     #proxy_preview_binding?: GObject.Binding;
     random_switch: Adw.SwitchRow;
@@ -28,9 +31,11 @@ export default class ServicePage extends Adw.PreferencesPage {
     #rotation_position?: number;
     #settings?: Gio.Settings;
 
-    constructor(settings: Gio.Settings, params?: Partial<Adw.PreferencesPage.ConstructorProps>) {
+    constructor(settings: Gio.Settings, logger: Console, params?: Partial<Adw.PreferencesPage.ConstructorProps>) {
         super(params);
 
+        this.#logger = logger;
+        this.#mime_rows = [];
         this.#settings = settings;
         // @ts-expect-error
         this.allowed_mime_types_listbox = this._allowed_mime_types_listbox;
@@ -56,11 +61,13 @@ export default class ServicePage extends Adw.PreferencesPage {
             // @ts-expect-error
             this.#proxy = new DBusProxyWrapper(Gio.DBus.session, Service.SERVICE_ID, Service.SERVICE_PATH);
         } catch (e) {
-            console.error(e);
+            this.#logger.error(e);
         }
     }
 
     destroy(): void {
+        this.#disconnect_mime_rows_signals();
+        this.#logger = undefined;
         this.#proxy = undefined;
         this.#settings = undefined;
     }
@@ -73,6 +80,7 @@ export default class ServicePage extends Adw.PreferencesPage {
         this.#settings!.bind('remember-profile-state', this.daemon_remember_profile_state_switch, 'active', Gio.SettingsBindFlags.DEFAULT);
         this.#settings!.bind('random', this.random_switch, 'active', Gio.SettingsBindFlags.DEFAULT);
         this.#settings!.bind('interval', this.rotation_custom_interval_spinner, 'value', Gio.SettingsBindFlags.DEFAULT);
+        this.#settings!.connect('changed::allowed-mime-types', () => this.#load_mime_types());
         this.daemon_running_switch.set_sensitive(Boolean(this.#proxy?.g_name_owner));
         this.daemon_running_switch.set_active(Boolean(this.#proxy?.Running));
         this.#proxy?.connect('notify::g-name-owner', () => {
@@ -96,7 +104,7 @@ export default class ServicePage extends Adw.PreferencesPage {
                 else
                     this.#proxy.StopSync();
             } catch (e) {
-                console.error(e);
+                this.#logger?.error(e);
             }
 
             this.daemon_running_switch.set_active(Boolean(this.#proxy.Running));
@@ -129,6 +137,7 @@ export default class ServicePage extends Adw.PreferencesPage {
         }
 
         this.#button_add = undefined;
+        this.#disconnect_mime_rows_signals();
         super.vfunc_unrealize();
     }
 
@@ -158,6 +167,27 @@ export default class ServicePage extends Adw.PreferencesPage {
         });
     }
 
+    _on_allowed_mime_types_delete_button_clicked(meta_row: MetaTypeRow) {
+        const mime_type = meta_row.get_title();
+        const dialog = new DeleteDialog({
+            body: `Are you sure you want to delete mime type ${mime_type}`,
+            body_use_markup: true,
+        });
+
+        dialog.choose(this.get_root(), null, (_dialog, result) => {
+            const response = _dialog?.choose_finish(result);
+
+            if (response === 'yes') {
+                const allowed_mime_type = this.#settings!.get_value("allowed-mime-types").deep_unpack<SettingsAllowedMimeTypesType>();
+                const indexOfMime = allowed_mime_type.indexOf(mime_type);
+                if (indexOfMime > -1) {
+                    allowed_mime_type.splice(indexOfMime, 1);
+                    this.#settings!.set_value('allowed-mime-types', new GLib.Variant("as", allowed_mime_type));
+                }
+            }
+        });
+    }
+
     _on_rotation_mode_combo_factory_bind(_widget: Gtk.SignalListItemFactory, item: Gtk.ListItem) {
         const label = (item.get_child() as Gtk.Label) || null;
         const rotation_mode = item.get_item<RotationModeObject>();
@@ -175,6 +205,16 @@ export default class ServicePage extends Adw.PreferencesPage {
         item.set_child(new Gtk.Label());
     }
 
+    #disconnect_mime_rows_signals() {
+        for (const row of this.#mime_rows) {
+            const { mime_row, signal_id } = row;
+
+            mime_row.disconnect(signal_id);
+        }
+
+        this.#mime_rows = [];
+    }
+
     #load_mime_types() {
         if (this.#button_add_clicked_id) {
             this.#button_add!.disconnect(this.#button_add_clicked_id);
@@ -182,12 +222,21 @@ export default class ServicePage extends Adw.PreferencesPage {
         }
 
         this.#button_add = undefined;
+        this.#disconnect_mime_rows_signals();
         this.allowed_mime_types_listbox.remove_all();
 
         this.#button_add = new Gtk.Button({icon_name: 'list-add-symbolic', css_classes: ['flat']});
         this.#button_add_clicked_id = this.#button_add.connect('clicked', () => this._on_allowed_mime_types_add_button_clicked());
         this.allowed_mime_types_listbox.append(this.#button_add);
         this.allowed_mime_types_reset_button.set_visible(Boolean(this.#settings?.get_user_value('allowed-mime-types')));
-        this.#settings!.get_strv('allowed-mime-types').forEach(mime_type => this.allowed_mime_types_listbox.append(new MetaTypeRow({title: mime_type})));
+        this.#settings!.get_strv('allowed-mime-types').forEach(mime_type => {
+            const mime_row = new MetaTypeRow({title: mime_type});
+
+            this.allowed_mime_types_listbox.append(mime_row);
+            this.#mime_rows.push({
+                mime_row: mime_row,
+                signal_id: mime_row.connect('delete-clicked', (widget: MetaTypeRow) => this._on_allowed_mime_types_delete_button_clicked(widget)),
+            });
+        });
     }
 }

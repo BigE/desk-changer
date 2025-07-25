@@ -104,10 +104,10 @@ export class ServiceRunner extends GObject.Object {
 
         super();
 
-        this.#gamemode = new GameMode();
         this.#logger = logger;
         this.#settings = settings;
         this.#running = false;
+        this.#gamemode = new GameMode(this.#logger);
         this.#background = Gio.Settings.new('org.gnome.desktop.background');
     }
 

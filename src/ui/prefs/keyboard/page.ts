@@ -70,7 +70,6 @@ export default class KeyboardPage extends Adw.PreferencesPage {
             const dialog = new KeybindDialog(widget.get_title());
 
             dialog.connect('notify::keybind', () => {
-                console.log(dialog.keybind)
                 if (!dialog.keybind)
                     this.#settings!.reset(widget.keybind);
                 else

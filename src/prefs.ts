@@ -23,6 +23,7 @@ export default class DeskChangerPreferences extends ExtensionPreferences {
     #current_profile_index?: number;
     #extension_page?: _ExtensionPage;
     #keyboard_page?: _KeyboardPage;
+    #logger?: Console;
     #profiles?: Gio.ListStore<Profile>;
     #profiles_page?: _ProfilesPage;
     #resource?: Gio.Resource;
@@ -37,6 +38,8 @@ export default class DeskChangerPreferences extends ExtensionPreferences {
     async fillPreferencesWindow(window: Adw.PreferencesWindow): Promise<void> {
         this.#resource = Gio.Resource.load(`${this.path}/${APP_ID}.gresource`);
         Gio.resources_register(this.#resource);
+        this.#logger = ('getLogger' in this && typeof this.getLogger === 'function')?
+            (this.getLogger() as unknown) as Console : (console as unknown) as Console;
         this.#settings = this.getSettings();
 
         if (!AboutPage) {
@@ -98,7 +101,7 @@ export default class DeskChangerPreferences extends ExtensionPreferences {
         this.#extension_page = new ExtensionPage(this.#profiles!, this.#current_profile_index!, this.#settings);
         this.#keyboard_page = new KeyboardPage(this.#settings);
         this.#profiles_page = new ProfilesPage(this.#profiles!, this.#current_profile_index!, this.#settings);
-        this.#service_page = new ServicePage(this.#settings);
+        this.#service_page = new ServicePage(this.#settings, this.#logger);
         window.add(this.#profiles_page);
         window.add(this.#keyboard_page);
         window.add(this.#extension_page);
