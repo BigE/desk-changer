@@ -2,7 +2,7 @@
 
 DeskChanger is a gnome-shell wallpaper slideshow extension with multiple
 profile support. The extension allows you to switch profiles on the fly
-without reloading the daemon.
+without reloading the service.
 
 ## Screenshots
 
@@ -14,10 +14,16 @@ without reloading the daemon.
 The requirements are for the most recent version of the plugin. Previous
 versions support older versions of gnome-shell.
 
-* gnome-shell 3.32 or higher
-* gjs 1.54 or higher
+* gnome-shell 45 or higher
 
 ## Install
+
+### Requirements
+
+ * gettext (for translations)
+ * make (not required - to build without make just follow the steps in the 
+Makefile and run the commands manually)
+ * yarn (for installing the necessary tools to compile the TypeScript)
 
 First clone the repo and run the following install instructions.
 
@@ -29,13 +35,20 @@ make all
 
 Once the make process is complete, you can then run `make install` to install
 the extension to your local directory. If you want to install it to the
-system, just copy the desk-changer&commat;eric.gach.gmail.com folder to your
+system, run make as root with DESTDIR or just copy the
+desk-changer&commat;eric.gach.gmail.com folder to your
 `/usr/share/gnome-shell/extensions/` folder.
 
->\# cp -r desk-changer@eric.gach.gmail.com/ /usr/share/gnome-shell/extensions/
+```
+# make DESTDIR=/usr install
+```
+OR
+```
+# cp -r dist /usr/share/gnome-shell/extensions/desk-changer@eric.gach.gmail.com
+```
 
 Then restart gnome-shell and enable the extension. Once it is enabled, you can
-use the extension to start the daemon with the built in toggle switch.
+use the extension to start the daemon with the built-in toggle switch.
 
 ## General Information
 ### Daemon
@@ -45,21 +58,29 @@ interface. The only interface available to the daemon now is the DBus
 interface.
 
 #### DBUS Interface
-**Name**: `org.gnome.Shell.Extensions.DeskChanger.Daemon`
 
-**Path**: `/org/gnome/Shell/Extensions/DeskChanger/Daemon`
+***IMPORTANT* This has changed since version 36 of the extension**
+
+The DBus interface is available for interaction with the service itself. The
+interface exposes most of the service runner as well as read only properties
+for pulling information from the service. There are also signals available
+for specific events within the service.
+
+**Name**: `org.gnome.Shell.Extensions.DeskChanger.Service`
+
+**Path**: `/org/gnome/Shell/Extensions/DeskChanger/Service`
 
 ##### Methods
 * `Load(String profile)` Loads the specified profile and respective locations
 * `Next()` Switches to the next wallpaper, returns the uri
 * `Prev()` Switches to the previous wallpaper, returns the uri
-* `Quit()` Terminates the daemon process.
-* `Start()` Enables automatic rotation and makes the daemon available
-* `Stop([Boolean quit])` Disables automatic rotation and makes the daemon
-  unavaialble for use. If `quit` is `true` then the daemon process will be
-  terminated. 
+* `Restart()` Automatically issues a Stop/Start, service must be running
+* `Start()` Enables automatic rotation and makes the service available
+* `Stop()` Disables automatic rotation and makes the service unavailable for
+use.
 
 ##### Properties
+* GameMode - Read only boolean value if GameMode is detected and enabled
 * History - Read only array of history
 * Preview - Read only URI of the next wallpaper
 * Queue - Read only array of the queue
@@ -67,8 +88,8 @@ interface.
 
 ##### Signals
 * Changed - Emitted when the wallpaper is changed, uri to wallpaper file
-* Preview - Emitted when a new preview is available, uri to preview file
-* Running - Emitted when the daemon is stopped and started
+* Start - Emitted when the service is started
+* Stop - Emitted when the service is stopped
 
 
 ### dconf-editor
