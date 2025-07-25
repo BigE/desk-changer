@@ -52,8 +52,12 @@ export default class DeskChangerExtension extends Extension {
             Gio.resources_register(this.#resource);
         }
 
-        if (!this.#logger)
-            this.#logger = (this.getLogger() as unknown) as Console;
+        if (!this.#logger) {
+            if ('getLogger' in this && typeof this.getLogger === "function")
+                this.#logger = (this.getLogger() as unknown) as Console;
+            else
+                this.#logger = (console as unknown) as Console;
+        }
 
         if (!this.#settings)
             this.#settings = this.getSettings();
