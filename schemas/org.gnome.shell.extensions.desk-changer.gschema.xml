@@ -126,12 +126,12 @@
 				<choice value="twentyfourhour" />
 				<choice value="interval" />
 			</choices>
-			<default>"fiveminute"</default>
+			<default>"thirtyminute"</default>
 			<description>
-				Choose how the rotation is handled by the daemon. The fiveminute choice is the default. It enables a 
-				timer that uses the interval value to change the wallpaper ever 300 seconds or 5 minutes. For hourly
+				Choose how the rotation is handled by the daemon. The thirtyminute choice is the default. It enables a
+				timer that uses the interval value to change the wallpaper every 1800 seconds or 30 minutes. For hourly
 				and daily, the wallpaper will be changed at the beginning of every hour of the day. When disabled,
-				rotation is not done by the	daemon, but only by user interaction with the extension.
+				rotation is not done by the	daemon, but only by manual user interaction with the extension.
 			</description>
 			<summary>Different options to control when the wallpaper is changed</summary>
 		</key>
