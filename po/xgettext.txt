@@ -1,0 +1,17 @@
+resources/ui/dialog/keybind.ui
+resources/ui/prefs/about_page.ui
+resources/ui/prefs/extension_page.ui
+resources/ui/prefs/keyboard_page.ui
+resources/ui/prefs/profiles_page.ui
+resources/ui/prefs/service_page.ui
+src/extension.ts
+src/service/index.ts
+src/service/runner.ts
+src/service/profile/index.ts
+src/service/profile/queue.ts
+src/service/timer/index.ts
+src/ui/panelMenu/button.ts
+src/ui/popupMenu/profile.ts
+src/ui/popupMenu/preview_menu_item.ts
+src/ui/popupMenu/open_current_menu_item.ts
+src/ui/prefs/profiles_page.ts

@@ -1,0 +1,65 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!-- Created with Cambalache 0.96.1 -->
+<interface>
+  <!-- interface-name about_page.ui -->
+  <requires lib="gtk" version="4.18"/>
+  <requires lib="libadwaita" version="1.7"/>
+  <template class="DeskChangerUiPrefsAboutPage" parent="AdwPreferencesPage">
+    <property name="icon-name">dialog-information-symbolic</property>
+    <property name="title">About</property>
+    <child>
+      <object class="AdwPreferencesGroup">
+        <child>
+          <object class="GtkBox">
+            <property name="margin-bottom">10</property>
+            <property name="margin-end">10</property>
+            <property name="margin-start">10</property>
+            <property name="margin-top">10</property>
+            <property name="orientation">vertical</property>
+            <property name="spacing">5</property>
+            <child>
+              <object class="GtkImage">
+                <property name="hexpand">True</property>
+                <property name="hexpand-set">True</property>
+                <property name="resource">/org/gnome/shell/extensions/desk-changer/icons/wallpaper-icon.svg</property>
+                <property name="vexpand">True</property>
+                <property name="vexpand-set">True</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel" id="name_label">
+                <property name="label">&lt;b&gt;DeskChanger&lt;/b&gt;</property>
+                <property name="use-markup">True</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel" id="version_label">
+                <property name="label">Version 36</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel" id="description_label">
+                <property name="label">Simple wallpaper changer with multiple profile support. Integrates into the shell by providing it's own panel icon. The daemon is written using gjs and runs independently of the extension as a background process.</property>
+                <property name="wrap">True</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel" id="url_label">
+                <property name="label">&lt;a href="https://github.com/BigE/desk-changer"&gt;https://github.com/BigE/desk-changer&lt;/a&gt;</property>
+                <property name="use-markup">True</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel" id="license_label">
+                <property name="label">&lt;span size="small"&gt;This program comes with absolutely no warranty.
+See the &lt;a href="https://opensource.org/licenses/mit-license.php"&gt;The MIT License (MIT)&lt;/a&gt; for details.&lt;/span&gt;</property>
+                <property name="use-markup">True</property>
+                <property name="wrap">True</property>
+              </object>
+            </child>
+          </object>
+        </child>
+      </object>
+    </child>
+  </template>
+</interface>

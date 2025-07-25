@@ -1,0 +1,28 @@
+{
+  "name": "desk-changer",
+  "version": "37",
+  "description": "A TypeScript GNOME Extension",
+  "type": "module",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BigE/desk-changer.git"
+  },
+  "author": "Eric Gach <eric.gach@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/BigE/desk-changer/issues"
+  },
+  "homepage": "https://github.com/BigE/desk-changer#readme",
+  "sideEffects": false,
+  "packageManager": "yarn@4.9.2",
+  "devDependencies": {
+    "eslint": "^9.27.0",
+    "eslint-plugin-jsdoc": "^50.6.17",
+    "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "@girs/gjs": "^4.0.0-beta.23",
+    "@girs/gnome-shell": "^48.0.2"
+  }
+}

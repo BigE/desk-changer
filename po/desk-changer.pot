@@ -1,14 +1,14 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
-# This file is distributed under the same license as the DeskChanger package.
+# This file is distributed under the same license as the desk-changer package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: DeskChanger 32\n"
+"Project-Id-Version: desk-changer 36\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-08-17 17:55-0500\n"
+"POT-Creation-Date: 2025-07-23 11:40-0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,327 +17,195 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: desk-changer@eric.gach.gmail.com/extension.js:63
-#, javascript-format
-msgid "Wallpaper changed: %s"
+#: resources/ui/dialog/keybind.ui:48
+msgid "Press Esc to cancel or Backspace to disable the keyboard shortcut"
 msgstr ""
 
-#: desk-changer@eric.gach.gmail.com/extension.js:67
+#: resources/ui/dialog/keybind.ui:76
+msgid "Reset Shortcut"
+msgstr ""
+
+#: resources/ui/dialog/keybind.ui:104
+msgid "_Cancel"
+msgstr ""
+
+#: resources/ui/dialog/keybind.ui:120
+msgid "Re_place"
+msgstr ""
+
+#: resources/ui/dialog/keybind.ui:130
+msgid "_Set"
+msgstr ""
+
+#: resources/ui/prefs/extension_page.ui:9
+msgid "Extension"
+msgstr ""
+
+#: resources/ui/prefs/extension_page.ui:12
+msgid "Extension Settings"
+msgstr ""
+
+#: resources/ui/prefs/extension_page.ui:21
+msgid "Current Profile"
+msgstr ""
+
+#: resources/ui/prefs/extension_page.ui:26
+msgid "Icon as Preview"
+msgstr ""
+
+#: resources/ui/prefs/extension_page.ui:32
+msgid "Notifications"
+msgstr ""
+
+#: resources/ui/prefs/keyboard_page.ui:9
+msgid "Keyboard"
+msgstr ""
+
+#: resources/ui/prefs/profiles_page.ui:9
+msgid "Profiles"
+msgstr ""
+
+#: resources/ui/prefs/profiles_page.ui:48
+msgid "Add Item(s)"
+msgstr ""
+
+#: resources/ui/prefs/profiles_page.ui:62
+msgid "Remove Item"
+msgstr ""
+
+#: resources/ui/prefs/profiles_page.ui:93
+msgid "Add Profile"
+msgstr ""
+
+#: resources/ui/prefs/profiles_page.ui:99
+msgid "Remove Profile"
+msgstr ""
+
+#: resources/ui/prefs/service_page.ui:35
+msgid "Custom Interval"
+msgstr ""
+
+#: resources/ui/prefs/service_page.ui:53
+msgid "Daemon"
+msgstr ""
+
+#: resources/ui/prefs/service_page.ui:61
+msgid "Remember Profile State"
+msgstr ""
+
+#: resources/ui/prefs/service_page.ui:67
+msgid "Currently Running"
+msgstr ""
+
+#: resources/ui/prefs/service_page.ui:85
+msgid "Allowed MIME Types"
+msgstr ""
+
+#: src/extension.ts:164
 #, javascript-format
 msgid "Profile changed to %s"
 msgstr ""
 
-#: desk-changer@eric.gach.gmail.com/extension.js:72
+#: src/extension.ts:170
 msgid "Notifications are now enabled"
 msgstr ""
 
-#: desk-changer@eric.gach.gmail.com/extension.js:73
+#: src/extension.ts:171
 msgid "Notifications are now disabled"
 msgstr ""
 
-#: desk-changer@eric.gach.gmail.com/extension.js:79
+#: src/extension.ts:177
 msgid "Wallpapers will be shown in a random order"
 msgstr ""
 
-#: desk-changer@eric.gach.gmail.com/extension.js:80
+#: src/extension.ts:178
 msgid "Wallpapers will be shown in the order they were loaded"
 msgstr ""
 
-#: desk-changer@eric.gach.gmail.com/extension.js:109
+#: src/extension.ts:191
 msgid "Rotation will occur at the beginning of every hour"
 msgstr ""
 
-#: desk-changer@eric.gach.gmail.com/extension.js:112
+#: src/extension.ts:194
 msgid "Rotation will occur at the beginning of every day"
 msgstr ""
 
-#: desk-changer@eric.gach.gmail.com/extension.js:115
+#: src/extension.ts:197
 msgid "Rotation has been disabled"
 msgstr ""
 
-#: desk-changer@eric.gach.gmail.com/prefs.js:24
-msgid "Add"
+#: src/service/index.ts:47
+msgid "DBUS: Failed to find interface info"
 msgstr ""
 
-#: desk-changer@eric.gach.gmail.com/prefs.js:25
-#: desk-changer@eric.gach.gmail.com/prefs.js:191
-msgid "Cancel"
+#: src/service/runner.ts:151 src/service/runner.ts:196
+msgid "Service isn't running"
 msgstr ""
 
-#: desk-changer@eric.gach.gmail.com/prefs.js:135
-msgid "Failed to update keybinding"
+#: src/service/runner.ts:174
+msgid "Service is already running"
 msgstr ""
 
-#: desk-changer@eric.gach.gmail.com/prefs.js:176
-msgid "Profile Name"
+#: src/service/runner.ts:214
+msgid "Timer already exists"
 msgstr ""
 
-#: desk-changer@eric.gach.gmail.com/prefs.js:190
-msgid "OK"
+#: src/service/profile/index.ts:75
+msgid "Profile name is required"
 msgstr ""
 
-#: desk-changer@eric.gach.gmail.com/daemon/server.js:32
-msgid "The next wallpaper in queue"
+#: src/service/profile/index.ts:127
+msgid "Loading random wallpaper queue failed"
 msgstr ""
 
-#: desk-changer@eric.gach.gmail.com/daemon/server.js:39
-msgid "Check if the daemon is running"
+#: src/service/profile/index.ts:144
+#, javascript-format
+msgid "Profile %s does not exist"
 msgstr ""
 
-#: desk-changer@eric.gach.gmail.com/daemon/server.js:70
-msgid "Enable debugging"
+#: src/service/profile/index.ts:151
+#, javascript-format
+msgid "No wallpapers were loaded for %s"
 msgstr ""
 
-#: desk-changer@eric.gach.gmail.com/daemon/server.js:71
-msgid "Show release version"
+#: src/service/profile/index.ts:168 src/service/profile/index.ts:185
+#, javascript-format
+msgid "Profile %s is not loaded"
 msgstr ""
 
-#: desk-changer@eric.gach.gmail.com/ui/panelMenu.js:28
-msgid "DeskChanger Settings"
+#: src/service/profile/queue.ts:31
+msgid "Failed to grab next queue item"
 msgstr ""
 
-#: desk-changer@eric.gach.gmail.com/ui/popupMenu.js:35
-msgid "No more wallpapers available in history"
+#: src/service/timer/index.ts:31
+msgid "Interval must be between 1 and 86400"
 msgstr ""
 
-#: desk-changer@eric.gach.gmail.com/ui/popupMenu.js:91
-msgid "Open current wallpaper"
+#: src/ui/panelMenu/button.ts:157
+msgid "Preferences"
 msgstr ""
 
-#: desk-changer@eric.gach.gmail.com/ui/popupMenu.js:181
+#: src/ui/popupMenu/profile.ts:75 src/ui/popupMenu/profile.ts:111
+msgid "Profile"
+msgstr ""
+
+#: src/ui/popupMenu/profile.ts:109
+#, javascript-format
+msgid "Profile: %s"
+msgstr ""
+
+#: src/ui/popupMenu/preview_menu_item.ts:67
 msgid "Open next wallpaper"
 msgstr ""
 
-#: desk-changer@eric.gach.gmail.com/ui/popupMenu.js:238
-msgid "Desktop Profile"
+#: src/ui/popupMenu/open_current_menu_item.ts:18
+msgid "Open current wallpaper"
 msgstr ""
 
-#: resources/ui/prefs.ui:23
-msgid "Next Wallpaper"
+#: src/ui/prefs/profiles_page.ts:175
+msgid "<b>Location</b>"
 msgstr ""
 
-#: resources/ui/prefs.ui:26
-msgid "next-wallpaper"
-msgstr ""
-
-#: resources/ui/prefs.ui:29
-msgid "Previous Wallpaper"
-msgstr ""
-
-#: resources/ui/prefs.ui:32
-msgid "prev-wallpaper"
-msgstr ""
-
-#: resources/ui/prefs.ui:78
-msgid "Location URI"
-msgstr ""
-
-#: resources/ui/prefs.ui:93
-msgid "Recursive"
-msgstr ""
-
-#: resources/ui/prefs.ui:116
-msgid "Add Item(s)"
-msgstr ""
-
-#: resources/ui/prefs.ui:123
-msgid "Add Folder(s)"
-msgstr ""
-
-#: resources/ui/prefs.ui:130
-msgid "Remove Item"
-msgstr ""
-
-#: resources/ui/prefs.ui:147
-msgid "Edit the locations of the currently selected profile."
-msgstr ""
-
-#: resources/ui/prefs.ui:152
-msgid "Edit Profile"
-msgstr ""
-
-#: resources/ui/prefs.ui:180
-msgid "Add New Profile"
-msgstr ""
-
-#: resources/ui/prefs.ui:182
-msgid "Add a new profile"
-msgstr ""
-
-#: resources/ui/prefs.ui:188
-msgid "Remove Selected Profile"
-msgstr ""
-
-#: resources/ui/prefs.ui:190
-msgid "Remove the selected profile"
-msgstr ""
-
-#: resources/ui/prefs.ui:201
-msgid "Profiles"
-msgstr ""
-
-#: resources/ui/prefs.ui:221
-msgid "Shortcut"
-msgstr ""
-
-#: resources/ui/prefs.ui:233
-msgid "Key Combination"
-msgstr ""
-
-#: resources/ui/prefs.ui:254
-msgid "Keyboard"
-msgstr ""
-
-#: resources/ui/prefs.ui:277
-msgid "Current Profile"
-msgstr ""
-
-#: resources/ui/prefs.ui:303
-msgid "Show Icon as Preview"
-msgstr ""
-
-#: resources/ui/prefs.ui:320
-msgid "Notifications"
-msgstr ""
-
-#: resources/ui/prefs.ui:336
-msgid "Extension"
-msgstr ""
-
-#: resources/ui/prefs.ui:370
-msgid ""
-"The rotation mode of the damon. Interval will rotate at the specified timer "
-"interval. Hourly will rotate at the top of each hour. Disabled will disable "
-"automatic rotation."
-msgstr ""
-
-#: resources/ui/prefs.ui:371
-msgid "Mode"
-msgstr ""
-
-#: resources/ui/prefs.ui:397
-msgid ""
-"This only applies to the Interval Timer option and sets the interval at "
-"which the timer will change the wallpaper."
-msgstr ""
-
-#: resources/ui/prefs.ui:398
-msgid "Custom Timer (in seconds)"
-msgstr ""
-
-#: resources/ui/prefs.ui:415
-msgid "Rotation Options"
-msgstr ""
-
-#: resources/ui/prefs.ui:423
-msgid "Ensure that the daemon process is running when the extension is loaded."
-msgstr ""
-
-#: resources/ui/prefs.ui:427
-msgid "Auto Start Daemon"
-msgstr ""
-
-#: resources/ui/prefs.ui:441
-msgid ""
-"If enabled the daemon will save the current and next wallpaper when it "
-"stops. When it starts, if the values are present, it will then use them to "
-"restore the current wallpaper and fill the queue."
-msgstr ""
-
-#: resources/ui/prefs.ui:445
-msgid "Remember Profile State"
-msgstr ""
-
-#: resources/ui/prefs.ui:459
-msgid ""
-"The current status of the daemon itself. Toggling this will swith the entire "
-"daemon process on/off respectively."
-msgstr ""
-
-#: resources/ui/prefs.ui:463
-msgid "Daemon Running"
-msgstr ""
-
-#: resources/ui/prefs.ui:483
-msgid "Allowed Mime Types"
-msgstr ""
-
-#: resources/ui/prefs.ui:509
-msgid "Daemon"
-msgstr ""
-
-#: resources/ui/prefs.ui:540
-msgid "DeskChanger"
-msgstr ""
-
-#: resources/ui/prefs.ui:549
-msgid "Version 31"
-msgstr ""
-
-#: resources/ui/prefs.ui:559
-msgid ""
-"Simple wallpaper changer with multiple profile support. Integrates into the "
-"shell by providing it's own panel icon. The daemon is written using gjs and "
-"runs independently of the extension as a background process."
-msgstr ""
-
-#: resources/ui/prefs.ui:567
-msgid ""
-"<a href=\"https://github.com/BigE/desk-changer\">https://github.com/BigE/"
-"desk-changer</a>"
-msgstr ""
-
-#: resources/ui/prefs.ui:574
-msgid ""
-"<span size=\"small\">This program comes with absolutely no warranty.\n"
-"See the <a href=\"https://opensource.org/licenses/mit-license.php\">The MIT "
-"License (MIT)</a> for details.</span>"
-msgstr ""
-
-#: resources/ui/prefs.ui:585
-msgid "About"
-msgstr ""
-
-#: resources/ui/rotation.ui:15
-msgid "1 Minute Interval"
-msgstr ""
-
-#: resources/ui/rotation.ui:21
-msgid "5 Minute Interval"
-msgstr ""
-
-#: resources/ui/rotation.ui:27
-msgid "30 Minute Interval"
-msgstr ""
-
-#: resources/ui/rotation.ui:33
-msgid "1 Hour Interval"
-msgstr ""
-
-#: resources/ui/rotation.ui:39
-msgid "6 Hour Interval"
-msgstr ""
-
-#: resources/ui/rotation.ui:45
-msgid "12 Hour Interval"
-msgstr ""
-
-#: resources/ui/rotation.ui:51
-msgid "24 Hour Interval"
-msgstr ""
-
-#: resources/ui/rotation.ui:57
-msgid "Custom Interval"
-msgstr ""
-
-#: resources/ui/rotation.ui:63
-msgid "Hourly Timer"
-msgstr ""
-
-#: resources/ui/rotation.ui:69
-msgid "Daily Timer"
-msgstr ""
-
-#: resources/ui/rotation.ui:75
-msgid "Disabled"
+#: src/ui/prefs/profiles_page.ts:180
+msgid "<b>Recursive</b>"
 msgstr ""

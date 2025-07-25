@@ -1,0 +1,32 @@
+name: Release Build
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build-and-zip:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Run Makefile target
+        run: make desk-changer@eric.gach.gmail.com.zip
+
+      - name: Rename zip to include tag
+        run: mv desk-changer@eric.gach.gmail.com.zip desk-changer@eric.gach.gmail.com-${{ github.event.release.tag_name }}.zip
+
+      - name: Upload Release zip
+        uses: ncipollo/release-action@v1.12.0
+        with:
+          artifacts: "desk-changer@eric.gach.gmail.com-${{ github.event.release.tag_name }}.zip"
+          token: ${{ secrets.GITHUB_TOKEN }}

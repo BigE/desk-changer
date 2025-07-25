@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE node PUBLIC
+        "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN"
+        "http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd" >
+<node>
+    <interface name="org.gnome.Shell.Extensions.DeskChanger.Service">
+        <!-- Methods -->
+        <method name="Load">
+            <arg type="s" name="profile_name" direction="in" />
+        </method>
+        <method name="Next">
+            <arg type="s" name="preview" direction="out" />
+        </method>
+        <method name="Previous">
+            <arg type="s" name="preview" direction="out" />
+        </method>
+        <method name="Restart" />
+        <method name="Start" />
+        <method name="Stop" />
+        <!-- Properties -->
+        <property name="GameMode" type="b" access="read" />
+        <property name="History" type="as" access="read" />
+        <property name="Preview" type="s" access="read" />
+        <property name="Profile" type="s" access="read" />
+        <property name="Queue" type="as" access="read" />
+        <property name="Running" type="b" access="read" />
+        <!-- Signals -->
+        <signal name="Changed">
+            <arg type="s" name="uri" />
+        </signal>
+        <signal name="Start" />
+        <signal name="Stop" />
+    </interface>
+</node>

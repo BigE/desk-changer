@@ -5,9 +5,22 @@
 /.settings
 /*.code-workspace
 /.vscode
+*.db
+*.db-journal
 
 # zip ignore
 /*.zip
 
 # build files
+/dist
+gschemas.compiled
 *.gresource
+
+# yarn non-zero install
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions

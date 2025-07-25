@@ -2,7 +2,9 @@
 
 DeskChanger is a gnome-shell wallpaper slideshow extension with multiple
 profile support. The extension allows you to switch profiles on the fly
-without reloading the daemon.
+without reloading the extension. The service runner will also stay running
+when the lock screen is active, allowing wallpaper changes to still happen at
+specific times or intervals.
 
 ## Screenshots
 
@@ -12,10 +14,13 @@ without reloading the daemon.
 ## Requirements
 
 The requirements are for the most recent version of the plugin. Previous
-versions support older versions of gnome-shell.
+releases support older versions of gnome-shell.
 
-* gnome-shell 3.32 or higher
-* gjs 1.54 or higher
+* gettext (for translations)
+* gnome-shell 45 or higher
+* make (not required - to build without make just follow the steps in the
+  Makefile and run the commands manually)
+* yarn (for installing the necessary tools to compile the TypeScript)
 
 ## Install
 
@@ -27,15 +32,25 @@ cd desk-changer
 make all
 ```
 
-Once the make process is complete, you can then run `make install` to install
-the extension to your local directory. If you want to install it to the
-system, just copy the desk-changer&commat;eric.gach.gmail.com folder to your
+Once the make process is complete, you will have a dist folder where the
+compiled JS extension lives. You can then run `make install` to install the
+compiled extension to your local directory. If you want to install it to the
+system, run make as root with DESTDIR or just copy the
+desk-changer&commat;eric.gach.gmail.com folder to your
 `/usr/share/gnome-shell/extensions/` folder.
 
->\# cp -r desk-changer@eric.gach.gmail.com/ /usr/share/gnome-shell/extensions/
+```
+# make DESTDIR=/usr install
+```
+OR
+```
+# cp -r dist /usr/share/gnome-shell/extensions/desk-changer@eric.gach.gmail.com
+```
 
-Then restart gnome-shell and enable the extension. Once it is enabled, you can
-use the extension to start the daemon with the built in toggle switch.
+Then restart gnome-shell and enable the extension. Use the preferences to add
+more profiles and wallpapers. The default profile provided by the extension
+will recursively load the `/usr/share/backgrounds` folder with rotation enabled
+for every 30 minutes.
 
 ## General Information
 ### Daemon
@@ -45,21 +60,35 @@ interface. The only interface available to the daemon now is the DBus
 interface.
 
 #### DBUS Interface
-**Name**: `org.gnome.Shell.Extensions.DeskChanger.Daemon`
 
-**Path**: `/org/gnome/Shell/Extensions/DeskChanger/Daemon`
+***IMPORTANT* - The DBUS Interface has changed since version 36 of the extension**
+
+The DBUS Interface name was previously
+`org.gnome.Shell.Extensions.DeskChanger.Daemon` since it ran as an external
+program separate from the extension. Now everything is part of the extension
+and there is not an external daemon. This is reflected in the new name of the
+service `org.gnome.Shell.Extensions.DeskChanger.Service`
+
+The DBus interface is available for interaction with the service itself. The
+interface exposes most of the service runner as well as read only properties
+for pulling information from the service and current profile. There are also
+signals available for specific events within the service.
+
+**Name**: `org.gnome.Shell.Extensions.DeskChanger.Service`
+
+**Path**: `/org/gnome/Shell/Extensions/DeskChanger/Service`
 
 ##### Methods
 * `Load(String profile)` Loads the specified profile and respective locations
 * `Next()` Switches to the next wallpaper, returns the uri
 * `Prev()` Switches to the previous wallpaper, returns the uri
-* `Quit()` Terminates the daemon process.
-* `Start()` Enables automatic rotation and makes the daemon available
-* `Stop([Boolean quit])` Disables automatic rotation and makes the daemon
-  unavaialble for use. If `quit` is `true` then the daemon process will be
-  terminated. 
+* `Restart()` Automatically issues a Stop/Start, service must be running
+* `Start()` Enables automatic rotation and makes the service available
+* `Stop()` Disables automatic rotation and makes the service unavailable for
+use.
 
 ##### Properties
+* GameMode - Read only boolean value if GameMode is detected and enabled
 * History - Read only array of history
 * Preview - Read only URI of the next wallpaper
 * Queue - Read only array of the queue
@@ -67,8 +96,8 @@ interface.
 
 ##### Signals
 * Changed - Emitted when the wallpaper is changed, uri to wallpaper file
-* Preview - Emitted when a new preview is available, uri to preview file
-* Running - Emitted when the daemon is stopped and started
+* Start - Emitted when the service is started
+* Stop - Emitted when the service is stopped
 
 
 ### dconf-editor
