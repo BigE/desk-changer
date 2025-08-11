@@ -7,7 +7,7 @@ import { gettext as _ } from "resource:///org/gnome/Shell/Extensions/js/extensio
 import Profile from "../../common/profile/index.js";
 import ProfileItem from "../../common/profile/item.js";
 import {SettingsProfileType, SettingsProfileItemType, SettingsProfileState} from "../../common/settings.js";
-import DeleteDialog from "../dialog/delete.js";
+import DeleteDialog from "./dialog/delete.js";
 
 type ComboRowProfilesType = Omit<Adw.ComboRow, 'get_model' | 'model' | 'selected_item'> & {
     model: Gio.ListStore<Profile> | null;

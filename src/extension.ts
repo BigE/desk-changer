@@ -34,11 +34,6 @@ export default class DeskChangerExtension extends Extension {
     #settings?: Gio.Settings;
     #settings_notifications: number[] = [];
 
-    constructor(metadata: any) {
-        super(metadata);
-        this.initTranslations(this.uuid);
-    }
-
     /**
      * Enable the extension
      *
@@ -95,19 +90,16 @@ export default class DeskChangerExtension extends Extension {
 
         // call this to clean up the indicator and notifications
         this.#sessionModeUnlockDialog();
-        this.#source?.destroy();
-        this.#source = undefined;
+        this.#clearTimeout();
 
-        if (this.#is_session_mode_user(Main.sessionMode)) {
-            this.#service?.destroy();
-            this.#service = undefined;
-            this.#settings = undefined;
-            if (this.#resource)
-                Gio.resources_unregister(this.#resource);
-            this.#resource = undefined;
-            this.#logger?.log('extension disabled');
-            this.#logger = undefined;
-        }
+        this.#service?.destroy();
+        this.#service = undefined;
+        this.#settings = undefined;
+        if (this.#resource)
+            Gio.resources_unregister(this.#resource);
+        this.#resource = undefined;
+        this.#logger?.log('extension disabled');
+        this.#logger = undefined;
     }
 
     /**
@@ -132,6 +124,7 @@ export default class DeskChangerExtension extends Extension {
         this.#settings.bind('icon-preview', this.#button, 'icon_preview_enabled', Gio.SettingsBindFlags.GET);
         this.#settings.bind('random', this.#button, 'random', Gio.SettingsBindFlags.DEFAULT);
         this.#settings.bind_with_mapping('profiles', this.#button, 'profiles', Gio.SettingsBindFlags.GET, (value, variant) => {
+            this.#clearTimeout();
             // according to the g_settings_bind_with_mapping the value is
             // supposed to be an assignable reference here and then that gets
             // set to the object property. however, there is no way to set the
@@ -140,8 +133,7 @@ export default class DeskChangerExtension extends Extension {
             this.#source = setTimeout(() => {
                 if (this.#button && this.#settings)
                     this.#button.profiles = this.#settings.get_value("profiles");
-                this.#source?.destroy();
-                this.#source = undefined;
+                this.#clearTimeout();
             }, 50);
 
             // this is what the C implementation expects?? but value is `null`
@@ -210,6 +202,13 @@ export default class DeskChangerExtension extends Extension {
                 this.#sendNotification(message);
             }));
         }
+    }
+
+    #clearTimeout() {
+        if (this.#source)
+            clearTimeout(this.#source);
+
+        this.#source = undefined;
     }
 
     /**

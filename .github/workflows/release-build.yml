@@ -19,6 +19,9 @@ jobs:
         with:
           node-version: '22'
 
+      - name: Corepack enable
+        run: corepack enable
+
       - name: Run Makefile target
         run: make desk-changer@eric.gach.gmail.com.zip
 

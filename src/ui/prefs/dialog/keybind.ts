@@ -3,7 +3,7 @@ import Gdk from "gi://Gdk";
 import Gtk from "gi://Gtk";
 import GObject from "gi://GObject";
 
-import {APP_PATH} from "../../common/interface.js";
+import { APP_PATH } from "../../../common/interface.js";
 
 export default class KeybindDialog extends Adw.Dialog {
     static {
@@ -32,7 +32,7 @@ export default class KeybindDialog extends Adw.Dialog {
                     null, GObject.ParamFlags.READWRITE
                 ),
             },
-            Template: `resource://${APP_PATH}/ui/dialog/keybind.ui`,
+            Template: `resource://${APP_PATH}/ui/prefs/dialog/keybind.ui`,
         }, this);
     }
 

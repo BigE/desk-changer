@@ -7,5 +7,5 @@
   <ui template-class="DeskChangerUiPrefsExtensionPage" filename="resources/ui/prefs/extension_page.ui" sha256="fe6703b7fc1ce6fd356bc4c93e6467ea9b8eec802228a000670ed5b0ceb27d5d"/>
   <ui template-class="DeskChangerUiPrefsServicePage" filename="resources/ui/prefs/service_page.ui" sha256="2178abeed677f77971fd69895728149489529487cf830bf3afc795b36392bbdf"/>
   <ui template-class="DeskChangerUiPrefsAboutPage" filename="resources/ui/prefs/about_page.ui" sha256="ef43b0d96aa77850d11610b624cfd9477f99ef1c62b4d1e009827b1008bf6c92"/>
-  <ui template-class="DeskChangerUiKeybindDialog" filename="resources/ui/dialog/keybind.ui" sha256="cbd5348e8f182bca708e313e356b18e5c2cd1a29fd10254b30d8a25840cd2ac1"/>
+  <ui template-class="DeskChangerUiKeybindDialog" filename="resources/ui/prefs/dialog/keybind.ui" sha256="cbd5348e8f182bca708e313e356b18e5c2cd1a29fd10254b30d8a25840cd2ac1"/>
 </cambalache-project>

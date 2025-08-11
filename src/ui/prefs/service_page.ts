@@ -8,7 +8,7 @@ import RotationModeListStore, {RotationModeObject} from "./common/rotation_modes
 import MetaTypeRow from "./common/meta_type_row.js";
 import {SettingsAllowedMimeTypesType} from "../../common/settings.js";
 import Service from "../../service/index.js";
-import DeleteDialog from "../dialog/delete.js";
+import DeleteDialog from "./dialog/delete.js";
 
 export default class ServicePage extends Adw.PreferencesPage {
     allowed_mime_types_listbox: Gtk.ListBox;
