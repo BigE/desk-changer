@@ -3,7 +3,6 @@ import Gtk from "gi://Gtk";
 import Gio from "gi://Gio";
 
 import KeyboardShortcutRow from "./shortcut_row.js";
-import GObject from "gi://GObject";
 
 export default class KeyboardPage extends Adw.PreferencesPage {
     keymap_listbox: Gtk.ListBox;
@@ -65,7 +64,7 @@ export default class KeyboardPage extends Adw.PreferencesPage {
     }
 
     #on_keyboard_shortcut_row_activate(widget: KeyboardShortcutRow) {
-        import("../../dialog/keybind.js").then((keybind) => {
+        import("../dialog/keybind.js").then((keybind) => {
             const KeybindDialog = keybind.default;
             const dialog = new KeybindDialog(widget.get_title());
 

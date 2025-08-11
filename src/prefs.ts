@@ -30,11 +30,6 @@ export default class DeskChangerPreferences extends ExtensionPreferences {
     #service_page?: _ServicePage;
     #settings?: Gio.Settings;
 
-    constructor(metadata: any) {
-        super(metadata);
-        this.initTranslations(this.uuid);
-    }
-
     async fillPreferencesWindow(window: Adw.PreferencesWindow): Promise<void> {
         this.#resource = Gio.Resource.load(`${this.path}/${APP_ID}.gresource`);
         Gio.resources_register(this.#resource);
