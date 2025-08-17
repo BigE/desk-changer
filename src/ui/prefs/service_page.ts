@@ -160,16 +160,21 @@ export default class ServicePage extends Adw.PreferencesPage {
         this.#rotation_mode_combo_notify_id = this.rotation_mode_combo.connect(
             'notify::selected-item',
             () => {
-                this.#settings?.set_string(
-                    'rotation',
-                    this.rotation_mode_combo.get_selected_item<RotationModeObject>()
-                        .mode
-                );
+                const mode =
+                    this.rotation_mode_combo.get_selected_item<RotationModeObject>();
+
+                this.#settings?.set_string('rotation', mode.mode);
+                if (mode.mode === 'interval')
+                    this.rotation_custom_interval_spinner.show();
+                else this.rotation_custom_interval_spinner.hide();
             }
         );
 
         if (this.#rotation_position)
             this.rotation_mode_combo.set_selected(this.#rotation_position);
+
+        if (this.#settings?.get_string('rotation') === 'interval')
+            this.rotation_custom_interval_spinner.show();
     }
 
     vfunc_unrealize() {
