@@ -1,15 +1,18 @@
-import Adw from "gi://Adw";
-import GObject from "gi://GObject";
-import Gtk from "gi://Gtk";
+import Adw from 'gi://Adw';
+import GObject from 'gi://GObject';
+import Gtk from 'gi://Gtk';
 
 export default class MetaTypeRow extends Adw.ActionRow {
     static {
-        GObject.registerClass({
-            GTypeName: "DeskChangerUiPrefsCommonMetaTypeRow",
-            Signals: {
-                "delete-clicked": {},
+        GObject.registerClass(
+            {
+                GTypeName: 'DeskChangerUiPrefsCommonMetaTypeRow',
+                Signals: {
+                    'delete-clicked': {},
+                },
             },
-        }, this);
+            this
+        );
     }
 
     #delete_button?: Gtk.Button;
@@ -20,11 +23,14 @@ export default class MetaTypeRow extends Adw.ActionRow {
 
         const box = (this.get_child() as Gtk.Box) || null;
 
-        if (!box)
-            return;
+        if (!box) return;
 
-        this.#delete_button = new Gtk.Button({icon_name: "user-trash-symbolic"});
-        this.#delete_clicked_id = this.#delete_button.connect('clicked', () => this.emit('delete-clicked'));
+        this.#delete_button = new Gtk.Button({
+            icon_name: 'user-trash-symbolic',
+        });
+        this.#delete_clicked_id = this.#delete_button.connect('clicked', () =>
+            this.emit('delete-clicked')
+        );
         box.append(this.#delete_button);
     }
 

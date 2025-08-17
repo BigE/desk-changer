@@ -1,24 +1,30 @@
-import Gio from "gi://Gio";
-import GObject from "gi://GObject";
-import ServiceProfileWallpaper from "./wallpaper.js";
+import Gio from 'gi://Gio';
+import GObject from 'gi://GObject';
+import ServiceProfileWallpaper from './wallpaper.js';
 
 export default class ServiceProfileQueue extends Gio.ListStore<ServiceProfileWallpaper> {
     static {
-        GObject.registerClass({
-            GTypeName: "DeskChangerServiceProfileQueue",
-            Properties: {
-                "next": GObject.param_spec_string(
-                    "next", "Next",
-                    "Next item in queue object",
-                    null, GObject.ParamFlags.READABLE
-                )
+        GObject.registerClass(
+            {
+                GTypeName: 'DeskChangerServiceProfileQueue',
+                Properties: {
+                    next: GObject.param_spec_string(
+                        'next',
+                        'Next',
+                        'Next item in queue object',
+                        null,
+                        GObject.ParamFlags.READABLE
+                    ),
+                },
             },
-        }, this);
+            this
+        );
     }
 
     get items() {
-        return Array.from({ length: this.n_items }, (_, index) => this.get_item(index))
-            .filter(value => value !== null && value !== undefined);
+        return Array.from({length: this.n_items}, (_, index) =>
+            this.get_item(index)
+        ).filter(value => value !== null && value !== undefined);
     }
 
     get next(): string | null {
@@ -32,8 +38,7 @@ export default class ServiceProfileQueue extends Gio.ListStore<ServiceProfileWal
     dequeue(): ServiceProfileWallpaper {
         const item = this.get_item(0);
 
-        if (!item)
-            throw new TypeError(_("Failed to grab next queue item"));
+        if (!item) throw new TypeError(_('Failed to grab next queue item'));
 
         this.remove(0);
         return item;

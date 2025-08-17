@@ -1,9 +1,9 @@
-import Gio from "gi://Gio";
-import GLib from "gi://GLib";
-import GObject from "gi://GObject";
+import Gio from 'gi://Gio';
+import GLib from 'gi://GLib';
+import GObject from 'gi://GObject';
 
-import {APP_PATH} from "../common/interface.js";
-import { ServiceRunner } from "./runner.js";
+import {APP_PATH} from '../common/interface.js';
+import {ServiceRunner} from './runner.js';
 
 export namespace Service {
     export interface ConstructorProps extends ServiceRunner.ConstructorProps {}
@@ -14,33 +14,46 @@ export default class Service extends ServiceRunner {
     #dbus_id?: number;
     #dbus_name_owned: boolean;
     #signals: number[];
-
-    static readonly SERVICE_ID = 'org.gnome.Shell.Extensions.DeskChanger.Service';
-    static readonly SERVICE_PATH = "/org/gnome/Shell/Extensions/DeskChanger/Service";
+    static readonly SERVICE_ID =
+        'org.gnome.Shell.Extensions.DeskChanger.Service';
+    static readonly SERVICE_PATH =
+        '/org/gnome/Shell/Extensions/DeskChanger/Service';
 
     static {
-        GObject.registerClass({
-            GTypeName: "DeskChangerServiceDBus",
-            Properties: {
-                "dbus_name_owned": GObject.param_spec_boolean(
-                    "dbus-name-owned", "DBus name owned",
-                    "Boolean check if the DBus name is owned or not",
-                    false, GObject.ParamFlags.READABLE
-                ),
-            }
-        }, this);
+        GObject.registerClass(
+            {
+                GTypeName: 'DeskChangerServiceDBus',
+                Properties: {
+                    dbus_name_owned: GObject.param_spec_boolean(
+                        'dbus-name-owned',
+                        'DBus name owned',
+                        'Boolean check if the DBus name is owned or not',
+                        false,
+                        GObject.ParamFlags.READABLE
+                    ),
+                },
+            },
+            this
+        );
     }
 
     static getDBusInterfaceXML(): string {
-        return (new TextDecoder()).decode(Gio.resources_lookup_data(GLib.build_filenamev([
-            APP_PATH,
-            'service',
-            `${Service.SERVICE_ID}.xml`
-        ]), Gio.ResourceLookupFlags.NONE).toArray());
+        return new TextDecoder().decode(
+            Gio.resources_lookup_data(
+                GLib.build_filenamev([
+                    APP_PATH,
+                    'service',
+                    `${Service.SERVICE_ID}.xml`,
+                ]),
+                Gio.ResourceLookupFlags.NONE
+            ).toArray()
+        );
     }
 
     static getDBusInterfaceInfo(): Gio.DBusInterfaceInfo {
-        const node_info = Gio.DBusNodeInfo.new_for_xml(Service.getDBusInterfaceXML());
+        const node_info = Gio.DBusNodeInfo.new_for_xml(
+            Service.getDBusInterfaceXML()
+        );
         const dbus_info = node_info.lookup_interface(Service.SERVICE_ID);
 
         if (!dbus_info)
@@ -50,8 +63,7 @@ export default class Service extends ServiceRunner {
     }
 
     get dbus() {
-        if (this.#dbus && this.is_dbus_name_owned())
-            return this.#dbus;
+        if (this.#dbus && this.is_dbus_name_owned()) return this.#dbus;
         return undefined;
     }
 
@@ -112,25 +124,52 @@ export default class Service extends ServiceRunner {
         this.#dbus_name_owned = true;
 
         // expose the property changes
-        this.#signals.push(this.connect("notify::GameMode", () => {
-            this.dbus?.emit_property_changed("GameMode", new GLib.Variant('b', this.GameMode));
-        }));
-        this.#signals.push(this.connect("notify::Preview", () => {
-            this.dbus?.emit_property_changed('Preview', new GLib.Variant('s', this.Preview));
-        }));
-        this.#signals.push(this.connect('notify::Running', () => {
-            this.dbus?.emit_property_changed('Running', new GLib.Variant('b', this.Running));
-        }));
+        this.#signals.push(
+            this.connect('notify::GameMode', () => {
+                this.dbus?.emit_property_changed(
+                    'GameMode',
+                    new GLib.Variant('b', this.GameMode)
+                );
+            })
+        );
+        this.#signals.push(
+            this.connect('notify::Preview', () => {
+                this.dbus?.emit_property_changed(
+                    'Preview',
+                    new GLib.Variant('s', this.Preview)
+                );
+            })
+        );
+        this.#signals.push(
+            this.connect('notify::Running', () => {
+                this.dbus?.emit_property_changed(
+                    'Running',
+                    new GLib.Variant('b', this.Running)
+                );
+            })
+        );
         // expose the signals
-        this.#signals.push(this.connect('Changed', (_source, uri) => {
-            this.dbus?.emit_signal('Changed', new GLib.Variant('(s)', [uri]));
-        }));
-        this.#signals.push(this.connect('Start', (_source, profile_name, preview) => {
-            this.dbus?.emit_signal('Start', new GLib.Variant('(ss)', [profile_name, preview]));
-        }));
-        this.#signals.push(this.connect('Stop', () => {
-            this.dbus?.emit_signal('Stop', new GLib.Variant('()', []));
-        }));
+        this.#signals.push(
+            this.connect('Changed', (_source, uri) => {
+                this.dbus?.emit_signal(
+                    'Changed',
+                    new GLib.Variant('(s)', [uri])
+                );
+            })
+        );
+        this.#signals.push(
+            this.connect('Start', (_source, profile_name, preview) => {
+                this.dbus?.emit_signal(
+                    'Start',
+                    new GLib.Variant('(ss)', [profile_name, preview])
+                );
+            })
+        );
+        this.#signals.push(
+            this.connect('Stop', () => {
+                this.dbus?.emit_signal('Stop', new GLib.Variant('()', []));
+            })
+        );
     }
 
     #on_name_lost() {

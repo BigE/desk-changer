@@ -1,5 +1,5 @@
-import St from "gi://St";
-import GObject from "gi://GObject";
+import St from 'gi://St';
+import GObject from 'gi://GObject';
 
 /**
  * Button control that has an icon for the child
@@ -10,16 +10,22 @@ import GObject from "gi://GObject";
  */
 export default class ControlButton extends St.Button {
     static {
-        GObject.registerClass({
-            GTypeName: "DeskChangerUiControlButton",
-        }, this);
+        GObject.registerClass(
+            {
+                GTypeName: 'DeskChangerUiControlButton',
+            },
+            this
+        );
     }
 
     #icon?: St.Icon;
 
     constructor(icon: string) {
         super({style_class: 'button'});
-        this.#icon = new St.Icon({icon_name: `${icon}-symbolic`, icon_size: 20});
+        this.#icon = new St.Icon({
+            icon_name: `${icon}-symbolic`,
+            icon_size: 20,
+        });
         this.add_child(this.#icon);
     }
 
@@ -34,8 +40,7 @@ export default class ControlButton extends St.Button {
      * @param icon
      */
     set_icon(icon: string) {
-        if (!this.#icon)
-            return;
+        if (!this.#icon) return;
 
         this.#icon.set_icon_name(`${icon}-symbolic`);
     }

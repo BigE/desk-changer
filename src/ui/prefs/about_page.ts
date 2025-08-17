@@ -1,4 +1,3 @@
-import Adw from "gi://Adw";
+import Adw from 'gi://Adw';
 
-export default class AboutPage extends Adw.PreferencesPage {
-}
+export default class AboutPage extends Adw.PreferencesPage {}

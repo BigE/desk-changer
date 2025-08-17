@@ -1,5 +1,5 @@
-import {SettingsRotationModes} from "./settings.js";
-import {ServiceTimerType} from "../service/timer/types.js";
+import {SettingsRotationModes} from './settings.js';
+import {ServiceTimerType} from '../service/timer/types.js';
 
 type RotationModesType = {
     [mode in SettingsRotationModes]: {
@@ -11,54 +11,54 @@ type RotationModesType = {
 
 const RotationModes: RotationModesType = {
     oneminute: {
-        label: "One Minute",
+        label: 'One Minute',
         interval: 60,
-        timer: "interval"
+        timer: 'interval',
     },
     fiveminute: {
-        label: "Five Minutes",
+        label: 'Five Minutes',
         interval: 300,
-        timer: "interval"
+        timer: 'interval',
     },
     thirtyminute: {
-        label: "Thirty Minutes",
+        label: 'Thirty Minutes',
         interval: 1800,
-        timer: "interval"
+        timer: 'interval',
     },
     onehour: {
-        label: "One Hour",
+        label: 'One Hour',
         interval: 3600,
-        timer: "interval"
+        timer: 'interval',
     },
     sixhour: {
-        label: "Six Hours",
+        label: 'Six Hours',
         interval: 21600,
-        timer: "interval"
+        timer: 'interval',
     },
     twelvehour: {
-        label: "Twelve Hours",
+        label: 'Twelve Hours',
         interval: 43200,
-        timer: "interval"
+        timer: 'interval',
     },
     twentyfourhour: {
-        label: "24 Hours",
+        label: '24 Hours',
         interval: 86400,
-        timer: "interval"
+        timer: 'interval',
     },
     interval: {
-        label: "Interval",
-        timer: "interval"
+        label: 'Interval',
+        timer: 'interval',
     },
     hourly: {
-        label: "Hourly",
-        timer: "hourly"
+        label: 'Hourly',
+        timer: 'hourly',
     },
     daily: {
-        label: "Daily",
-        timer: "daily"
+        label: 'Daily',
+        timer: 'daily',
     },
     disabled: {
-        label: "Disabled",
-    }
+        label: 'Disabled',
+    },
 };
 export default RotationModes;
