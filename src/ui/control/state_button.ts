@@ -54,11 +54,16 @@ export default class ControlStateButton extends ControlButton {
         this.#clicked_id = this.connect('clicked', () => {
             const keys = Object.keys(this.#states);
 
-            if (!this.#state) return (this.state = keys[0]);
+            if (!this.#state) {
+                this.state = keys[0];
+                return;
+            }
 
             let currentIndex = keys.indexOf(this.#state);
-            if (currentIndex === -1 || ++currentIndex >= keys.length)
-                return (this.state = keys[0]);
+            if (currentIndex === -1 || ++currentIndex >= keys.length) {
+                this.state = keys[0];
+                return;
+            }
 
             this.state = keys[currentIndex];
         });

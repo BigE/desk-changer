@@ -254,7 +254,7 @@ export default class ServiceProfile extends GObject.Object {
         if (
             current &&
             (position = this.#wallpapers.findIndex(
-                wallpaper => wallpaper.wallpaper === current
+                obj => obj.wallpaper === current
             ))
         )
             this.#history.insert(0, this.#wallpapers[position]);
@@ -275,7 +275,7 @@ export default class ServiceProfile extends GObject.Object {
         if (
             current &&
             (position = this.#wallpapers.findIndex(
-                wallpaper => wallpaper.wallpaper === current
+                obj => obj.wallpaper === current
             ))
         ) {
             this.#queue.insert(0, this.#wallpapers[position]);
@@ -349,7 +349,7 @@ export default class ServiceProfile extends GObject.Object {
             this.#monitors.push(monitor);
         } catch (e) {
             this.#logger?.warn(
-                `Failed to create monitor for ${directory.get_uri()} on ${this.#profile_name}`
+                `Failed to create monitor for ${directory.get_uri()} on ${this.#profile_name}: ${e}`
             );
         }
 
@@ -367,7 +367,7 @@ export default class ServiceProfile extends GObject.Object {
             }
         } catch (e) {
             this.#logger?.warn(
-                `Failed to enumerate children of ${directory.get_uri()} for ${this.#profile_name}`
+                `Failed to enumerate children of ${directory.get_uri()} for ${this.#profile_name}: ${e}`
             );
         }
     }
@@ -397,23 +397,28 @@ export default class ServiceProfile extends GObject.Object {
                 content_type &&
                 allowed_mime_types.includes(content_type)
             ) {
-                const uri = location.get_uri();
+                const location_uri = location.get_uri();
 
-                if (uri in this.#wallpapers) {
+                if (location_uri in this.#wallpapers) {
                     this.#logger?.debug(
-                        `Skipping duplicate ${uri} for ${this.#profile_name}`
+                        `Skipping duplicate ${location_uri} for ${this.#profile_name}`
                     );
                     return;
                 }
 
-                this.#wallpapers.push(new ServiceProfileWallpaper(uri));
-                this.#logger?.debug(`Added ${uri} to ${this.#profile_name}`);
+                this.#wallpapers.push(
+                    new ServiceProfileWallpaper(location_uri)
+                );
+                this.#logger?.debug(
+                    `Added ${location_uri} to ${this.#profile_name}`
+                );
             } else {
                 this.#logger?.debug(
                     `Skipped over unsupported mime ${info.get_content_type()} for ${uri}`
                 );
             }
         } catch (e) {
+            this.#logger?.warn(`Failed to retrieve ${uri}: ${e}`);
             return;
         }
     }

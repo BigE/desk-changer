@@ -110,7 +110,7 @@ export default class PopupMenuProfile extends PopupMenu.PopupSubMenuMenuItem {
                 profile.setOrnament(PopupMenu.Ornament.DOT);
             profile.connect(
                 'activate',
-                (element: PopupMenu.PopupMenuItem, event: any) =>
+                (element: PopupMenu.PopupMenuItem, event: Clutter.Event) =>
                     this.emit('profile-activate', element, event)
             );
             this.menu.addMenuItem(profile);

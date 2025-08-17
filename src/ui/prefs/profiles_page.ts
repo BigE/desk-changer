@@ -48,15 +48,15 @@ export default class DeskChangerUiPrefsProfilesPage extends Adw.PreferencesPage 
         super();
         this.#settings = settings;
 
-        // @ts-expect-error
+        // @ts-expect-error Bind property from resource file
         this.combo_row_profiles = this._combo_row_profiles;
-        // @ts-expect-error
+        // @ts-expect-error Bind property from resource file
         this.locations_listview = this._locations_listview;
-        // @ts-expect-error
+        // @ts-expect-error Bind property from resource file
         this.locations_selection = this._locations_selection;
-        // @ts-expect-error
+        // @ts-expect-error Bind property from resource file
         this.remove_item_button = this._remove_item_button;
-        // @ts-expect-error
+        // @ts-expect-error Bind property from resource file
         this.remove_profile_button = this._remove_profile_button;
 
         this.combo_row_profiles.set_model(profiles);
@@ -136,43 +136,40 @@ export default class DeskChangerUiPrefsProfilesPage extends Adw.PreferencesPage 
     _on_add_profile_button_clicked() {
         const dialog = new Adw.AlertDialog();
         const entry = new Adw.EntryRow();
-        const dialog_response_id = dialog.connect(
-            'response',
-            (_dialog, response) => {
-                const profile_name = (
-                    _dialog.get_extra_child()! as Adw.EntryRow
-                ).get_text();
+        const dialog_response_id = dialog.connect('response', _dialog => {
+            const profile_name = (
+                _dialog.get_extra_child()! as Adw.EntryRow
+            ).get_text();
 
-                if (profile_name.length === 0) return;
+            if (profile_name.length === 0) return;
 
-                const profiles = this.#settings
-                    .get_value('profiles')
-                    .deepUnpack<SettingsProfileType>();
+            const profiles = this.#settings
+                .get_value('profiles')
+                .deepUnpack<SettingsProfileType>();
 
-                if (!(profile_name in profiles)) {
-                    profiles[profile_name] = [];
-                    this.#settings.set_value(
-                        'profiles',
-                        new GLib.Variant('a{sa(sb)}', profiles)
-                    );
-                    this.combo_row_profiles
-                        .get_model()!
-                        .append(new Profile(profile_name));
-                    this.combo_row_profiles.set_selected(
-                        this.combo_row_profiles.get_model()!.get_n_items() - 1
-                    );
-                } else {
-                    const profile = this.#find_profile_by_name(profile_name);
+            if (!(profile_name in profiles)) {
+                profiles[profile_name] = [];
+                this.#settings.set_value(
+                    'profiles',
+                    new GLib.Variant('a{sa(sb)}', profiles)
+                );
+                this.combo_row_profiles
+                    .get_model()!
+                    .append(new Profile(profile_name));
+                this.combo_row_profiles.set_selected(
+                    this.combo_row_profiles.get_model()!.get_n_items() - 1
+                );
+            } else {
+                const profile = this.#find_profile_by_name(profile_name);
 
-                    if (!profile) return;
+                if (!profile) return;
 
-                    const [success, index] = this.combo_row_profiles
-                        .get_model()!
-                        .find(profile);
-                    success && this.combo_row_profiles.set_selected(index);
-                }
+                const [success, index] = this.combo_row_profiles
+                    .get_model()!
+                    .find(profile);
+                if (success) this.combo_row_profiles.set_selected(index);
             }
-        );
+        });
 
         dialog.set_title('Add Profile');
         dialog.set_body('Enter your new profile name below');

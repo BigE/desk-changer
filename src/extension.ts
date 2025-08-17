@@ -195,10 +195,12 @@ export default class DeskChangerExtension extends Extension {
     #bindNotifications() {
         if (this.#service) {
             this.#service_notifications.push(
-                this.#service.connect('Changed', (_sender: any, uri: string) =>
-                    this.#sendNotification(
-                        this.gettext('Wallpaper changed: %s').format(uri)
-                    )
+                this.#service.connect(
+                    'Changed',
+                    (_sender: never, uri: string) =>
+                        this.#sendNotification(
+                            this.gettext('Wallpaper changed: %s').format(uri)
+                        )
                 )
             );
         }
@@ -301,7 +303,7 @@ export default class DeskChangerExtension extends Extension {
      * @param session
      * @private
      */
-    #is_session_mode_user(session: any): boolean {
+    #is_session_mode_user(session: object): boolean {
         return (
             ('currentMode' in session && session.currentMode === 'user') ||
             ('parentMode' in session && session.parentMode === 'user')
@@ -314,7 +316,7 @@ export default class DeskChangerExtension extends Extension {
      * @param session
      * @private
      */
-    #onSessionModeChanged(session: any) {
+    #onSessionModeChanged(session: object) {
         if (this.#is_session_mode_user(session)) this.#sessionModeUser();
         else if (
             'currentMode' in session &&

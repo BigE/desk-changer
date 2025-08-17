@@ -5,7 +5,6 @@ import GObject from 'gi://GObject';
 import Graphene from 'gi://Graphene';
 import St from 'gi://St';
 
-import Service from '../../service/index.js';
 import GLib from 'gi://GLib';
 
 export type PreviewSizeType = {height: number; width: number};

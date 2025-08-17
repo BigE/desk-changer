@@ -88,7 +88,7 @@ export default class GameMode extends GObject.Object {
         this.notify('enabled');
     }
 
-    _onProxyReady(o: any, res: Gio.AsyncResult) {
+    _onProxyReady(_o: Gio.DBusProxy | null, res: Gio.AsyncResult) {
         try {
             this.#proxy = Gio.DBusProxy.new_finish(res);
         } catch (e) {

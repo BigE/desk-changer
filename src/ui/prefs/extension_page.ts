@@ -22,11 +22,11 @@ export default class ExtensionPage extends Adw.PreferencesPage {
     ) {
         super();
 
-        // @ts-expect-error
+        // @ts-expect-error Bind property from resource file
         this.current_profile_combo = this._current_profile_combo;
-        // @ts-expect-error
+        // @ts-expect-error Bind property from resource file
         this.icon_preview_switch = this._icon_preview_switch;
-        // @ts-expect-error
+        // @ts-expect-error Bind property from resource file
         this.notifications_switch = this._notifications_switch;
 
         this.current_profile_combo.set_model(profiles);

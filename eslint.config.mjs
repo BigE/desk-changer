@@ -46,13 +46,14 @@ export default ts_eslint.config(
         rules: {
             'lines-between-class-members': [
                 'error', {
-                    'enforce': [
-                        {'blankLine': 'always', 'prev': '*', 'next': 'method'},
-                        {'blankLine': 'always', 'prev': 'method', 'next': '*'},
-                        {'blankLine': 'never', 'prev': 'field', 'next': 'field'},
-                    ]
-                }
+                    enforce: [
+                        {blankLine: 'always', prev: '*', next: 'method'},
+                        {blankLine: 'always', prev: 'method', next: '*'},
+                        {blankLine: 'never', prev: 'field', next: 'field'},
+                    ],
+                },
             ],
+            '@typescript-eslint/no-namespace': 'off',
             // See: https://eslint.org/docs/latest/rules/#possible-problems
             'array-callback-return': 'error',
             'no-await-in-loop': 'error',

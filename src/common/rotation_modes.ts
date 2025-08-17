@@ -2,7 +2,7 @@ import {SettingsRotationModes} from './settings.js';
 import {ServiceTimerType} from '../service/timer/types.js';
 
 type RotationModesType = {
-    [mode in SettingsRotationModes]: {
+    [_mode in SettingsRotationModes]: {
         label: string;
         interval?: number;
         timer?: ServiceTimerType;

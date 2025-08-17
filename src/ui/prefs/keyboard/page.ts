@@ -15,7 +15,7 @@ export default class KeyboardPage extends Adw.PreferencesPage {
     constructor(settings: Gio.Settings) {
         super();
 
-        // @ts-expect-error
+        // @ts-expect-error Bind property from resource file
         this.keymap_listbox = this._keymap_listbox;
         this.#settings = settings;
     }

@@ -85,23 +85,23 @@ export default class KeybindDialog extends Adw.Dialog {
         this.#keybind = keybind;
         this.#keybind_name = keybind_name;
 
-        // @ts-expect-error
+        // @ts-expect-error Bind property from resource file
         this.cancel_button = this._cancel_button;
-        // @ts-expect-error
+        // @ts-expect-error Bind property from resource file
         this.edit_box = this._edit_box;
-        // @ts-expect-error
+        // @ts-expect-error Bind property from resource file
         this.remove_button = this._remove_button;
-        // @ts-expect-error
+        // @ts-expect-error Bind property from resource file
         this.replace_button = this._replace_button;
-        // @ts-expect-error
+        // @ts-expect-error Bind property from resource file
         this.set_button = this._set_button;
-        // @ts-expect-error
+        // @ts-expect-error Bind property from resource file
         this.shortcut_accel_label = this._shortcut_accel_label;
-        // @ts-expect-error
+        // @ts-expect-error Bind property from resource file
         this.stack = this._stack;
-        // @ts-expect-error
+        // @ts-expect-error Bind property from resource file
         this.standard_box = this._standard_box;
-        // @ts-expect-error
+        // @ts-expect-error Bind property from resource file
         this.top_info_label = this._top_info_label;
     }
 
@@ -166,13 +166,13 @@ export default class KeybindDialog extends Adw.Dialog {
     ): boolean {
         if (
             (mask === 0 || mask === Gdk.ModifierType.SHIFT_MASK) &&
-            keycode != 0
+            keycode !== 0
         ) {
             if (
                 (keyval >= Gdk.KEY_a && keyval <= Gdk.KEY_z) ||
                 (keyval >= Gdk.KEY_A && keyval <= Gdk.KEY_Z) ||
                 (keyval >= Gdk.KEY_0 && keyval <= Gdk.KEY_9) ||
-                (keyval == Gdk.KEY_space && mask === 0)
+                (keyval === Gdk.KEY_space && mask === 0)
             ) {
                 return false;
             }

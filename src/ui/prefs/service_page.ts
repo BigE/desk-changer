@@ -43,33 +43,33 @@ export default class ServicePage extends Adw.PreferencesPage {
         this.#logger = logger;
         this.#mime_rows = [];
         this.#settings = settings;
-        // @ts-expect-error
+        // @ts-expect-error Bind property from resource file
         this.allowed_mime_types_listbox = this._allowed_mime_types_listbox;
-        // @ts-expect-error
         this.allowed_mime_types_reset_button =
+            // @ts-expect-error Bind property from resource file
             this._allowed_mime_types_reset_button;
-        // @ts-expect-error
+        // @ts-expect-error Bind property from resource file
         this.daemon_auto_start_switch = this._daemon_auto_start_switch;
-        // @ts-expect-error
         this.daemon_remember_profile_state_switch =
+            // @ts-expect-error Bind property from resource file
             this._daemon_remember_profile_state_switch;
-        // @ts-expect-error
+        // @ts-expect-error Bind property from resource file
         this.daemon_running_switch = this._daemon_running_switch;
-        // @ts-expect-error
+        // @ts-expect-error Bind property from resource file
         this.gamemode_switch = this._gamemode_switch;
-        // @ts-expect-error
+        // @ts-expect-error Bind property from resource file
         this.random_switch = this._random_switch;
-        // @ts-expect-error
         this.rotation_custom_interval_spinner =
+            // @ts-expect-error Bind property from resource file
             this._rotation_custom_interval_spinner;
-        // @ts-expect-error
+        // @ts-expect-error Bind property from resource file
         this.rotation_mode_combo = this._rotation_mode_combo;
 
         try {
             const DBusProxyWrapper = Gio.DBusProxy.makeProxyWrapper(
                 Service.getDBusInterfaceXML()
             );
-            // @ts-expect-error
+            // @ts-expect-error No construct signature
             this.#proxy = new DBusProxyWrapper(
                 Gio.DBus.session,
                 Service.SERVICE_ID,

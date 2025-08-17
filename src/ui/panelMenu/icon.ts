@@ -93,7 +93,7 @@ export default class PanelMenuIcon extends St.Bin {
         if (this.preview_enabled && this.preview) {
             try {
                 this.#create_preview();
-            } catch (e) {
+            } catch {
                 // fallback to the icon, it will clean up any preview items created
                 this.#create_icon();
             }

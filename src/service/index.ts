@@ -6,7 +6,7 @@ import {APP_PATH} from '../common/interface.js';
 import {ServiceRunner} from './runner.js';
 
 export namespace Service {
-    export interface ConstructorProps extends ServiceRunner.ConstructorProps {}
+    export type ConstructorProps = ServiceRunner.ConstructorProps;
 }
 
 export default class Service extends ServiceRunner {
@@ -77,8 +77,7 @@ export default class Service extends ServiceRunner {
         this.#signals = [];
 
         const dbus_info = Service.getDBusInterfaceInfo();
-        // wrapJSObject takes string|DBusInterfaceInfo
-        // @ts-expect-error
+        // @ts-expect-error wrapJSObject takes string|DBusInterfaceInfo
         this.#dbus = Gio.DBusExportedObject.wrapJSObject(dbus_info, this);
         this.#dbus.export(Gio.DBus.session, Service.SERVICE_PATH);
     }
