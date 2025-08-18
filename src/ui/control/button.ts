@@ -1,5 +1,5 @@
-import St from 'gi://St';
 import GObject from 'gi://GObject';
+import St from 'gi://St';
 
 /**
  * Button control that has an icon for the child
@@ -18,30 +18,16 @@ export default class ControlButton extends St.Button {
         );
     }
 
-    #icon?: St.Icon;
+    constructor({icon_name, ...props}: Partial<St.Button.ConstructorProps>) {
+        if (icon_name === undefined || icon_name === '')
+            throw new TypeError('`icon_name` must be a string');
 
-    constructor(icon: string) {
-        super({style_class: 'button'});
-        this.#icon = new St.Icon({
-            icon_name: `${icon}-symbolic`,
-            icon_size: 20,
-        });
-        this.add_child(this.#icon);
+        props.style_class ??= 'icon-button';
+        super(props);
+        this.set_icon_name(icon_name);
     }
 
-    destroy() {
-        this.#icon?.destroy();
-        this.#icon = undefined;
-        super.destroy();
-    }
-
-    /**
-     * Set the icon
-     * @param icon
-     */
-    set_icon(icon: string) {
-        if (!this.#icon) return;
-
-        this.#icon.set_icon_name(`${icon}-symbolic`);
+    set_icon_name(icon_name: string) {
+        super.set_icon_name(`${icon_name}-symbolic`);
     }
 }

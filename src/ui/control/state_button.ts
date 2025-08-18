@@ -48,7 +48,7 @@ export default class ControlStateButton extends ControlButton {
         if (Object.entries(states).length < 2)
             throw new TypeError('There must be at least two states');
 
-        super(states[state]);
+        super({icon_name: states[state]});
         this.#state = state;
         this.#states = states;
         this.#clicked_id = this.connect('clicked', () => {
@@ -84,6 +84,6 @@ export default class ControlStateButton extends ControlButton {
         if (!(state in this.#states))
             throw new TypeError(`State ${state} does not exist`);
 
-        this.set_icon(this.#states[state]);
+        this.set_icon_name(this.#states[state]);
     }
 }

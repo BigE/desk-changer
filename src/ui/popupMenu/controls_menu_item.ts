@@ -4,6 +4,7 @@ import St from 'gi://St';
 
 import ControlButton from '../control/button.js';
 import ControlStateButton from '../control/state_button.js';
+import Clutter from 'gi://Clutter';
 
 export namespace ControlsMenuItem {
     export interface ConstructorProps
@@ -69,13 +70,16 @@ export default class ControlsMenuItem extends PopupMenu.PopupBaseMenuItem {
         props.reactive ??= false;
         super(props);
 
-        this.#content_box = new St.BoxLayout();
+        this.#content_box = new St.BoxLayout({
+            x_expand: true,
+            x_align: Clutter.ActorAlign.FILL,
+        });
         this.#random = random || true;
-        this.#next = new ControlButton('media-skip-forward');
+        this.#next = new ControlButton({icon_name: 'media-skip-forward'});
         this.#next_clicked_id = this.#next.connect('clicked', () =>
             this.emit('next-clicked')
         );
-        this.#prev = new ControlButton('media-skip-backward');
+        this.#prev = new ControlButton({icon_name: 'media-skip-backward'});
         this.#prev_clicked_id = this.#prev.connect('clicked', () =>
             this.emit('previous-clicked')
         );
@@ -94,7 +98,9 @@ export default class ControlsMenuItem extends PopupMenu.PopupBaseMenuItem {
         );
 
         this.#content_box.add_child(this.#prev);
+        this.#content_box.add_child(new St.Bin({x_expand: true}));
         this.#content_box.add_child(this.#random_control);
+        this.#content_box.add_child(new St.Bin({x_expand: true}));
         this.#content_box.add_child(this.#next);
         this.add_child(new St.Bin({x_expand: true}));
         this.add_child(this.#content_box);
