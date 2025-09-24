@@ -39,79 +39,73 @@ export default class DeskChangerPreferences extends ExtensionPreferences {
                 : (console as unknown as Console);
         this.#settings = this.getSettings();
 
-        if (!AboutPage) {
-            AboutPage = GObject.registerClass(
-                {
-                    GTypeName: 'DeskChangerUiPrefsAboutPage',
-                    Template: `resource://${APP_PATH}/ui/prefs/about_page.ui`,
-                },
-                _AboutPage
-            );
-        }
+        AboutPage ??= GObject.registerClass(
+            {
+                GTypeName: 'DeskChangerUiPrefsAboutPage',
+                InternalChildren: [
+                    'image',
+                    'version_label'
+                ],
+                Template: `resource://${APP_PATH}/ui/prefs/about_page.ui`,
+            },
+            _AboutPage
+        );
 
-        if (!ExtensionPage) {
-            ExtensionPage = GObject.registerClass(
-                {
-                    GTypeName: 'DeskChangerUiPrefsExtensionPage',
-                    InternalChildren: [
-                        'current_profile_combo',
-                        'icon_preview_switch',
-                        'notifications_switch',
-                    ],
-                    Template: `resource://${APP_PATH}/ui/prefs/extension_page.ui`,
-                },
-                _ExtensionPage
-            );
-        }
+        ExtensionPage ??= GObject.registerClass(
+            {
+                GTypeName: 'DeskChangerUiPrefsExtensionPage',
+                InternalChildren: [
+                    'current_profile_combo',
+                    'icon_preview_switch',
+                    'notifications_switch',
+                ],
+                Template: `resource://${APP_PATH}/ui/prefs/extension_page.ui`,
+            },
+            _ExtensionPage
+        );
 
-        if (!KeyboardPage) {
-            KeyboardPage = GObject.registerClass(
-                {
-                    GTypeName: 'DeskChangerUiPrefsKeyboardPage',
-                    InternalChildren: ['keymap_listbox'],
-                    Template: `resource://${APP_PATH}/ui/prefs/keyboard_page.ui`,
-                },
-                _KeyboardPage
-            );
-        }
+        KeyboardPage ??= GObject.registerClass(
+            {
+                GTypeName: 'DeskChangerUiPrefsKeyboardPage',
+                InternalChildren: ['keymap_listbox'],
+                Template: `resource://${APP_PATH}/ui/prefs/keyboard_page.ui`,
+            },
+            _KeyboardPage
+        );
 
-        if (!ProfilesPage) {
-            ProfilesPage = GObject.registerClass(
-                {
-                    GTypeName: 'DeskChangerUiPrefsProfilesPage',
-                    InternalChildren: [
-                        'combo_row_profiles',
-                        'locations_listview',
-                        'locations_selection',
-                        'remove_item_button',
-                        'remove_profile_button',
-                    ],
-                    Template: `resource://${APP_PATH}/ui/prefs/profiles_page.ui`,
-                },
-                _ProfilesPage
-            );
-        }
+        ProfilesPage ??= GObject.registerClass(
+            {
+                GTypeName: 'DeskChangerUiPrefsProfilesPage',
+                InternalChildren: [
+                    'combo_row_profiles',
+                    'locations_listview',
+                    'locations_selection',
+                    'remove_item_button',
+                    'remove_profile_button',
+                ],
+                Template: `resource://${APP_PATH}/ui/prefs/profiles_page.ui`,
+            },
+            _ProfilesPage
+        );
 
-        if (!ServicePage) {
-            ServicePage = GObject.registerClass(
-                {
-                    GTypeName: 'DeskChangerUiPrefsServicePage',
-                    InternalChildren: [
-                        'allowed_mime_types_listbox',
-                        'allowed_mime_types_reset_button',
-                        'daemon_auto_start_switch',
-                        'daemon_remember_profile_state_switch',
-                        'daemon_running_switch',
-                        'gamemode_switch',
-                        'random_switch',
-                        'rotation_custom_interval_spinner',
-                        'rotation_mode_combo',
-                    ],
-                    Template: `resource://${APP_PATH}/ui/prefs/service_page.ui`,
-                },
-                _ServicePage
-            );
-        }
+        ServicePage ??= GObject.registerClass(
+            {
+                GTypeName: 'DeskChangerUiPrefsServicePage',
+                InternalChildren: [
+                    'allowed_mime_types_listbox',
+                    'allowed_mime_types_reset_button',
+                    'daemon_auto_start_switch',
+                    'daemon_remember_profile_state_switch',
+                    'daemon_running_switch',
+                    'gamemode_switch',
+                    'random_switch',
+                    'rotation_custom_interval_spinner',
+                    'rotation_mode_combo',
+                ],
+                Template: `resource://${APP_PATH}/ui/prefs/service_page.ui`,
+            },
+            _ServicePage
+        );
 
         this.#load_profiles();
         this.#extension_page = new ExtensionPage(

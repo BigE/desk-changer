@@ -149,51 +149,7 @@ export default class ServiceProfile extends GObject.Object {
             let wallpaper: ServiceProfileWallpaper | undefined;
 
             if (random) {
-                let i = 0;
-
-                do {
-                    wallpaper =
-                        this.#wallpapers[
-                            Math.floor(Math.random() * this.#wallpapers.length)
-                        ];
-                    const [in_history, _history_position] =
-                        this.#history.find(wallpaper);
-                    const [in_queue, _queue_position] =
-                        this.#queue.find(wallpaper);
-
-                    this.#logger?.debug(
-                        in_history,
-                        _history_position,
-                        in_queue,
-                        _queue_position
-                    );
-                    if (
-                        in_history &&
-                        (this.#wallpapers.length >= 128 ||
-                            this.#history.next === wallpaper.wallpaper)
-                    ) {
-                        this.#logger?.debug(
-                            `Wallpaper ${wallpaper.wallpaper} exists in history`
-                        );
-                        wallpaper = undefined;
-                    } else if (
-                        in_queue &&
-                        this.#wallpapers.length > MAX_QUEUE_LENGTH
-                    ) {
-                        this.#logger?.debug(
-                            `Wallpaper ${wallpaper.wallpaper} is already in the queue`
-                        );
-                        wallpaper = undefined;
-                    }
-                } while (
-                    wallpaper === undefined &&
-                    ++i < this.#wallpapers.length
-                );
-
-                if (!wallpaper)
-                    throw new TypeError(
-                        _('Loading random wallpaper queue failed')
-                    );
+                wallpaper = this.get_random_wallpaper();
             } else {
                 wallpaper = this.#wallpapers[this.#sequence++];
                 if (this.#sequence >= this.#wallpapers.length) {
@@ -204,6 +160,57 @@ export default class ServiceProfile extends GObject.Object {
             this.#queue.append(wallpaper);
             this.#logger?.debug(`Added ${wallpaper} to the queue`);
         } while (this.#queue.get_n_items() < MAX_QUEUE_LENGTH);
+    }
+
+    get_random_wallpaper() {
+        let wallpaper: ServiceProfileWallpaper | undefined;
+        let i = 0;
+
+        do {
+            wallpaper =
+                this.#wallpapers[
+                    Math.floor(Math.random() * this.#wallpapers.length)
+                ];
+            const [in_history, _history_position] =
+                this.#history.find(wallpaper);
+            const [in_queue, _queue_position] =
+                this.#queue.find(wallpaper);
+
+            this.#logger?.debug(
+                in_history,
+                _history_position,
+                in_queue,
+                _queue_position
+            );
+            if (
+                in_history &&
+                (this.#wallpapers.length >= 128 ||
+                    this.#history.next === wallpaper.wallpaper)
+            ) {
+                this.#logger?.debug(
+                    `Wallpaper ${wallpaper.wallpaper} exists in history`
+                );
+                wallpaper = undefined;
+            } else if (
+                in_queue &&
+                this.#wallpapers.length > MAX_QUEUE_LENGTH
+            ) {
+                this.#logger?.debug(
+                    `Wallpaper ${wallpaper.wallpaper} is already in the queue`
+                );
+                wallpaper = undefined;
+            }
+        } while (
+            wallpaper === undefined &&
+            ++i < this.#wallpapers.length
+        );
+
+        if (!wallpaper)
+            throw new TypeError(
+                _('Loading random wallpaper queue failed')
+            );
+
+        return wallpaper;
     }
 
     load() {
