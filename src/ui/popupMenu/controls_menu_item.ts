@@ -1,12 +1,14 @@
-import GObject from "gi://GObject";
-import * as PopupMenu from "resource:///org/gnome/shell/ui/popupMenu.js";
-import St from "gi://St";
+import GObject from 'gi://GObject';
+import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
+import St from 'gi://St';
 
-import ControlButton from "../control/button.js";
-import ControlStateButton from "../control/state_button.js";
+import ControlButton from '../control/button.js';
+import ControlStateButton from '../control/state_button.js';
+import Clutter from 'gi://Clutter';
 
 export namespace ControlsMenuItem {
-    export interface ConstructorProps extends PopupMenu.PopupBaseMenuItem.ConstructorProps {
+    export interface ConstructorProps
+        extends PopupMenu.PopupBaseMenuItem.ConstructorProps {
         random: boolean;
     }
 }
@@ -23,20 +25,25 @@ export namespace ControlsMenuItem {
  */
 export default class ControlsMenuItem extends PopupMenu.PopupBaseMenuItem {
     static {
-        GObject.registerClass({
-            GTypeName: "DeskChangerUiPopupMenuControlsMenuItem",
-            Properties: {
-                "random": GObject.param_spec_boolean(
-                    "random", "Random",
-                    "Tell the daemon to randomly select the next wallpaper",
-                    false, GObject.ParamFlags.READWRITE
-                )
+        GObject.registerClass(
+            {
+                GTypeName: 'DeskChangerUiPopupMenuControlsMenuItem',
+                Properties: {
+                    random: GObject.param_spec_boolean(
+                        'random',
+                        'Random',
+                        'Tell the daemon to randomly select the next wallpaper',
+                        false,
+                        GObject.ParamFlags.READWRITE
+                    ),
+                },
+                Signals: {
+                    'next-clicked': [],
+                    'previous-clicked': [],
+                },
             },
-            Signals: {
-                "next-clicked": [],
-                "previous-clicked": [],
-            },
-        }, this);
+            this
+        );
     }
 
     #content_box?: St.BoxLayout;
@@ -54,35 +61,50 @@ export default class ControlsMenuItem extends PopupMenu.PopupBaseMenuItem {
 
     set random(value: boolean) {
         this.#random = value;
-        this.#random_control?.set_state(value? 'random' : 'ordered');
-        this.notify("random");
+        this.#random_control?.set_state(value ? 'random' : 'ordered');
+        this.notify('random');
     }
 
     constructor(properties?: Partial<ControlsMenuItem.ConstructorProps>) {
-        const { random, ...props } = properties || {};
+        const {random, ...props} = properties || {};
         props.reactive ??= false;
         super(props);
 
-        this.#content_box = new St.BoxLayout();
-        this.#random = random || true;
-        this.#next = new ControlButton('media-skip-forward');
-        this.#next_clicked_id = this.#next.connect('clicked', () => this.emit("next-clicked"));
-        this.#prev = new ControlButton('media-skip-backward');
-        this.#prev_clicked_id = this.#prev.connect('clicked', () => this.emit("previous-clicked"));
-        this.#random_control = new ControlStateButton({
-            random: 'media-playlist-shuffle',
-            ordered: 'media-playlist-repeat',
-        }, this.#random? 'random' : 'ordered');
-        this.#random_clicked_id = this.#random_control.connect('notify::state', () => {
-            this.random = (this.#random_control?.state === "random");
+        this.#content_box = new St.BoxLayout({
+            x_expand: true,
+            x_align: Clutter.ActorAlign.FILL,
         });
+        this.#random = random || true;
+        this.#next = new ControlButton({icon_name: 'media-skip-forward'});
+        this.#next_clicked_id = this.#next.connect('clicked', () =>
+            this.emit('next-clicked')
+        );
+        this.#prev = new ControlButton({icon_name: 'media-skip-backward'});
+        this.#prev_clicked_id = this.#prev.connect('clicked', () =>
+            this.emit('previous-clicked')
+        );
+        this.#random_control = new ControlStateButton(
+            {
+                random: 'media-playlist-shuffle',
+                ordered: 'media-playlist-repeat',
+            },
+            this.#random ? 'random' : 'ordered'
+        );
+        this.#random_clicked_id = this.#random_control.connect(
+            'notify::state',
+            () => {
+                this.random = this.#random_control?.state === 'random';
+            }
+        );
 
         this.#content_box.add_child(this.#prev);
+        this.#content_box.add_child(new St.Bin({x_expand: true}));
         this.#content_box.add_child(this.#random_control);
+        this.#content_box.add_child(new St.Bin({x_expand: true}));
         this.#content_box.add_child(this.#next);
-        this.add_child(new St.Bin({ x_expand: true }));
+        this.add_child(new St.Bin({x_expand: true}));
         this.add_child(this.#content_box);
-        this.add_child(new St.Bin({ x_expand: true }));
+        this.add_child(new St.Bin({x_expand: true}));
     }
 
     destroy() {
@@ -103,7 +125,7 @@ export default class ControlsMenuItem extends PopupMenu.PopupBaseMenuItem {
 
         this.#next?.destroy();
         this.#next = undefined;
-        this.#prev?.destroy()
+        this.#prev?.destroy();
         this.#prev = undefined;
         this.#random_control?.destroy();
         this.#random_control = undefined;

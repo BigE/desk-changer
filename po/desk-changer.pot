@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: desk-changer 36\n"
+"Project-Id-Version: desk-changer 39\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-07-23 11:40-0500\n"
+"POT-Creation-Date: 2025-09-24 09:55-0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,23 +17,23 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: resources/ui/dialog/keybind.ui:48
+#: resources/ui/prefs/dialog/keybind.ui:48
 msgid "Press Esc to cancel or Backspace to disable the keyboard shortcut"
 msgstr ""
 
-#: resources/ui/dialog/keybind.ui:76
+#: resources/ui/prefs/dialog/keybind.ui:76
 msgid "Reset Shortcut"
 msgstr ""
 
-#: resources/ui/dialog/keybind.ui:104
+#: resources/ui/prefs/dialog/keybind.ui:104
 msgid "_Cancel"
 msgstr ""
 
-#: resources/ui/dialog/keybind.ui:120
+#: resources/ui/prefs/dialog/keybind.ui:120
 msgid "Re_place"
 msgstr ""
 
-#: resources/ui/dialog/keybind.ui:130
+#: resources/ui/prefs/dialog/keybind.ui:130
 msgid "_Set"
 msgstr ""
 
@@ -101,111 +101,111 @@ msgstr ""
 msgid "Allowed MIME Types"
 msgstr ""
 
-#: src/extension.ts:164
+#: src/extension.ts:214
 #, javascript-format
 msgid "Profile changed to %s"
 msgstr ""
 
-#: src/extension.ts:170
+#: src/extension.ts:227
 msgid "Notifications are now enabled"
 msgstr ""
 
-#: src/extension.ts:171
+#: src/extension.ts:228
 msgid "Notifications are now disabled"
 msgstr ""
 
-#: src/extension.ts:177
+#: src/extension.ts:242
 msgid "Wallpapers will be shown in a random order"
 msgstr ""
 
-#: src/extension.ts:178
+#: src/extension.ts:245
 msgid "Wallpapers will be shown in the order they were loaded"
 msgstr ""
 
-#: src/extension.ts:191
+#: src/extension.ts:274
 msgid "Rotation will occur at the beginning of every hour"
 msgstr ""
 
-#: src/extension.ts:194
+#: src/extension.ts:279
 msgid "Rotation will occur at the beginning of every day"
 msgstr ""
 
-#: src/extension.ts:197
+#: src/extension.ts:283
 msgid "Rotation has been disabled"
 msgstr ""
 
-#: src/service/index.ts:47
+#: src/service/index.ts:60
 msgid "DBUS: Failed to find interface info"
 msgstr ""
 
-#: src/service/runner.ts:151 src/service/runner.ts:196
+#: src/service/runner.ts:203 src/service/runner.ts:255
 msgid "Service isn't running"
 msgstr ""
 
-#: src/service/runner.ts:174
+#: src/service/runner.ts:229
 msgid "Service is already running"
 msgstr ""
 
-#: src/service/runner.ts:214
+#: src/service/runner.ts:272
 msgid "Timer already exists"
 msgstr ""
 
-#: src/service/profile/index.ts:75
+#: src/service/profile/index.ts:116
 msgid "Profile name is required"
 msgstr ""
 
-#: src/service/profile/index.ts:127
+#: src/service/profile/index.ts:210
 msgid "Loading random wallpaper queue failed"
 msgstr ""
 
-#: src/service/profile/index.ts:144
+#: src/service/profile/index.ts:224
 #, javascript-format
 msgid "Profile %s does not exist"
 msgstr ""
 
-#: src/service/profile/index.ts:151
+#: src/service/profile/index.ts:233
 #, javascript-format
 msgid "No wallpapers were loaded for %s"
 msgstr ""
 
-#: src/service/profile/index.ts:168 src/service/profile/index.ts:185
+#: src/service/profile/index.ts:252 src/service/profile/index.ts:275
 #, javascript-format
 msgid "Profile %s is not loaded"
 msgstr ""
 
-#: src/service/profile/queue.ts:31
+#: src/service/profile/queue.ts:41
 msgid "Failed to grab next queue item"
 msgstr ""
 
-#: src/service/timer/index.ts:31
+#: src/service/timer/index.ts:38
 msgid "Interval must be between 1 and 86400"
 msgstr ""
 
-#: src/ui/panelMenu/button.ts:157
+#: src/ui/panelMenu/button.ts:226
 msgid "Preferences"
 msgstr ""
 
-#: src/ui/popupMenu/profile.ts:75 src/ui/popupMenu/profile.ts:111
+#: src/ui/popupMenu/profile.ts:87 src/ui/popupMenu/profile.ts:123
 msgid "Profile"
 msgstr ""
 
-#: src/ui/popupMenu/profile.ts:109
+#: src/ui/popupMenu/profile.ts:122
 #, javascript-format
 msgid "Profile: %s"
 msgstr ""
 
-#: src/ui/popupMenu/preview_menu_item.ts:67
+#: src/ui/popupMenu/preview_menu_item.ts:74
 msgid "Open next wallpaper"
 msgstr ""
 
-#: src/ui/popupMenu/open_current_menu_item.ts:18
+#: src/ui/popupMenu/open_current_menu_item.ts:21
 msgid "Open current wallpaper"
 msgstr ""
 
-#: src/ui/prefs/profiles_page.ts:175
+#: src/ui/prefs/profiles_page.ts:243
 msgid "<b>Location</b>"
 msgstr ""
 
-#: src/ui/prefs/profiles_page.ts:180
+#: src/ui/prefs/profiles_page.ts:250
 msgid "<b>Recursive</b>"
 msgstr ""

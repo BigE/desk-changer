@@ -1,14 +1,17 @@
-import GObject from "gi://GObject";
+import GObject from 'gi://GObject';
 
-import ServiceTimer, {ServiceCallback} from "./index.js";
+import ServiceTimer, {ServiceCallback} from './index.js';
 
 export default class ServiceTimerHourly extends ServiceTimer {
     #done: boolean;
 
     static {
-        GObject.registerClass({
-            GTypeName: "DeskChangerServiceTimerHourly",
-        }, this);
+        GObject.registerClass(
+            {
+                GTypeName: 'DeskChangerServiceTimerHourly',
+            },
+            this
+        );
     }
 
     constructor(callback: ServiceCallback) {

@@ -1,7 +1,7 @@
 NAME=desk-changer
 DOMAIN=eric.gach.gmail.com
 UUID=$(NAME)@$(DOMAIN)
-VERSION=38
+VERSION:=$(shell grep '"version"' metadata.json | cut -d '"' -f 4)
 
 ifeq ($(strip $(DESTDIR)),)
 	INSTALL_DIR = $(HOME)/.local/share/gnome-shell/extensions
@@ -31,6 +31,7 @@ dist/org.gnome.shell.extensions.$(NAME).gresource: resources/org.gnome.shell.ext
 dist: dist/extension.js dist/prefs.js schemas/gschemas.compiled dist/org.gnome.shell.extensions.$(NAME).gresource
 	@cp -r schemas dist
 	@cp -r metadata.json dist
+	@yarn eslint dist --fix
 
 $(UUID).zip: dist
 	@(cd dist && zip ../$(UUID).zip -9r .)

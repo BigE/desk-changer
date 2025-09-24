@@ -1,14 +1,17 @@
-import { Extension, gettext as _ } from "resource:///org/gnome/shell/extensions/extension.js";
-import Gio from "gi://Gio";
-import GLib from "gi://GLib";
-import GObject from "gi://GObject";
-import * as Main from "resource:///org/gnome/shell/ui/main.js";
+import {
+    Extension,
+    gettext as _,
+} from 'resource:///org/gnome/shell/extensions/extension.js';
+import Gio from 'gi://Gio';
+import GLib from 'gi://GLib';
+import GObject from 'gi://GObject';
+import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 
-import {APP_ID} from "./common/interface.js";
-import Service from "./service/index.js";
-import PanelMenuButton from "./ui/panelMenu/button.js";
-import RotationModes from "./common/rotation_modes.js";
-import {SettingsRotationModes} from "./common/settings.js";
+import {APP_ID} from './common/interface.js';
+import Service from './service/index.js';
+import PanelMenuButton from './ui/panelMenu/button.js';
+import RotationModes from './common/rotation_modes.js';
+import {SettingsRotationModes} from './common/settings.js';
 
 /**
  * DeskChanger - A simple wallpaper changer
@@ -43,31 +46,36 @@ export default class DeskChangerExtension extends Extension {
      */
     enable() {
         if (!this.#resource) {
-            this.#resource = Gio.Resource.load(`${this.path}/${APP_ID}.gresource`);
+            this.#resource = Gio.Resource.load(
+                `${this.path}/${APP_ID}.gresource`
+            );
             Gio.resources_register(this.#resource);
         }
 
         if (!this.#logger) {
-            if ('getLogger' in this && typeof this.getLogger === "function")
-                this.#logger = (this.getLogger() as unknown) as Console;
-            else
-                this.#logger = (console as unknown) as Console;
+            if ('getLogger' in this && typeof this.getLogger === 'function')
+                this.#logger = this.getLogger() as unknown as Console;
+            else this.#logger = console as unknown as Console;
         }
 
-        if (!this.#settings)
-            this.#settings = this.getSettings();
+        if (!this.#settings) this.#settings = this.getSettings();
 
         if (!this.#service)
-            this.#service = new Service({ logger: this.#logger, settings: this.#settings });
+            this.#service = new Service({
+                logger: this.#logger,
+                settings: this.#settings,
+            });
 
-        if (!this.#service.is_dbus_name_owned())
-            this.#service.own_name();
+        if (!this.#service.is_dbus_name_owned()) this.#service.own_name();
 
         if (this.#settings.get_boolean('auto-start') && !this.#service.Running)
             this.#service.Start();
 
         this.#onSessionModeChanged(Main.sessionMode);
-        this.#session_changed_id = Main.sessionMode.connect('updated', this.#onSessionModeChanged.bind(this))
+        this.#session_changed_id = Main.sessionMode.connect(
+            'updated',
+            this.#onSessionModeChanged.bind(this)
+        );
 
         if (this.#is_session_mode_user(Main.sessionMode))
             this.#logger.log('extension enabled');
@@ -95,8 +103,7 @@ export default class DeskChangerExtension extends Extension {
         this.#service?.destroy();
         this.#service = undefined;
         this.#settings = undefined;
-        if (this.#resource)
-            Gio.resources_unregister(this.#resource);
+        if (this.#resource) Gio.resources_unregister(this.#resource);
         this.#resource = undefined;
         this.#logger?.log('extension disabled');
         this.#logger = undefined;
@@ -112,101 +119,180 @@ export default class DeskChangerExtension extends Extension {
      * @private
      */
     #addIndicator() {
-        if (!this.#settings)
-            throw new TypeError("Settings object is required");
+        if (!this.#settings) throw new TypeError('Settings object is required');
 
-        if (!this.#service)
-            throw new TypeError("Service object is required");
+        if (!this.#service) throw new TypeError('Service object is required');
 
         this.#button = new PanelMenuButton(this.uuid);
         // settings bindings
-        this.#settings.bind('current-profile', this.#button, 'profile', Gio.SettingsBindFlags.DEFAULT);
-        this.#settings.bind('icon-preview', this.#button, 'icon_preview_enabled', Gio.SettingsBindFlags.GET);
-        this.#settings.bind('random', this.#button, 'random', Gio.SettingsBindFlags.DEFAULT);
-        this.#settings.bind_with_mapping('profiles', this.#button, 'profiles', Gio.SettingsBindFlags.GET, (value, variant) => {
-            this.#clearTimeout();
-            // according to the g_settings_bind_with_mapping the value is
-            // supposed to be an assignable reference here and then that gets
-            // set to the object property. however, there is no way to set the
-            // value here since it is passed in as null and that isn't a
-            // reference in JS. this is a dirty nasty hack.
-            this.#source = setTimeout(() => {
-                if (this.#button && this.#settings)
-                    this.#button.profiles = this.#settings.get_value("profiles");
+        this.#settings.bind(
+            'current-profile',
+            this.#button,
+            'profile',
+            Gio.SettingsBindFlags.DEFAULT
+        );
+        this.#settings.bind(
+            'icon-preview',
+            this.#button,
+            'icon_preview_enabled',
+            Gio.SettingsBindFlags.GET
+        );
+        this.#settings.bind(
+            'random',
+            this.#button,
+            'random',
+            Gio.SettingsBindFlags.DEFAULT
+        );
+        this.#settings.bind_with_mapping(
+            'profiles',
+            this.#button,
+            'profiles',
+            Gio.SettingsBindFlags.GET,
+            (value, variant) => {
                 this.#clearTimeout();
-            }, 50);
+                // according to the g_settings_bind_with_mapping the value is
+                // supposed to be an assignable reference here and then that gets
+                // set to the object property. however, there is no way to set the
+                // value here since it is passed in as null and that isn't a
+                // reference in JS. this is a dirty nasty hack.
+                this.#source = setTimeout(() => {
+                    if (this.#button && this.#settings)
+                        this.#button.profiles =
+                            this.#settings.get_value('profiles');
+                    this.#clearTimeout();
+                }, 50);
 
-            // this is what the C implementation expects?? but value is `null`
-            value = variant;
-            return true;
-        }, null);
+                // this is what the C implementation expects?? but value is `null`
+                value = variant;
+                return true;
+            },
+            null
+        );
         // service bindings
-        this.#service_preview_binding = this.#service.bind_property('Preview', this.#button, 'preview', GObject.BindingFlags.SYNC_CREATE);
+        this.#service_preview_binding = this.#service.bind_property(
+            'Preview',
+            this.#button,
+            'preview',
+            GObject.BindingFlags.SYNC_CREATE
+        );
         // signals
-        this.#next_clicked_id = this.#button.connect('next-clicked', () => { this.#service?.Next() });
-        this.#open_prefs_id = this.#button.connect('open-prefs', this.openPreferences.bind(this));
-        this.#previous_clicked_id = this.#button.connect('previous-clicked', () => { this.#service?.Previous() });
+        this.#next_clicked_id = this.#button.connect('next-clicked', () => {
+            this.#service?.Next();
+        });
+        this.#open_prefs_id = this.#button.connect(
+            'open-prefs',
+            this.openPreferences.bind(this)
+        );
+        this.#previous_clicked_id = this.#button.connect(
+            'previous-clicked',
+            () => {
+                this.#service?.Previous();
+            }
+        );
         Main.panel.addToStatusArea(this.uuid, this.#button);
     }
 
     #bindNotifications() {
         if (this.#service) {
-            this.#service_notifications.push(this.#service.connect(
-                'Changed',
-                (_sender: any, uri: string) =>
-                    this.#sendNotification(this.gettext("Wallpaper changed: %s").format(uri)))
+            this.#service_notifications.push(
+                this.#service.connect(
+                    'Changed',
+                    (_sender: never, uri: string) =>
+                        this.#sendNotification(
+                            this.gettext('Wallpaper changed: %s').format(uri)
+                        )
+                )
             );
         }
 
         if (this.#settings) {
-            this.#settings_notifications.push(this.#settings.connect(
-                'changed::current-profile',
-                (settings: Gio.Settings) => this.#sendNotification(
-                    _("Profile changed to %s").format(settings.get_string("current-profile"))
+            this.#settings_notifications.push(
+                this.#settings.connect(
+                    'changed::current-profile',
+                    (settings: Gio.Settings) =>
+                        this.#sendNotification(
+                            _('Profile changed to %s').format(
+                                settings.get_string('current-profile')
+                            )
+                        )
                 )
-            ));
+            );
 
-            this.#settings_notifications.push(this.#settings.connect("changed::notifications", (settings: Gio.Settings) => {
-                this.#sendNotification(((settings.get_boolean("notifications")) ?
-                        _("Notifications are now enabled") :
-                        _("Notifications are now disabled")
-                ), true);
-            }));
+            this.#settings_notifications.push(
+                this.#settings.connect(
+                    'changed::notifications',
+                    (settings: Gio.Settings) => {
+                        this.#sendNotification(
+                            settings.get_boolean('notifications')
+                                ? _('Notifications are now enabled')
+                                : _('Notifications are now disabled'),
+                            true
+                        );
+                    }
+                )
+            );
 
-            this.#settings_notifications.push(this.#settings.connect('changed::random', (settings: Gio.Settings) => {
-                this.#sendNotification(((settings.get_boolean("random"))?
-                        _("Wallpapers will be shown in a random order") :
-                        _("Wallpapers will be shown in the order they were loaded")
-                ));
-            }));
+            this.#settings_notifications.push(
+                this.#settings.connect(
+                    'changed::random',
+                    (settings: Gio.Settings) => {
+                        this.#sendNotification(
+                            settings.get_boolean('random')
+                                ? _(
+                                      'Wallpapers will be shown in a random order'
+                                  )
+                                : _(
+                                      'Wallpapers will be shown in the order they were loaded'
+                                  )
+                        );
+                    }
+                )
+            );
 
-            this.#settings_notifications.push(this.#settings.connect('changed::rotation', (settings: Gio.Settings) => {
-                let message;
-                const rotation = RotationModes[settings.get_string('rotation') as SettingsRotationModes];
+            this.#settings_notifications.push(
+                this.#settings.connect(
+                    'changed::rotation',
+                    (settings: Gio.Settings) => {
+                        let message;
+                        const rotation =
+                            RotationModes[
+                                settings.get_string(
+                                    'rotation'
+                                ) as SettingsRotationModes
+                            ];
 
-                switch (rotation.timer) {
-                    case 'interval':
-                        message = _("Rotation will occur at a set interval of %d seconds".format(rotation.interval));
-                        break;
-                    case 'hourly':
-                        message = _('Rotation will occur at the beginning of every hour');
-                        break;
-                    case 'daily':
-                        message = _('Rotation will occur at the beginning of every day');
-                        break;
-                    default:
-                        message = _('Rotation has been disabled');
-                        break;
-                }
+                        switch (rotation.timer) {
+                            case 'interval':
+                                message = _(
+                                    'Rotation will occur at a set interval of %d seconds'.format(
+                                        rotation.interval
+                                    )
+                                );
+                                break;
+                            case 'hourly':
+                                message = _(
+                                    'Rotation will occur at the beginning of every hour'
+                                );
+                                break;
+                            case 'daily':
+                                message = _(
+                                    'Rotation will occur at the beginning of every day'
+                                );
+                                break;
+                            default:
+                                message = _('Rotation has been disabled');
+                                break;
+                        }
 
-                this.#sendNotification(message);
-            }));
+                        this.#sendNotification(message);
+                    }
+                )
+            );
         }
     }
 
     #clearTimeout() {
-        if (this.#source)
-            clearTimeout(this.#source);
+        if (this.#source) clearTimeout(this.#source);
 
         this.#source = undefined;
     }
@@ -217,8 +303,11 @@ export default class DeskChangerExtension extends Extension {
      * @param session
      * @private
      */
-    #is_session_mode_user(session: any): boolean {
-        return ('currentMode' in session && session.currentMode === 'user') || ('parentMode' in session && session.parentMode === 'user');
+    #is_session_mode_user(session: object): boolean {
+        return (
+            ('currentMode' in session && session.currentMode === 'user') ||
+            ('parentMode' in session && session.parentMode === 'user')
+        );
     }
 
     /**
@@ -227,10 +316,12 @@ export default class DeskChangerExtension extends Extension {
      * @param session
      * @private
      */
-    #onSessionModeChanged(session: any) {
-        if (this.#is_session_mode_user(session))
-            this.#sessionModeUser();
-        else if ('currentMode' in session && session.currentMode === 'unlock-dialog')
+    #onSessionModeChanged(session: object) {
+        if (this.#is_session_mode_user(session)) this.#sessionModeUser();
+        else if (
+            'currentMode' in session &&
+            session.currentMode === 'unlock-dialog'
+        )
             this.#sessionModeUnlockDialog();
     }
 
@@ -269,8 +360,7 @@ export default class DeskChangerExtension extends Extension {
     }
 
     #sendNotification(message: string, force: boolean = false) {
-        if (!this.#settings?.get_boolean('notifications') && !force)
-            return;
+        if (!this.#settings?.get_boolean('notifications') && !force) return;
 
         Main.notify(this.metadata.name, message);
     }

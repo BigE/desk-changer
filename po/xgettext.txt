@@ -1,4 +1,4 @@
-resources/ui/dialog/keybind.ui
+resources/ui/prefs/dialog/keybind.ui
 resources/ui/prefs/about_page.ui
 resources/ui/prefs/extension_page.ui
 resources/ui/prefs/keyboard_page.ui

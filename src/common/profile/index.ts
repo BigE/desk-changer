@@ -1,25 +1,34 @@
-import Gio from "gi://Gio";
-import GObject from "gi://GObject";
+import Gio from 'gi://Gio';
+import GObject from 'gi://GObject';
 
-import ProfileItem from "./item.js";
+import ProfileItem from './item.js';
 
 export default class CommonProfile extends GObject.Object {
     static {
-        GObject.registerClass({
-            GTypeName: "DeskChangerCommonProfile",
-            Properties: {
-                "items": GObject.param_spec_object(
-                    "items", "Items",
-                    "All items contained within the profile",
-                    Gio.ListModel.$gtype, GObject.ParamFlags.READWRITE | GObject.ParamFlags.CONSTRUCT
-                ),
-                    "name": GObject.param_spec_string(
-                    "name", "Name",
-                    "Name of the profile",
-                    null, GObject.ParamFlags.READWRITE | GObject.ParamFlags.CONSTRUCT
-                ),
+        GObject.registerClass(
+            {
+                GTypeName: 'DeskChangerCommonProfile',
+                Properties: {
+                    items: GObject.param_spec_object(
+                        'items',
+                        'Items',
+                        'All items contained within the profile',
+                        Gio.ListModel.$gtype,
+                        GObject.ParamFlags.READWRITE |
+                            GObject.ParamFlags.CONSTRUCT
+                    ),
+                    name: GObject.param_spec_string(
+                        'name',
+                        'Name',
+                        'Name of the profile',
+                        null,
+                        GObject.ParamFlags.READWRITE |
+                            GObject.ParamFlags.CONSTRUCT
+                    ),
+                },
             },
-        }, this);
+            this
+        );
     }
 
     private _items: Gio.ListStore<ProfileItem>;

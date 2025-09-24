@@ -10,6 +10,17 @@ export type SettingsProfileState = {
 
 export type SettingsProfileType = {
     [name: string]: SettingsProfileItemType[];
-}
+};
 
-export type SettingsRotationModes = 'oneminute' | 'fiveminute' | 'thirtyminute' | 'onehour' | 'sixhour' | 'twelvehour' | 'twentyfourhour' | 'interval' | 'hourly' | 'daily' | 'disabled';
+export type SettingsRotationModes =
+    | 'oneminute'
+    | 'fiveminute'
+    | 'thirtyminute'
+    | 'onehour'
+    | 'sixhour'
+    | 'twelvehour'
+    | 'twentyfourhour'
+    | 'interval'
+    | 'hourly'
+    | 'daily'
+    | 'disabled';

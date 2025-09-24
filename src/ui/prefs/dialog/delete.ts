@@ -1,11 +1,14 @@
-import Adw from "gi://Adw";
-import GObject from "gi://GObject";
+import Adw from 'gi://Adw';
+import GObject from 'gi://GObject';
 
 export default class DeleteDialog extends Adw.AlertDialog {
     static {
-        GObject.registerClass({
-            GTypeName: "DeskChangerUiDeleteDialog"
-        }, this);
+        GObject.registerClass(
+            {
+                GTypeName: 'DeskChangerUiDeleteDialog',
+            },
+            this
+        );
     }
 
     constructor(params?: Partial<Adw.AlertDialog.ConstructorProps>) {

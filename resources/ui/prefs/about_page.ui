@@ -21,6 +21,7 @@
               <object class="GtkImage">
                 <property name="hexpand">True</property>
                 <property name="hexpand-set">True</property>
+                <property name="pixel-size">256</property>
                 <property name="resource">/org/gnome/shell/extensions/desk-changer/icons/wallpaper-icon.svg</property>
                 <property name="vexpand">True</property>
                 <property name="vexpand-set">True</property>
@@ -34,7 +35,7 @@
             </child>
             <child>
               <object class="GtkLabel" id="version_label">
-                <property name="label">Version 36</property>
+                <property name="label">Version 38</property>
               </object>
             </child>
             <child>

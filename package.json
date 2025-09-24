@@ -1,6 +1,6 @@
 {
   "name": "desk-changer",
-  "version": "38",
+  "version": "39",
   "description": "A TypeScript GNOME Extension",
   "type": "module",
   "private": true,
@@ -17,9 +17,14 @@
   "sideEffects": false,
   "packageManager": "yarn@4.9.2",
   "devDependencies": {
-    "eslint": "^9.27.0",
+    "@eslint/js": "^9.33.0",
+    "eslint": "^9.33.0",
+    "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-jsdoc": "^50.6.17",
-    "typescript": "^5.8.3"
+    "eslint-plugin-prettier": "^5.5.4",
+    "prettier": "3.6.2",
+    "typescript": "^5.9.2",
+    "typescript-eslint": "^8.39.1"
   },
   "dependencies": {
     "@girs/gjs": "^4.0.0-beta.23",
