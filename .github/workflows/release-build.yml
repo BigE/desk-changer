@@ -34,7 +34,7 @@ jobs:
         run: mv desk-changer@eric.gach.gmail.com.zip desk-changer@eric.gach.gmail.com-${{ github.event.release.tag_name }}.zip
 
       - name: Upload Release zip
-        uses: ncipollo/release-action@v1.12.0
+        uses: ncipollo/release-action@a2e71bdd4e7dab70ca26a852f29600c98b33153e
         with:
           allowUpdates: true
           artifacts: "desk-changer@eric.gach.gmail.com-${{ github.event.release.tag_name }}.zip"
