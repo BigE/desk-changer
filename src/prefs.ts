@@ -43,7 +43,7 @@ export default class DeskChangerPreferences extends ExtensionPreferences {
             {
                 GTypeName: 'DeskChangerUiPrefsAboutPage',
                 InternalChildren: [
-                    'image',
+                    'description_label',
                     'version_label'
                 ],
                 Template: `resource://${APP_PATH}/ui/prefs/about_page.ui`,
@@ -124,7 +124,7 @@ export default class DeskChangerPreferences extends ExtensionPreferences {
         window.add(this.#keyboard_page);
         window.add(this.#extension_page);
         window.add(this.#service_page);
-        window.add(new AboutPage());
+        window.add(new AboutPage(this.metadata.description, this.metadata.version));
 
         window.connect('close-request', () => {
             this.#extension_page?.destroy();
