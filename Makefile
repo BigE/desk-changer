@@ -1,7 +1,7 @@
 NAME=desk-changer
 DOMAIN=eric.gach.gmail.com
 UUID=$(NAME)@$(DOMAIN)
-VERSION=38
+VERSION:=$(shell grep '"version"' metadata.json | cut -d '"' -f 4)
 
 ifeq ($(strip $(DESTDIR)),)
 	INSTALL_DIR = $(HOME)/.local/share/gnome-shell/extensions
