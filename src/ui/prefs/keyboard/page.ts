@@ -1,6 +1,7 @@
 import Adw from 'gi://Adw';
-import Gtk from 'gi://Gtk';
 import Gio from 'gi://Gio';
+import GLib from 'gi://GLib';
+import Gtk from 'gi://Gtk';
 
 import KeyboardShortcutRow from './shortcut_row.js';
 
@@ -8,8 +9,10 @@ export default class KeyboardPage extends Adw.PreferencesPage {
     keymap_listbox: Gtk.ListBox;
     #next?: KeyboardShortcutRow;
     #next_activated_id?: number;
+    #next_changed_id?: number;
     #previous?: KeyboardShortcutRow;
     #previous_activated_id?: number;
+    #previous_changed_id?: number;
     #settings?: Gio.Settings;
 
     constructor(settings: Gio.Settings) {
@@ -30,34 +33,42 @@ export default class KeyboardPage extends Adw.PreferencesPage {
 
         this.#next = new KeyboardShortcutRow(
             'next-wallpaper',
-            this.#settings!.get_string('next-wallpaper'),
+            this.#settings!.get_strv('next-wallpaper').join(' '),
             {title: 'Next Wallpaper'}
+        );
+
+        if (!this.#next.accelerator_label)
+            throw TypeError();
+
+        this.#next_changed_id = this.#settings?.connect(
+            'changed::next-wallpaper',
+            () => {
+                this.#next!.accelerator_label!.accelerator = this.#settings?.get_strv('next-wallpaper').join(' ') || '';
+            }
         );
         this.#next_activated_id = this.#next.connect(
             'activated',
             this.#on_keyboard_shortcut_row_activate.bind(this)
         );
-        this.#settings!.bind(
-            'next-wallpaper',
-            this.#next,
-            'accelerator',
-            Gio.SettingsBindFlags.DEFAULT
-        );
         this.keymap_listbox.append(this.#next);
         this.#previous = new KeyboardShortcutRow(
             'previous-wallpaper',
-            this.#settings!.get_string('previous-wallpaper'),
+            this.#settings!.get_strv('previous-wallpaper').join(' '),
             {title: 'Previous Wallpaper'}
+        );
+
+        if (!this.#previous.accelerator_label)
+            throw TypeError();
+
+        this.#previous_changed_id = this.#settings?.connect(
+            'changed::previous-wallpaper',
+            () => {
+                this.#previous!.accelerator_label!.accelerator = this.#settings?.get_strv('previous-wallpaper').join(' ') || '';
+            }
         );
         this.#previous_activated_id = this.#previous.connect(
             'activated',
             this.#on_keyboard_shortcut_row_activate.bind(this)
-        );
-        this.#settings!.bind(
-            'previous-wallpaper',
-            this.#previous,
-            'accelerator',
-            Gio.SettingsBindFlags.DEFAULT
         );
         this.keymap_listbox.append(this.#previous);
     }
@@ -68,6 +79,11 @@ export default class KeyboardPage extends Adw.PreferencesPage {
             this.#next_activated_id = undefined;
         }
 
+        if (this.#next_changed_id) {
+            this.#settings!.disconnect(this.#next_changed_id);
+            this.#next_changed_id = undefined;
+        }
+
         if (this.#next) {
             this.keymap_listbox.remove(this.#next);
         }
@@ -75,6 +91,11 @@ export default class KeyboardPage extends Adw.PreferencesPage {
         if (this.#previous_activated_id) {
             this.#previous!.disconnect(this.#previous_activated_id);
             this.#previous_activated_id = undefined;
+        }
+
+        if (this.#previous_changed_id) {
+            this.#settings!.disconnect(this.#previous_changed_id);
+            this.#previous_changed_id = undefined;
         }
 
         if (this.#previous) {
@@ -93,7 +114,7 @@ export default class KeyboardPage extends Adw.PreferencesPage {
 
             dialog.connect('notify::keybind', () => {
                 if (!dialog.keybind) this.#settings!.reset(widget.keybind);
-                else this.#settings!.set_string(widget.keybind, dialog.keybind);
+                else this.#settings!.set_strv(widget.keybind, Array(dialog.keybind));
                 dialog.close();
             });
             dialog.present(this.get_root());
