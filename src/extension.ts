@@ -6,6 +6,8 @@ import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 import GObject from 'gi://GObject';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
+import Meta from 'gi://Meta';
+import Shell from 'gi://Shell';
 
 import {APP_ID} from './common/interface.js';
 import Service from './service/index.js';
@@ -77,6 +79,26 @@ export default class DeskChangerExtension extends Extension {
             this.#onSessionModeChanged.bind(this)
         );
 
+        // keybindings
+        Main.wm.addKeybinding(
+            'next-wallpaper',
+            this.#settings,
+            Meta.KeyBindingFlags.IGNORE_AUTOREPEAT,
+            Shell.ActionMode.NORMAL | Shell.ActionMode.OVERVIEW,
+            () => {
+                if (this.#service?.Running) this.#service?.Next();
+            }
+        );
+        Main.wm.addKeybinding(
+            'previous-wallpaper',
+            this.#settings,
+            Meta.KeyBindingFlags.IGNORE_AUTOREPEAT,
+            Shell.ActionMode.NORMAL | Shell.ActionMode.OVERVIEW,
+            () => {
+                if (this.#service?.Running) this.#service?.Previous();
+            }
+        )
+
         if (this.#is_session_mode_user(Main.sessionMode))
             this.#logger.log('extension enabled');
     }
@@ -95,6 +117,9 @@ export default class DeskChangerExtension extends Extension {
             Main.sessionMode.disconnect(this.#session_changed_id);
             this.#session_changed_id = undefined;
         }
+
+        Main.wm.removeKeybinding('next-wallpaper');
+        Main.wm.removeKeybinding('previous-wallpaper');
 
         // call this to clean up the indicator and notifications
         this.#sessionModeUnlockDialog();
