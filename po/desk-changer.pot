@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: desk-changer 39\n"
+"Project-Id-Version: desk-changer 40\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-09-24 09:55-0500\n"
+"POT-Creation-Date: 2025-10-28 12:33-0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -101,36 +101,36 @@ msgstr ""
 msgid "Allowed MIME Types"
 msgstr ""
 
-#: src/extension.ts:214
+#: src/extension.ts:239
 #, javascript-format
 msgid "Profile changed to %s"
 msgstr ""
 
-#: src/extension.ts:227
+#: src/extension.ts:252
 msgid "Notifications are now enabled"
 msgstr ""
 
-#: src/extension.ts:228
+#: src/extension.ts:253
 msgid "Notifications are now disabled"
 msgstr ""
 
-#: src/extension.ts:242
+#: src/extension.ts:267
 msgid "Wallpapers will be shown in a random order"
 msgstr ""
 
-#: src/extension.ts:245
+#: src/extension.ts:270
 msgid "Wallpapers will be shown in the order they were loaded"
 msgstr ""
 
-#: src/extension.ts:274
+#: src/extension.ts:299
 msgid "Rotation will occur at the beginning of every hour"
 msgstr ""
 
-#: src/extension.ts:279
+#: src/extension.ts:304
 msgid "Rotation will occur at the beginning of every day"
 msgstr ""
 
-#: src/extension.ts:283
+#: src/extension.ts:308
 msgid "Rotation has been disabled"
 msgstr ""
 
