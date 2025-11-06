@@ -108,11 +108,15 @@ export default class PopupMenuProfile extends PopupMenu.PopupSubMenuMenuItem {
             const profile = new PopupMenu.PopupMenuItem(profile_name);
             if (profile_name === this.#profile)
                 profile.setOrnament(PopupMenu.Ornament.DOT);
+            else
+                profile.setOrnament(PopupMenu.Ornament.NO_DOT);
+
             profile.connect(
                 'activate',
                 (element: PopupMenu.PopupMenuItem, event: Clutter.Event) =>
                     this.emit('profile-activate', element, event)
             );
+
             this.menu.addMenuItem(profile);
         }
     }
@@ -129,7 +133,7 @@ export default class PopupMenuProfile extends PopupMenu.PopupSubMenuMenuItem {
 
         for (const menu_item of this.menu._getMenuItems() as PopupMenu.PopupMenuItem[]) {
             if (old_value && menu_item.label.get_text() === old_value) {
-                menu_item.setOrnament(PopupMenu.Ornament.NONE);
+                menu_item.setOrnament(PopupMenu.Ornament.NO_DOT);
                 found_old = true;
             } else if (new_value && menu_item.label.get_text() === new_value) {
                 menu_item.setOrnament(PopupMenu.Ornament.DOT);
