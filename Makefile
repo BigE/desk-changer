@@ -11,7 +11,7 @@ endif
 
 .PHONY: all pack install clean pot update-translation
 
-all: dist/extension.js update-translations
+all: schemas/gschemas.compiled dist update-translations
 
 .yarn/install-state.gz:
 	@yarn install
@@ -28,7 +28,7 @@ dist/org.gnome.shell.extensions.$(NAME).gresource: resources/org.gnome.shell.ext
 		--sourcedir=./resources \
 		./resources/org.gnome.shell.extensions.desk-changer.gresource.xml
 
-dist: dist/extension.js dist/prefs.js schemas/gschemas.compiled dist/org.gnome.shell.extensions.$(NAME).gresource
+dist: dist/extension.js dist/prefs.js dist/org.gnome.shell.extensions.$(NAME).gresource
 	@cp -r schemas dist
 	@cp -r metadata.json dist
 	@yarn eslint dist --fix
@@ -44,7 +44,7 @@ install: dist
 	@cp -r dist $(INSTALL_DIR)/$(UUID)
 
 clean:
-	@rm -Rf dist $(UUID).zip .yarn/install-state.gz
+	@rm -Rf dist $(UUID).zip .yarn/install-state.gz schemas/gschemas.compiled
 
 pot: po/xgettext.txt
 	@xgettext --package-name=$(NAME) --package-version=$(VERSION) -k --keyword=_ --keyword=gettext -o ./po/desk-changer.pot -f ./po/xgettext.txt
