@@ -1,10 +1,10 @@
 import Gio from 'gi://Gio';
 import GObject from 'gi://GObject';
+import Graphene from 'gi://Graphene';
 import St from 'gi://St';
 
 import {APP_PATH} from '../../common/interface.js';
 import ControlPreview from '../control/preview.js';
-import Graphene from 'gi://Graphene';
 
 export namespace PanelMenuIcon {
     export interface ConstructorProps extends St.Bin.ConstructorProps {
@@ -28,15 +28,15 @@ export default class PanelMenuIcon extends St.Bin {
             {
                 GTypeName: 'DeskChangerUiPanelMenuIcon',
                 Properties: {
-                    preview: GObject.param_spec_string(
+                    'preview': GObject.param_spec_string(
                         'preview',
                         'Preview',
                         'The URI of the current preview, NULL if empty',
                         null,
                         GObject.ParamFlags.READWRITE
                     ),
-                    preview_enabled: GObject.param_spec_boolean(
-                        'preview_enabled',
+                    'preview-enabled': GObject.param_spec_boolean(
+                        'preview-enabled',
                         'Preview Enabled',
                         'Toggle for enabling the preview vs icon',
                         false,
@@ -69,7 +69,7 @@ export default class PanelMenuIcon extends St.Bin {
 
     set preview_enabled(value: boolean) {
         this.#preview_enabled = value;
-        this.notify('preview_enabled');
+        this.notify('preview-enabled');
         this.update_child();
     }
 
@@ -89,6 +89,13 @@ export default class PanelMenuIcon extends St.Bin {
         super.destroy();
     }
 
+    /**
+     * Update the child to reflect the icon settings.
+     *
+     * This is where the control switches between an actual icon and a preview
+     * of the next wallpaper. This is called automatically by the setter
+     * whenever the property preview-enabled is changed.
+     */
     update_child() {
         if (this.preview_enabled && this.preview) {
             try {
@@ -119,8 +126,7 @@ export default class PanelMenuIcon extends St.Bin {
         });
         this.#preview_file_binding = this.bind_property(
             'preview',
-            this.#preview_control,
-            'preview_file',
+            this.#preview_control, 'preview-file',
             GObject.BindingFlags.SYNC_CREATE
         );
         this.set_child(this.#preview_control);
@@ -133,11 +139,8 @@ export default class PanelMenuIcon extends St.Bin {
     }
 
     #destroy_preview() {
-        if (this.#preview_file_binding) {
-            this.#preview_file_binding.unbind();
-            this.#preview_file_binding = undefined;
-        }
-
+        this.#preview_file_binding?.unbind();
+        this.#preview_file_binding = undefined;
         this.#preview_control?.destroy();
         this.#preview_control = undefined;
     }

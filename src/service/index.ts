@@ -24,7 +24,7 @@ export default class Service extends ServiceRunner {
             {
                 GTypeName: 'DeskChangerServiceDBus',
                 Properties: {
-                    dbus_name_owned: GObject.param_spec_boolean(
+                    'dbus-name-owned': GObject.param_spec_boolean(
                         'dbus-name-owned',
                         'DBus name owned',
                         'Boolean check if the DBus name is owned or not',

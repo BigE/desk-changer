@@ -154,26 +154,22 @@ export default class DeskChangerExtension extends Extension {
         // settings bindings
         this.#settings.bind(
             'current-profile',
-            this.#button,
-            'profile',
+            this.#button, 'profile',
             Gio.SettingsBindFlags.DEFAULT
         );
         this.#settings.bind(
             'icon-preview',
-            this.#button,
-            'icon_preview_enabled',
+            this.#button, 'icon-preview-enabled',
             Gio.SettingsBindFlags.GET
         );
         this.#settings.bind(
             'random',
-            this.#button,
-            'random',
+            this.#button, 'random',
             Gio.SettingsBindFlags.DEFAULT
         );
         this.#settings.bind_with_mapping(
             'profiles',
-            this.#button,
-            'profiles',
+            this.#button, 'profiles',
             Gio.SettingsBindFlags.GET,
             (value, variant) => {
                 this.#clearTimeout();
@@ -198,8 +194,7 @@ export default class DeskChangerExtension extends Extension {
         // service bindings
         this.#service_preview_binding = this.#service.bind_property(
             'Preview',
-            this.#button,
-            'preview',
+            this.#button, 'preview',
             GObject.BindingFlags.SYNC_CREATE
         );
         // signals
@@ -222,7 +217,6 @@ export default class DeskChangerExtension extends Extension {
             GObject.BindingFlags.SYNC_CREATE,
         );
         this.#button_notify_id = this.#button.connect('notify::service-running', (button: PanelMenuButton) => {
-            console.log(`notify::service-running: ${button.service_running}`);
             if (button.service_running === true && this.#service?.Running === false)
                 this.#service.Start();
             else if (button.service_running === false && this.#service?.Running === true)
@@ -375,11 +369,6 @@ export default class DeskChangerExtension extends Extension {
      * @private
      */
     #removeIndicator() {
-        this.#service_preview_binding?.unbind();
-        this.#service_preview_binding = undefined;
-        this.#service_running_binding?.unbind();
-        this.#service_running_binding = undefined;
-
         if (this.#button_notify_id) {
             this.#button!.disconnect(this.#button_notify_id);
             this.#button_notify_id = undefined;
@@ -400,6 +389,10 @@ export default class DeskChangerExtension extends Extension {
             this.#previous_clicked_id = undefined;
         }
 
+        this.#service_preview_binding?.unbind();
+        this.#service_preview_binding = undefined;
+        this.#service_running_binding?.unbind();
+        this.#service_running_binding = undefined;
         this.#button?.destroy();
         this.#button = undefined;
     }

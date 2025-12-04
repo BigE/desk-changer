@@ -30,7 +30,7 @@ export default class ControlsMenuItem extends PopupMenu.PopupBaseMenuItem {
             {
                 GTypeName: 'DeskChangerUiPopupMenuControlsMenuItem',
                 Properties: {
-                    random: GObject.param_spec_boolean(
+                    'random': GObject.param_spec_boolean(
                         'random',
                         'Random',
                         'Tell the daemon to randomly select the next wallpaper',
@@ -72,7 +72,8 @@ export default class ControlsMenuItem extends PopupMenu.PopupBaseMenuItem {
 
     set random(value: boolean) {
         this.#random = value;
-        this.#random_control?.set_state(value ? 'random' : 'ordered');
+        if (this.#random_control)
+            this.#random_control.state = value ? 'random' : 'ordered';
         this.notify('random');
     }
 
@@ -81,7 +82,6 @@ export default class ControlsMenuItem extends PopupMenu.PopupBaseMenuItem {
     }
 
     set service_running(value: boolean) {
-        console.log(`controls_menu_item.service_running: ${value}`);
         this.#service_running = value;
         this.notify('service-running');
     }
@@ -130,11 +130,9 @@ export default class ControlsMenuItem extends PopupMenu.PopupBaseMenuItem {
             this.#service_running_control, 'state',
             GObject.BindingFlags.SYNC_CREATE | GObject.BindingFlags.BIDIRECTIONAL,
             (binding, source) => {
-                console.log(`binding_to: ${source}`);
                 return [true, source === true? 'running' : 'stopped'];
             },
             (binding, source) => {
-                console.log(`binding_from: ${source}`);
                 return [true, source === 'running'];
             }
         );

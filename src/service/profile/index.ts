@@ -24,7 +24,7 @@ export default class ServiceProfile extends GObject.Object {
             {
                 GTypeName: 'DeskChangerServiceProfile',
                 Properties: {
-                    history: GObject.param_spec_variant(
+                    'history': GObject.param_spec_variant(
                         'history',
                         'History',
                         'History of the loaded profile',
@@ -32,28 +32,28 @@ export default class ServiceProfile extends GObject.Object {
                         null,
                         GObject.ParamFlags.READABLE
                     ),
-                    loaded: GObject.param_spec_boolean(
+                    'loaded': GObject.param_spec_boolean(
                         'loaded',
                         'Loaded',
                         'Check if the profile is loaded',
                         false,
                         GObject.ParamFlags.READABLE
                     ),
-                    preview: GObject.param_spec_string(
+                    'preview': GObject.param_spec_string(
                         'preview',
                         'Preview',
                         'Preview of the next wallpaper in the queue',
                         null,
                         GObject.ParamFlags.READABLE
                     ),
-                    profile_name: GObject.param_spec_string(
-                        'profile_name',
+                    'profile-name': GObject.param_spec_string(
+                        'profile-name',
                         'Profile name',
                         'The profile name that this object represents',
                         null,
                         GObject.ParamFlags.READABLE
                     ),
-                    queue: GObject.param_spec_variant(
+                    'queue': GObject.param_spec_variant(
                         'queue',
                         'Queue',
                         'Queue of the loaded profile',

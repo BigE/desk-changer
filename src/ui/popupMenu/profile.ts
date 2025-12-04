@@ -28,14 +28,14 @@ export default class PopupMenuProfile extends PopupMenu.PopupSubMenuMenuItem {
             {
                 GTypeName: 'DeskChangerUiPopupMenuProfile',
                 Properties: {
-                    profile: GObject.param_spec_string(
+                    'profile': GObject.param_spec_string(
                         'profile',
                         'Profile',
                         'The name of the currently selected profile',
                         null,
                         GObject.ParamFlags.READWRITE
                     ),
-                    profiles: GObject.param_spec_variant(
+                    'profiles': GObject.param_spec_variant(
                         'profiles',
                         'Profiles',
                         'List of profiles for the dropdown menu',

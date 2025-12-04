@@ -7,8 +7,6 @@ import St from 'gi://St';
 
 import GLib from 'gi://GLib';
 
-export type PreviewSizeType = {height: number; width: number};
-
 export namespace ControlPreview {
     export interface ConstructorProps extends St.Bin.ConstructorProps {
         preview_file: string | null;
@@ -30,13 +28,20 @@ export default class ControlPreview extends St.Bin {
             {
                 GTypeName: 'DeskChangerUiControlPreview',
                 Properties: {
-                    preview_file: GObject.param_spec_string(
-                        'preview_file',
+                    'preview-file': GObject.param_spec_string(
+                        'preview-file',
                         'Preview File',
                         'File that the preview is currently displaying, NULL to disable',
                         null,
                         GObject.ParamFlags.READWRITE
                     ),
+                    'preview-size': GObject.ParamSpec.boxed(
+                        'preview-size',
+                        'Preview Size',
+                        'The size of the preview control',
+                        GObject.ParamFlags.CONSTRUCT_ONLY | GObject.ParamFlags.READABLE,
+                        Graphene.Size.$gtype
+                    )
                 },
             },
             this
@@ -51,14 +56,15 @@ export default class ControlPreview extends St.Bin {
         return this.#preview_file;
     }
 
-    get preview_size(): PreviewSizeType {
+    get preview_size(): Graphene.Size {
         return this.#preview_size;
     }
 
     set preview_file(value: string | null) {
+        if (value)
+            this.#set_preview(value);
         this.#preview_file = value;
-        this.notify('preview_file');
-        this.#set_preview();
+        this.notify('preview-file');
     }
 
     constructor(parameters: Partial<ControlPreview.ConstructorProps>) {
@@ -70,7 +76,8 @@ export default class ControlPreview extends St.Bin {
 
         this.#preview_file = preview_file || null;
         this.#preview_size = preview_size;
-        this.#set_preview();
+        if (preview_file)
+            this.#set_preview(preview_file);
     }
 
     destroy() {
@@ -83,9 +90,9 @@ export default class ControlPreview extends St.Bin {
         this.#texture = undefined;
     }
 
-    #set_preview() {
+    #set_preview(preview_file: string) {
         const file = (
-            GLib.uri_unescape_string(this.preview_file || '', null) || ''
+            GLib.uri_unescape_string(preview_file, null) || ''
         ).replace('file://', '');
 
         if (!file.length) return;

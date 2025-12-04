@@ -30,7 +30,7 @@ export default class PreviewMenuItem extends PopupMenu.PopupBaseMenuItem {
             {
                 GTypeName: 'DeskChangerPopupMenuPreviewMenuItem',
                 Properties: {
-                    preview: GObject.param_spec_string(
+                    'preview': GObject.param_spec_string(
                         'preview',
                         'Preview',
                         'File URI to send to the preview control',
@@ -109,8 +109,7 @@ export default class PreviewMenuItem extends PopupMenu.PopupBaseMenuItem {
         });
         this.#preview_binding = this.bind_property(
             'preview',
-            this.#preview_control,
-            'preview_file',
+            this.#preview_control, 'preview-file',
             GObject.BindingFlags.SYNC_CREATE
         );
         this.#box.add_child(this.#preview_control);
@@ -118,11 +117,8 @@ export default class PreviewMenuItem extends PopupMenu.PopupBaseMenuItem {
     }
 
     #remove_preview_control() {
-        if (this.#preview_binding) {
-            this.#preview_binding.unbind();
-            this.#preview_binding = undefined;
-        }
-
+        this.#preview_binding?.unbind();
+        this.#preview_binding = undefined;
         this.#preview_control?.destroy();
         this.#preview_control = undefined;
     }

@@ -10,7 +10,7 @@ export default class KeyboardShortcutRow extends Adw.ActionRow {
             {
                 GTypeName: 'DeskChangerUiPrefsKeyboardShortcutRow',
                 Properties: {
-                    keybind: GObject.param_spec_string(
+                    'keybind': GObject.param_spec_string(
                         'keybind',
                         'Keybind',
                         '',

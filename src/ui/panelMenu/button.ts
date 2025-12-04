@@ -9,6 +9,8 @@ import PreviewMenuItem from '../popupMenu/preview_menu_item.js';
 import ControlsMenuItem from '../popupMenu/controls_menu_item.js';
 import OpenCurrentMenuItem from '../popupMenu/open_current_menu_item.js';
 
+type ProfilesType = GLib.Variant<'a{sa(sb)}'>;
+
 /**
  * Main indicator button for DeskChanger
  *
@@ -25,28 +27,28 @@ export default class PanelMenuButton extends PanelMenu.Button {
             {
                 GTypeName: 'DeskChangerUiPanelMenuButton',
                 Properties: {
-                    icon_preview_enabled: GObject.param_spec_boolean(
-                        'icon_preview_enabled',
+                    'icon-preview-enabled': GObject.param_spec_boolean(
+                        'icon-preview-enabled',
                         'Icon preview enabled',
                         'If enabled the icon will turn into a preview of the next wallpaper',
                         false,
                         GObject.ParamFlags.READWRITE
                     ),
-                    preview: GObject.param_spec_string(
+                    'preview': GObject.param_spec_string(
                         'preview',
                         'Preview',
                         'Preview URI to be passed into the menu',
                         null,
                         GObject.ParamFlags.READWRITE
                     ),
-                    profile: GObject.param_spec_string(
+                    'profile': GObject.param_spec_string(
                         'profile',
                         'Profile',
                         'Current profile selected',
                         null,
                         GObject.ParamFlags.READWRITE
                     ),
-                    profiles: GObject.param_spec_variant(
+                    'profiles': GObject.param_spec_variant(
                         'profiles',
                         'Profiles',
                         'Profiles object to provide into the menu',
@@ -54,19 +56,19 @@ export default class PanelMenuButton extends PanelMenu.Button {
                         null,
                         GObject.ParamFlags.READWRITE
                     ),
-                    random: GObject.param_spec_boolean(
+                    'random': GObject.param_spec_boolean(
                         'random',
                         'Random',
                         'Random flag for the controls in the menu',
                         true,
                         GObject.ParamFlags.READWRITE
                     ),
-                    'service-running': GObject.ParamSpec.boolean(
+                    'service-running': GObject.param_spec_boolean(
                         'service-running',
                         'Service Running',
                         'Check if the service is running',
-                        GObject.ParamFlags.READWRITE,
-                        false
+                        false,
+                        GObject.ParamFlags.READWRITE
                     ),
                 },
                 Signals: {
@@ -94,7 +96,7 @@ export default class PanelMenuButton extends PanelMenu.Button {
     #profile?: string;
     #profile_activate_id?: number;
     #profile_menu_item?: PopupMenuProfile;
-    #profiles?: GLib.Variant<'a{sa(sb)}'>;
+    #profiles?: ProfilesType;
     #random: boolean;
     #service_running: boolean;
 
@@ -110,7 +112,7 @@ export default class PanelMenuButton extends PanelMenu.Button {
         return this.#profile || null;
     }
 
-    get profiles(): GLib.Variant<'a{sa(sb)}'> | null {
+    get profiles(): ProfilesType | null {
         return this.#profiles || null;
     }
 
@@ -124,7 +126,7 @@ export default class PanelMenuButton extends PanelMenu.Button {
 
     set icon_preview_enabled(value: boolean) {
         this.#icon_preview_enabled = value;
-        this.notify('icon_preview_enabled');
+        this.notify('icon-preview-enabled');
     }
 
     set preview(value: string | null) {
@@ -137,7 +139,7 @@ export default class PanelMenuButton extends PanelMenu.Button {
         this.notify('profile');
     }
 
-    set profiles(value: GLib.Variant<'a{sa(sb)}'> | null) {
+    set profiles(value: ProfilesType | null) {
         this.#profiles = value || undefined;
         this.notify('profiles');
     }
@@ -148,7 +150,6 @@ export default class PanelMenuButton extends PanelMenu.Button {
     }
 
     set service_running(value: boolean) {
-        console.log(`button.service_running: ${value}`);
         this.#service_running = value;
         this.notify('service-running');
     }
@@ -164,17 +165,15 @@ export default class PanelMenuButton extends PanelMenu.Button {
         this.#icon = new PanelMenuIcon();
         this.#bindings.push(
             this.bind_property(
-                'icon_preview_enabled',
-                this.#icon,
-                'preview_enabled',
+                'icon-preview-enabled',
+                this.#icon, 'preview-enabled',
                 GObject.BindingFlags.SYNC_CREATE
             )
         );
         this.#bindings.push(
             this.bind_property(
                 'preview',
-                this.#icon,
-                'preview',
+                this.#icon, 'preview',
                 GObject.BindingFlags.SYNC_CREATE
             )
         );
@@ -184,16 +183,14 @@ export default class PanelMenuButton extends PanelMenu.Button {
         this.#bindings.push(
             this.bind_property(
                 'profile',
-                this.#profile_menu_item,
-                'profile',
+                this.#profile_menu_item, 'profile',
                 GObject.BindingFlags.SYNC_CREATE
             )
         );
         this.#bindings.push(
             this.bind_property(
                 'profiles',
-                this.#profile_menu_item,
-                'profiles',
+                this.#profile_menu_item, 'profiles',
                 GObject.BindingFlags.SYNC_CREATE
             )
         );
@@ -213,8 +210,7 @@ export default class PanelMenuButton extends PanelMenu.Button {
         this.#bindings.push(
             this.bind_property(
                 'preview',
-                this.#preview_menu_item,
-                'preview',
+                this.#preview_menu_item, 'preview',
                 GObject.BindingFlags.SYNC_CREATE
             )
         );
@@ -225,16 +221,14 @@ export default class PanelMenuButton extends PanelMenu.Button {
         this.#bindings.push(
             this.bind_property(
                 'random',
-                this.#controls_menu_item,
-                'random',
+                this.#controls_menu_item, 'random',
                 GObject.BindingFlags.SYNC_CREATE | GObject.BindingFlags.BIDIRECTIONAL
             )
         );
         this.#bindings.push(
             this.bind_property(
                 'service-running',
-                this.#controls_menu_item,
-                'service_running',
+                this.#controls_menu_item, 'service-running',
                 GObject.BindingFlags.SYNC_CREATE | GObject.BindingFlags.BIDIRECTIONAL
             )
         );
