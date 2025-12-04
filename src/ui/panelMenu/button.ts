@@ -61,6 +61,13 @@ export default class PanelMenuButton extends PanelMenu.Button {
                         true,
                         GObject.ParamFlags.READWRITE
                     ),
+                    'service-running': GObject.ParamSpec.boolean(
+                        'service-running',
+                        'Service Running',
+                        'Check if the service is running',
+                        GObject.ParamFlags.READWRITE,
+                        false
+                    ),
                 },
                 Signals: {
                     'next-clicked': [],
@@ -89,6 +96,7 @@ export default class PanelMenuButton extends PanelMenu.Button {
     #profile_menu_item?: PopupMenuProfile;
     #profiles?: GLib.Variant<'a{sa(sb)}'>;
     #random: boolean;
+    #service_running: boolean;
 
     get icon_preview_enabled(): boolean {
         return this.#icon_preview_enabled;
@@ -108,6 +116,10 @@ export default class PanelMenuButton extends PanelMenu.Button {
 
     get random(): boolean {
         return this.#random;
+    }
+
+    get service_running() {
+        return this.#service_running;
     }
 
     set icon_preview_enabled(value: boolean) {
@@ -135,12 +147,19 @@ export default class PanelMenuButton extends PanelMenu.Button {
         this.notify('random');
     }
 
+    set service_running(value: boolean) {
+        console.log(`button.service_running: ${value}`);
+        this.#service_running = value;
+        this.notify('service-running');
+    }
+
     constructor(uuid: string) {
         super(0.0, uuid);
 
         this.#bindings = [];
         this.#icon_preview_enabled = false;
         this.#random = true;
+        this.#service_running = false;
         // first set up the icon
         this.#icon = new PanelMenuIcon();
         this.#bindings.push(
@@ -208,7 +227,15 @@ export default class PanelMenuButton extends PanelMenu.Button {
                 'random',
                 this.#controls_menu_item,
                 'random',
-                GObject.BindingFlags.SYNC_CREATE
+                GObject.BindingFlags.SYNC_CREATE | GObject.BindingFlags.BIDIRECTIONAL
+            )
+        );
+        this.#bindings.push(
+            this.bind_property(
+                'service-running',
+                this.#controls_menu_item,
+                'service_running',
+                GObject.BindingFlags.SYNC_CREATE | GObject.BindingFlags.BIDIRECTIONAL
             )
         );
         this.#next_clicked_id = this.#controls_menu_item.connect(

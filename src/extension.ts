@@ -26,6 +26,7 @@ import {SettingsRotationModes} from './common/settings.js';
  */
 export default class DeskChangerExtension extends Extension {
     #button?: PanelMenuButton;
+    #button_notify_id?: number;
     #logger?: Console;
     #next_clicked_id?: number;
     #open_prefs_id?: number;
@@ -35,6 +36,7 @@ export default class DeskChangerExtension extends Extension {
     #service?: Service;
     #service_notifications: number[] = [];
     #service_preview_binding?: GObject.Binding;
+    #service_running_binding?: GObject.Binding;
     #session_changed_id?: number;
     #settings?: Gio.Settings;
     #settings_notifications: number[] = [];
@@ -214,6 +216,19 @@ export default class DeskChangerExtension extends Extension {
                 this.#service?.Previous();
             }
         );
+        this.#service_running_binding = this.#service.bind_property(
+            'Running',
+            this.#button, 'service-running',
+            GObject.BindingFlags.SYNC_CREATE,
+        );
+        this.#button_notify_id = this.#button.connect('notify::service-running', (button: PanelMenuButton) => {
+            console.log(`notify::service-running: ${button.service_running}`);
+            if (button.service_running === true && this.#service?.Running === false)
+                this.#service.Start();
+            else if (button.service_running === false && this.#service?.Running === true)
+                this.#service.Stop();
+        });
+        // add to the main panel
         Main.panel.addToStatusArea(this.uuid, this.#button);
     }
 
@@ -360,9 +375,14 @@ export default class DeskChangerExtension extends Extension {
      * @private
      */
     #removeIndicator() {
-        if (this.#service_preview_binding) {
-            this.#service_preview_binding.unbind();
-            this.#service_preview_binding = undefined;
+        this.#service_preview_binding?.unbind();
+        this.#service_preview_binding = undefined;
+        this.#service_running_binding?.unbind();
+        this.#service_running_binding = undefined;
+
+        if (this.#button_notify_id) {
+            this.#button!.disconnect(this.#button_notify_id);
+            this.#button_notify_id = undefined;
         }
 
         if (this.#next_clicked_id) {
