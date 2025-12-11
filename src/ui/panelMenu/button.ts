@@ -34,6 +34,13 @@ export default class PanelMenuButton extends PanelMenu.Button {
                         false,
                         GObject.ParamFlags.READWRITE
                     ),
+                    'notifications': GObject.param_spec_boolean(
+                        'notifications',
+                        'Notifications',
+                        'If enabled the extension will show notifications',
+                        true,
+                        GObject.ParamFlags.READWRITE
+                    ),
                     'preview': GObject.param_spec_string(
                         'preview',
                         'Preview',
@@ -63,6 +70,13 @@ export default class PanelMenuButton extends PanelMenu.Button {
                         true,
                         GObject.ParamFlags.READWRITE
                     ),
+                    'remember-profile-state': GObject.param_spec_boolean(
+                        'remember-profile-state',
+                        'Remember Profile State',
+                        'Remember the wallpaper queue on unload',
+                        false,
+                        GObject.ParamFlags.READWRITE
+                    ),
                     'service-running': GObject.param_spec_boolean(
                         'service-running',
                         'Service Running',
@@ -85,8 +99,11 @@ export default class PanelMenuButton extends PanelMenu.Button {
     #controls_menu_item?: ControlsMenuItem;
     #icon?: PanelMenuIcon;
     #icon_preview_enabled: boolean;
+    #icon_preview_switch_menu_item?: PopupMenu.PopupSwitchMenuItem;
     declare menu: PopupMenu.PopupMenu;
     #next_clicked_id?: number;
+    #notifications: boolean;
+    #notifications_switch_menu_item?: PopupMenu.PopupSwitchMenuItem;
     #open_current_menu_item?: OpenCurrentMenuItem;
     #preferences_activate_id?: number;
     #preferences_menu_item?: PopupMenu.PopupMenuItem;
@@ -98,10 +115,17 @@ export default class PanelMenuButton extends PanelMenu.Button {
     #profile_menu_item?: PopupMenuProfile;
     #profiles?: ProfilesType;
     #random: boolean;
+    #remember_profile_state: boolean;
+    #remember_profile_state_switch_menu_item?: PopupMenu.PopupSwitchMenuItem;
     #service_running: boolean;
+    #settings_submenu?: PopupMenu.PopupSubMenuMenuItem;
 
     get icon_preview_enabled(): boolean {
         return this.#icon_preview_enabled;
+    }
+
+    get notifications(): boolean {
+        return this.#notifications;
     }
 
     get preview(): string | null {
@@ -120,13 +144,23 @@ export default class PanelMenuButton extends PanelMenu.Button {
         return this.#random;
     }
 
+    get remember_profile_state() {
+        return this.#remember_profile_state;
+    }
+
     get service_running() {
         return this.#service_running;
     }
 
     set icon_preview_enabled(value: boolean) {
+        console.log(`set icon_preview_enabled: ${value}`);
         this.#icon_preview_enabled = value;
         this.notify('icon-preview-enabled');
+    }
+
+    set notifications(value: boolean) {
+        this.#notifications = value;
+        this.notify('notifications');
     }
 
     set preview(value: string | null) {
@@ -149,6 +183,11 @@ export default class PanelMenuButton extends PanelMenu.Button {
         this.notify('random');
     }
 
+    set remember_profile_state(value: boolean) {
+        this.#remember_profile_state = value;
+        this.notify('remember-profile-state');
+    }
+
     set service_running(value: boolean) {
         this.#service_running = value;
         this.notify('service-running');
@@ -159,7 +198,9 @@ export default class PanelMenuButton extends PanelMenu.Button {
 
         this.#bindings = [];
         this.#icon_preview_enabled = false;
+        this.#notifications = true;
         this.#random = true;
+        this.#remember_profile_state = false;
         this.#service_running = false;
         // first set up the icon
         this.#icon = new PanelMenuIcon();
@@ -242,6 +283,45 @@ export default class PanelMenuButton extends PanelMenu.Button {
         );
         this.menu.addMenuItem(this.#controls_menu_item);
         this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
+        // quick settings submenu
+        this.#settings_submenu = new PopupMenu.PopupSubMenuMenuItem(_('Quick Settings'));
+        this.menu.addMenuItem(this.#settings_submenu);
+        this.#icon_preview_switch_menu_item = new PopupMenu.PopupSwitchMenuItem(
+            _('Icon as Preview'),
+            this.icon_preview_enabled
+        );
+        this.#bindings.push(
+            this.bind_property(
+                'icon-preview-enabled',
+                this.#icon_preview_switch_menu_item, 'state',
+                GObject.BindingFlags.SYNC_CREATE | GObject.BindingFlags.BIDIRECTIONAL
+            )
+        );
+        this.#settings_submenu.menu.addMenuItem(this.#icon_preview_switch_menu_item);
+        this.#remember_profile_state_switch_menu_item = new PopupMenu.PopupSwitchMenuItem(
+            _('Remember Profile State'),
+            this.remember_profile_state
+        );
+        this.#bindings.push(
+            this.bind_property(
+                'remember-profile-state',
+                this.#remember_profile_state_switch_menu_item, 'state',
+                GObject.BindingFlags.SYNC_CREATE | GObject.BindingFlags.BIDIRECTIONAL
+            )
+        );
+        this.#settings_submenu.menu.addMenuItem(this.#remember_profile_state_switch_menu_item);
+        this.#notifications_switch_menu_item = new PopupMenu.PopupSwitchMenuItem(
+            _('Notifications'),
+            this.notifications
+        );
+        this.#bindings.push(
+            this.bind_property(
+                'notifications',
+                this.#notifications_switch_menu_item, 'state',
+                GObject.BindingFlags.SYNC_CREATE | GObject.BindingFlags.BIDIRECTIONAL
+            )
+        );
+        this.#settings_submenu.menu.addMenuItem(this.#notifications_switch_menu_item);
         // preferences
         this.#preferences_menu_item = new PopupMenu.PopupMenuItem(
             _('Preferences')
@@ -283,6 +363,10 @@ export default class PanelMenuButton extends PanelMenu.Button {
             this.#previous_clicked_id = undefined;
         }
 
+        this.#icon_preview_switch_menu_item?.destroy();
+        this.#icon_preview_switch_menu_item = undefined;
+        this.#notifications_switch_menu_item?.destroy();
+        this.#notifications_switch_menu_item = undefined;
         this.#open_current_menu_item?.destroy();
         this.#open_current_menu_item = undefined;
         this.#preferences_menu_item?.destroy();
@@ -293,6 +377,9 @@ export default class PanelMenuButton extends PanelMenu.Button {
         this.#preview_menu_item = undefined;
         this.#profile_menu_item?.destroy();
         this.#profile_menu_item = undefined;
+        this.#settings_submenu?.menu.removeAll();
+        this.#settings_submenu?.destroy();
+        this.#settings_submenu = undefined;
         this.menu.removeAll();
         this.#icon?.destroy();
         this.#icon = undefined;

@@ -160,7 +160,12 @@ export default class DeskChangerExtension extends Extension {
         this.#settings.bind(
             'icon-preview',
             this.#button, 'icon-preview-enabled',
-            Gio.SettingsBindFlags.GET
+            Gio.SettingsBindFlags.DEFAULT
+        );
+        this.#settings.bind(
+            'notifications',
+            this.#button, 'notifications',
+            Gio.SettingsBindFlags.DEFAULT
         );
         this.#settings.bind(
             'random',
@@ -190,6 +195,11 @@ export default class DeskChangerExtension extends Extension {
                 return true;
             },
             null
+        );
+        this.#settings.bind(
+            'remember-profile-state',
+            this.#button, 'remember-profile-state',
+            Gio.SettingsBindFlags.DEFAULT
         );
         // service bindings
         this.#service_preview_binding = this.#service.bind_property(
@@ -278,6 +288,19 @@ export default class DeskChangerExtension extends Extension {
                                 : _(
                                       'Wallpapers will be shown in the order they were loaded'
                                   )
+                        );
+                    }
+                )
+            );
+
+            this.#settings_notifications.push(
+                this.#settings.connect(
+                    'changed::remember-profile-state',
+                    (settings: Gio.Settings) => {
+                        this.#sendNotification(
+                            settings.get_boolean('remember-profile-state')
+                            ? _('Profile queue will be saved on unload')
+                            : _('Profile queue will NOT be saved on unload')
                         );
                     }
                 )
