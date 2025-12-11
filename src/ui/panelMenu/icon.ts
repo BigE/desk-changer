@@ -64,13 +64,15 @@ export default class PanelMenuIcon extends St.Bin {
 
     set preview(value: string | null) {
         this.#preview = value;
+        if (!this.#preview_control)
+            this.update_child();
         this.notify('preview');
     }
 
     set preview_enabled(value: boolean) {
         this.#preview_enabled = value;
-        this.notify('preview-enabled');
         this.update_child();
+        this.notify('preview-enabled');
     }
 
     constructor(parameters?: Partial<PanelMenuIcon.ConstructorProps>) {
