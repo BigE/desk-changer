@@ -105,7 +105,7 @@ export default class PreviewMenuItem extends PopupMenu.PopupBaseMenuItem {
         }
 
         this.#preview_control = new ControlPreview({
-            preview_size: new Graphene.Size({height: -1, width: 200}),
+            preview_size: new Graphene.Size({height: -1, width: 256}),
         });
         this.#preview_binding = this.bind_property(
             'preview',
