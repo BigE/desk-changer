@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: desk-changer 40\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-10-28 12:33-0500\n"
+"POT-Creation-Date: 2025-12-11 13:08-0600\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -29,12 +29,38 @@ msgstr ""
 msgid "_Cancel"
 msgstr ""
 
+#: resources/ui/prefs/dialog/keybind.ui:110
+msgid "_Remove"
+msgstr ""
+
 #: resources/ui/prefs/dialog/keybind.ui:120
 msgid "Re_place"
 msgstr ""
 
 #: resources/ui/prefs/dialog/keybind.ui:130
 msgid "_Set"
+msgstr ""
+
+#: resources/ui/prefs/dialog/keybind.ui:144
+msgid "Set Keybind"
+msgstr ""
+
+#: resources/ui/prefs/about_page.ui:9
+msgid "About"
+msgstr ""
+
+#: resources/ui/prefs/about_page.ui:43
+msgid ""
+"Simple wallpaper changer with multiple profile support. Integrates into the "
+"shell by providing it's own panel icon. The daemon is written using gjs and "
+"runs independently of the extension as a background process."
+msgstr ""
+
+#: resources/ui/prefs/about_page.ui:55
+msgid ""
+"<span size=\"small\">This program comes with absolutely no warranty.\n"
+"See the <a href=\"https://opensource.org/licenses/mit-license.php\">The MIT "
+"License (MIT)</a> for details.</span>"
 msgstr ""
 
 #: resources/ui/prefs/extension_page.ui:9
@@ -49,11 +75,11 @@ msgstr ""
 msgid "Current Profile"
 msgstr ""
 
-#: resources/ui/prefs/extension_page.ui:26
+#: resources/ui/prefs/extension_page.ui:26 src/ui/panelMenu/button.ts:290
 msgid "Icon as Preview"
 msgstr ""
 
-#: resources/ui/prefs/extension_page.ui:32
+#: resources/ui/prefs/extension_page.ui:32 src/ui/panelMenu/button.ts:314
 msgid "Notifications"
 msgstr ""
 
@@ -61,16 +87,37 @@ msgstr ""
 msgid "Keyboard"
 msgstr ""
 
+#: resources/ui/prefs/keyboard_page.ui:12
+msgid "Shortcuts"
+msgstr ""
+
 #: resources/ui/prefs/profiles_page.ui:9
 msgid "Profiles"
+msgstr ""
+
+#: resources/ui/prefs/profiles_page.ui:12
+msgid "Locations"
 msgstr ""
 
 #: resources/ui/prefs/profiles_page.ui:48
 msgid "Add Item(s)"
 msgstr ""
 
+#: resources/ui/prefs/profiles_page.ui:56
+msgid "Add Folder(s)"
+msgstr ""
+
 #: resources/ui/prefs/profiles_page.ui:62
 msgid "Remove Item"
+msgstr ""
+
+#: resources/ui/prefs/profiles_page.ui:73 src/ui/popupMenu/profile.ts:87
+#: src/ui/popupMenu/profile.ts:127
+msgid "Profile"
+msgstr ""
+
+#: resources/ui/prefs/profiles_page.ui:82
+msgid "Edit Profile"
 msgstr ""
 
 #: resources/ui/prefs/profiles_page.ui:93
@@ -81,15 +128,35 @@ msgstr ""
 msgid "Remove Profile"
 msgstr ""
 
+#: resources/ui/prefs/service_page.ui:9 resources/ui/prefs/service_page.ui:53
+msgid "Daemon"
+msgstr ""
+
+#: resources/ui/prefs/service_page.ui:12
+msgid "Rotation Options"
+msgstr ""
+
+#: resources/ui/prefs/service_page.ui:21
+msgid "Mode"
+msgstr ""
+
 #: resources/ui/prefs/service_page.ui:35
 msgid "Custom Interval"
 msgstr ""
 
-#: resources/ui/prefs/service_page.ui:53
-msgid "Daemon"
+#: resources/ui/prefs/service_page.ui:41
+msgid "GameMode Monitor"
 msgstr ""
 
-#: resources/ui/prefs/service_page.ui:61
+#: resources/ui/prefs/service_page.ui:46
+msgid "Random Wallpaper"
+msgstr ""
+
+#: resources/ui/prefs/service_page.ui:56
+msgid "Auto Start"
+msgstr ""
+
+#: resources/ui/prefs/service_page.ui:61 src/ui/panelMenu/button.ts:302
 msgid "Remember Profile State"
 msgstr ""
 
@@ -97,40 +164,52 @@ msgstr ""
 msgid "Currently Running"
 msgstr ""
 
+#: resources/ui/prefs/service_page.ui:77
+msgid "Reset"
+msgstr ""
+
 #: resources/ui/prefs/service_page.ui:85
 msgid "Allowed MIME Types"
 msgstr ""
 
-#: src/extension.ts:239
+#: src/extension.ts:258
 #, javascript-format
 msgid "Profile changed to %s"
 msgstr ""
 
-#: src/extension.ts:252
+#: src/extension.ts:271
 msgid "Notifications are now enabled"
 msgstr ""
 
-#: src/extension.ts:253
+#: src/extension.ts:272
 msgid "Notifications are now disabled"
 msgstr ""
 
-#: src/extension.ts:267
+#: src/extension.ts:286
 msgid "Wallpapers will be shown in a random order"
 msgstr ""
 
-#: src/extension.ts:270
+#: src/extension.ts:289
 msgid "Wallpapers will be shown in the order they were loaded"
 msgstr ""
 
-#: src/extension.ts:299
+#: src/extension.ts:302
+msgid "Profile queue will be saved on unload"
+msgstr ""
+
+#: src/extension.ts:303
+msgid "Profile queue will NOT be saved on unload"
+msgstr ""
+
+#: src/extension.ts:331
 msgid "Rotation will occur at the beginning of every hour"
 msgstr ""
 
-#: src/extension.ts:304
+#: src/extension.ts:336
 msgid "Rotation will occur at the beginning of every day"
 msgstr ""
 
-#: src/extension.ts:308
+#: src/extension.ts:340
 msgid "Rotation has been disabled"
 msgstr ""
 
@@ -138,15 +217,15 @@ msgstr ""
 msgid "DBUS: Failed to find interface info"
 msgstr ""
 
-#: src/service/runner.ts:203 src/service/runner.ts:255
+#: src/service/runner.ts:202 src/service/runner.ts:254
 msgid "Service isn't running"
 msgstr ""
 
-#: src/service/runner.ts:229
+#: src/service/runner.ts:228
 msgid "Service is already running"
 msgstr ""
 
-#: src/service/runner.ts:272
+#: src/service/runner.ts:271
 msgid "Timer already exists"
 msgstr ""
 
@@ -181,15 +260,15 @@ msgstr ""
 msgid "Interval must be between 1 and 86400"
 msgstr ""
 
-#: src/ui/panelMenu/button.ts:226
+#: src/ui/panelMenu/button.ts:287
+msgid "Quick Settings"
+msgstr ""
+
+#: src/ui/panelMenu/button.ts:327
 msgid "Preferences"
 msgstr ""
 
-#: src/ui/popupMenu/profile.ts:87 src/ui/popupMenu/profile.ts:123
-msgid "Profile"
-msgstr ""
-
-#: src/ui/popupMenu/profile.ts:122
+#: src/ui/popupMenu/profile.ts:126
 #, javascript-format
 msgid "Profile: %s"
 msgstr ""

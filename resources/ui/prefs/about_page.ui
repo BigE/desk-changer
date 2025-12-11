@@ -1,12 +1,12 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<!-- Created with Cambalache 0.96.1 -->
+<!-- Created with Cambalache 0.96.3 -->
 <interface>
   <!-- interface-name about_page.ui -->
   <requires lib="gtk" version="4.18"/>
   <requires lib="libadwaita" version="1.7"/>
   <template class="DeskChangerUiPrefsAboutPage" parent="AdwPreferencesPage">
     <property name="icon-name">dialog-information-symbolic</property>
-    <property name="title">About</property>
+    <property name="title" translatable="yes">About</property>
     <child>
       <object class="AdwPreferencesGroup">
         <child>
@@ -40,7 +40,7 @@
             </child>
             <child>
               <object class="GtkLabel" id="description_label">
-                <property name="label">Simple wallpaper changer with multiple profile support. Integrates into the shell by providing it's own panel icon. The daemon is written using gjs and runs independently of the extension as a background process.</property>
+                <property name="label" translatable="yes">Simple wallpaper changer with multiple profile support. Integrates into the shell by providing it's own panel icon. The daemon is written using gjs and runs independently of the extension as a background process.</property>
                 <property name="wrap">True</property>
               </object>
             </child>
@@ -52,7 +52,7 @@
             </child>
             <child>
               <object class="GtkLabel" id="license_label">
-                <property name="label">&lt;span size="small"&gt;This program comes with absolutely no warranty.
+                <property name="label" translatable="yes">&lt;span size="small"&gt;This program comes with absolutely no warranty.
 See the &lt;a href="https://opensource.org/licenses/mit-license.php"&gt;The MIT License (MIT)&lt;/a&gt; for details.&lt;/span&gt;</property>
                 <property name="use-markup">True</property>
                 <property name="wrap">True</property>

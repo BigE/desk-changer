@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<!-- Created with Cambalache 0.96.1 -->
+<!-- Created with Cambalache 0.96.3 -->
 <interface>
   <!-- interface-name keybind.ui -->
   <requires lib="gtk" version="4.18"/>
@@ -107,7 +107,7 @@
             </child>
             <child type="start">
               <object class="GtkButton" id="remove_button">
-                <property name="label">_Remove</property>
+                <property name="label" translatable="yes">_Remove</property>
                 <property name="use-underline">True</property>
                 <property name="valign">end</property>
                 <style>
@@ -141,7 +141,7 @@
     </property>
     <property name="content-height">300</property>
     <property name="content-width">400</property>
-    <property name="title">Set Keybind</property>
+    <property name="title" translatable="yes">Set Keybind</property>
     <child>
       <object class="GtkEventControllerKey">
         <property name="propagation-phase">capture</property>

@@ -114,7 +114,7 @@
 				profile is changed. This means returning back to the profile will restore the previous background plus
 				the next in queue.
 			</description>
-			<summary>Remember profile last wallpaper on load</summary>
+			<summary>Remember profile wallpaper queue on unload</summary>
 		</key>
 		<key name="rotation" type="s">
 			<choices>
