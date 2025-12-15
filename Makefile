@@ -1,9 +1,11 @@
-NAME=desk-changer
-DOMAIN=eric.gach.gmail.com
-UUID=$(NAME)@$(DOMAIN)
-VERSION:=$(shell grep '"version"' metadata.json | cut -d '"' -f 4)
+NAME := desk-changer
+DOMAIN := eric.gach.gmail.com
+UUID := $(NAME)@$(DOMAIN)
+EXT_DIR := "${HOME}/.local/share/gnome-shell/extensions"
+TARGET_DIR := $(EXT_DIR)/$(UUID)
+VERSION := $(shell grep '"version"' metadata.json | cut -d '"' -f 4)
 
-.PHONY: all pack install clean pot update-translation
+.PHONY: all pack install clean pot symlink update-translation
 
 all: schemas/gschemas.compiled dist update-translations
 
@@ -33,6 +35,7 @@ $(UUID)-$(VERSION).zip: dist
 pack: $(UUID)-$(VERSION).zip
 
 install: pack
+	@echo "Installing $(UUID)"
 	@gnome-extensions install $(UUID)-$(VERSION).zip
 	@gnome-extensions enable $(UUID)
 
@@ -43,6 +46,26 @@ pot: po/xgettext.txt
 	@xgettext --package-name=$(NAME) --package-version=$(VERSION) -k --keyword=_ --keyword=gettext -o ./po/desk-changer.pot -f ./po/xgettext.txt
 
 po/desk-changer.pot: pot
+
+symlink: dist schemas/gschemas.compiled
+#	Ensure the target doesn't exist as an actual directory
+	@if [ -d "$(TARGET_DIR)" ] && [ ! -L "$(TARGET_DIR)" ]; then \
+		echo "Error: $(TARGET_DIR) exists and is a real directory" \
+		echo "Please remove it manually to prevent data loss."; \
+		exit 1; \
+	fi
+
+	@echo "Creating symlink in $(EXT_DIR)"
+	@ln -sfn "$(PWD)/dist" "$(TARGET_DIR)"
+
+uninstall:
+	@echo "Uninstalling $(UUID)"
+	@gnome-extensions uninstall $(UUID)
+
+unsymlink:
+	@echo "Removing symlink from $(EXT_DIR)"
+#	This should fail if the extension is not a symlink since we're not passing the recursive flag.
+	@rm -f $(TARGET_DIR)
 
 update-translations: po/desk-changer.pot dist
 	@(cd po && ./compile.sh ../dist/locale)
