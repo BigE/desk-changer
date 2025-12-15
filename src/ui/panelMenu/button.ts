@@ -153,7 +153,6 @@ export default class PanelMenuButton extends PanelMenu.Button {
     }
 
     set icon_preview_enabled(value: boolean) {
-        console.log(`set icon_preview_enabled: ${value}`);
         this.#icon_preview_enabled = value;
         this.notify('icon-preview-enabled');
     }

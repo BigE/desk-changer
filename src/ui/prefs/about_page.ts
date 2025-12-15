@@ -14,7 +14,6 @@ export default class AboutPage extends Adw.PreferencesPage {
         // @ts-expect-error Bind property from resource file
         this.version_label = this._version_label;
 
-        console.log(description);
         if (description)
             this.description_label?.set_label(description);
 
