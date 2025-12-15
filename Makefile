@@ -37,7 +37,7 @@ pack: $(UUID)-$(VERSION).zip
 install: pack
 	@echo "Installing $(UUID)"
 	@gnome-extensions install $(UUID)-$(VERSION).zip
-	@gnome-extensions enable $(UUID)
+	@echo "Extension is installed. You must logout/login before it can be enabled."
 
 clean:
 	@rm -Rf dist $(UUID)-$(VERSION).zip .yarn/install-state.gz schemas/gschemas.compiled
