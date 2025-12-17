@@ -12,7 +12,7 @@ export default class ServiceTimer extends GObject.Object {
         GObject.registerClass(
             {
                 Properties: {
-                    interval: GObject.param_spec_int(
+                    'interval': GObject.param_spec_int(
                         'interval',
                         'Interval',
                         'Timer interval that the callback executes',

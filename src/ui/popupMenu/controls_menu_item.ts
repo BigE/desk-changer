@@ -10,6 +10,7 @@ export namespace ControlsMenuItem {
     export interface ConstructorProps
         extends PopupMenu.PopupBaseMenuItem.ConstructorProps {
         random: boolean;
+        service_running: boolean;
     }
 }
 
@@ -29,10 +30,17 @@ export default class ControlsMenuItem extends PopupMenu.PopupBaseMenuItem {
             {
                 GTypeName: 'DeskChangerUiPopupMenuControlsMenuItem',
                 Properties: {
-                    random: GObject.param_spec_boolean(
+                    'random': GObject.param_spec_boolean(
                         'random',
                         'Random',
                         'Tell the daemon to randomly select the next wallpaper',
+                        false,
+                        GObject.ParamFlags.READWRITE
+                    ),
+                    'service-running': GObject.param_spec_boolean(
+                        'service-running',
+                        'Service Running',
+                        'Check if the service is running',
                         false,
                         GObject.ParamFlags.READWRITE
                     ),
@@ -54,6 +62,9 @@ export default class ControlsMenuItem extends PopupMenu.PopupBaseMenuItem {
     #random: boolean;
     #random_control?: ControlStateButton;
     #random_clicked_id?: number;
+    #service_running: boolean;
+    #service_running_binding?: GObject.Binding;
+    #service_running_control?: ControlStateButton;
 
     get random() {
         return this.#random;
@@ -61,12 +72,22 @@ export default class ControlsMenuItem extends PopupMenu.PopupBaseMenuItem {
 
     set random(value: boolean) {
         this.#random = value;
-        this.#random_control?.set_state(value ? 'random' : 'ordered');
+        if (this.#random_control)
+            this.#random_control.state = value ? 'random' : 'ordered';
         this.notify('random');
     }
 
+    get service_running() {
+        return this.#service_running;
+    }
+
+    set service_running(value: boolean) {
+        this.#service_running = value;
+        this.notify('service-running');
+    }
+
     constructor(properties?: Partial<ControlsMenuItem.ConstructorProps>) {
-        const {random, ...props} = properties || {};
+        const {random, service_running, ...props} = properties || {};
         props.reactive ??= false;
         super(props);
 
@@ -75,6 +96,7 @@ export default class ControlsMenuItem extends PopupMenu.PopupBaseMenuItem {
             x_align: Clutter.ActorAlign.FILL,
         });
         this.#random = random || true;
+        this.#service_running = service_running || false;
         this.#next = new ControlButton({icon_name: 'media-skip-forward'});
         this.#next_clicked_id = this.#next.connect('clicked', () =>
             this.emit('next-clicked')
@@ -97,9 +119,29 @@ export default class ControlsMenuItem extends PopupMenu.PopupBaseMenuItem {
             }
         );
 
+        this.#service_running_control = new ControlStateButton({
+            running: 'media-playback-stop',
+            stopped: 'media-playback-start',
+        }, this.service_running ? 'running' : 'stopped');
+
+        // @ts-expect-error - The TS bindings are wrong https://github.com/gjsify/ts-for-gir/issues/154
+        this.#service_running_binding = this.bind_property_full(
+            'service_running',
+            this.#service_running_control, 'state',
+            GObject.BindingFlags.SYNC_CREATE | GObject.BindingFlags.BIDIRECTIONAL,
+            (binding, source) => {
+                return [true, source === true? 'running' : 'stopped'];
+            },
+            (binding, source) => {
+                return [true, source === 'running'];
+            }
+        );
+
         this.#content_box.add_child(this.#prev);
         this.#content_box.add_child(new St.Bin({x_expand: true}));
         this.#content_box.add_child(this.#random_control);
+        this.#content_box.add_child(new St.Bin({x_expand: true}));
+        this.#content_box.add_child(this.#service_running_control);
         this.#content_box.add_child(new St.Bin({x_expand: true}));
         this.#content_box.add_child(this.#next);
         this.add_child(new St.Bin({x_expand: true}));
@@ -123,6 +165,8 @@ export default class ControlsMenuItem extends PopupMenu.PopupBaseMenuItem {
             this.#random_clicked_id = undefined;
         }
 
+        this.#service_running_binding?.unbind();
+        this.#service_running_binding = undefined;
         this.#next?.destroy();
         this.#next = undefined;
         this.#prev?.destroy();

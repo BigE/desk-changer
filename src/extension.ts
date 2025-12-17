@@ -26,6 +26,7 @@ import {SettingsRotationModes} from './common/settings.js';
  */
 export default class DeskChangerExtension extends Extension {
     #button?: PanelMenuButton;
+    #button_notify_id?: number;
     #logger?: Console;
     #next_clicked_id?: number;
     #open_prefs_id?: number;
@@ -35,6 +36,7 @@ export default class DeskChangerExtension extends Extension {
     #service?: Service;
     #service_notifications: number[] = [];
     #service_preview_binding?: GObject.Binding;
+    #service_running_binding?: GObject.Binding;
     #session_changed_id?: number;
     #settings?: Gio.Settings;
     #settings_notifications: number[] = [];
@@ -152,26 +154,27 @@ export default class DeskChangerExtension extends Extension {
         // settings bindings
         this.#settings.bind(
             'current-profile',
-            this.#button,
-            'profile',
+            this.#button, 'profile',
             Gio.SettingsBindFlags.DEFAULT
         );
         this.#settings.bind(
             'icon-preview',
-            this.#button,
-            'icon_preview_enabled',
-            Gio.SettingsBindFlags.GET
+            this.#button, 'icon-preview-enabled',
+            Gio.SettingsBindFlags.DEFAULT
+        );
+        this.#settings.bind(
+            'notifications',
+            this.#button, 'notifications',
+            Gio.SettingsBindFlags.DEFAULT
         );
         this.#settings.bind(
             'random',
-            this.#button,
-            'random',
+            this.#button, 'random',
             Gio.SettingsBindFlags.DEFAULT
         );
         this.#settings.bind_with_mapping(
             'profiles',
-            this.#button,
-            'profiles',
+            this.#button, 'profiles',
             Gio.SettingsBindFlags.GET,
             (value, variant) => {
                 this.#clearTimeout();
@@ -193,11 +196,15 @@ export default class DeskChangerExtension extends Extension {
             },
             null
         );
+        this.#settings.bind(
+            'remember-profile-state',
+            this.#button, 'remember-profile-state',
+            Gio.SettingsBindFlags.DEFAULT
+        );
         // service bindings
         this.#service_preview_binding = this.#service.bind_property(
             'Preview',
-            this.#button,
-            'preview',
+            this.#button, 'preview',
             GObject.BindingFlags.SYNC_CREATE
         );
         // signals
@@ -214,6 +221,18 @@ export default class DeskChangerExtension extends Extension {
                 this.#service?.Previous();
             }
         );
+        this.#service_running_binding = this.#service.bind_property(
+            'Running',
+            this.#button, 'service-running',
+            GObject.BindingFlags.SYNC_CREATE,
+        );
+        this.#button_notify_id = this.#button.connect('notify::service-running', (button: PanelMenuButton) => {
+            if (button.service_running === true && this.#service?.Running === false)
+                this.#service.Start();
+            else if (button.service_running === false && this.#service?.Running === true)
+                this.#service.Stop();
+        });
+        // add to the main panel
         Main.panel.addToStatusArea(this.uuid, this.#button);
     }
 
@@ -269,6 +288,19 @@ export default class DeskChangerExtension extends Extension {
                                 : _(
                                       'Wallpapers will be shown in the order they were loaded'
                                   )
+                        );
+                    }
+                )
+            );
+
+            this.#settings_notifications.push(
+                this.#settings.connect(
+                    'changed::remember-profile-state',
+                    (settings: Gio.Settings) => {
+                        this.#sendNotification(
+                            settings.get_boolean('remember-profile-state')
+                            ? _('Profile queue will be saved on unload')
+                            : _('Profile queue will NOT be saved on unload')
                         );
                     }
                 )
@@ -360,9 +392,9 @@ export default class DeskChangerExtension extends Extension {
      * @private
      */
     #removeIndicator() {
-        if (this.#service_preview_binding) {
-            this.#service_preview_binding.unbind();
-            this.#service_preview_binding = undefined;
+        if (this.#button_notify_id) {
+            this.#button!.disconnect(this.#button_notify_id);
+            this.#button_notify_id = undefined;
         }
 
         if (this.#next_clicked_id) {
@@ -380,6 +412,10 @@ export default class DeskChangerExtension extends Extension {
             this.#previous_clicked_id = undefined;
         }
 
+        this.#service_preview_binding?.unbind();
+        this.#service_preview_binding = undefined;
+        this.#service_running_binding?.unbind();
+        this.#service_running_binding = undefined;
         this.#button?.destroy();
         this.#button = undefined;
     }

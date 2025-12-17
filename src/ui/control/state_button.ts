@@ -17,7 +17,7 @@ export default class ControlStateButton extends ControlButton {
             {
                 GTypeName: 'DeskChangerUiControlStateButton',
                 Properties: {
-                    state: GObject.param_spec_string(
+                    'state': GObject.param_spec_string(
                         'state',
                         'State',
                         'State name',
@@ -31,16 +31,21 @@ export default class ControlStateButton extends ControlButton {
     }
 
     #clicked_id?: number;
-    #state?: string;
+    #state: string;
     readonly #states: StateType;
 
     get state() {
-        return this.#state || null;
+        return this.#state;
     }
 
-    set state(state: string | null) {
-        if (state) this.set_state(state);
-        this.#state = state || undefined;
+    set state(state: string) {
+        if (state === this.#state) return;
+
+        if (!(state in this.#states))
+            throw new TypeError(`State ${state} does not exist`);
+
+        this.#state = state;
+        this.set_icon_name(this.#states[state]);
         this.notify('state');
     }
 
@@ -76,14 +81,5 @@ export default class ControlStateButton extends ControlButton {
         }
 
         super.destroy();
-    }
-
-    set_state(state: string) {
-        if (this.#state === state) return;
-
-        if (!(state in this.#states))
-            throw new TypeError(`State ${state} does not exist`);
-
-        this.set_icon_name(this.#states[state]);
     }
 }

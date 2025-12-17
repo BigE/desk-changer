@@ -8,7 +8,7 @@ export default class ServiceProfileWallpaper extends GObject.Object {
             {
                 GTypeName: 'DeskChangerServiceProfileWallpaper',
                 Properties: {
-                    wallpaper: GObject.param_spec_string(
+                    'wallpaper': GObject.param_spec_string(
                         'wallpaper',
                         'Wallpaper',
                         'Wallpaper URI',

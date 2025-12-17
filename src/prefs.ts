@@ -125,6 +125,7 @@ export default class DeskChangerPreferences extends ExtensionPreferences {
         window.add(this.#extension_page);
         window.add(this.#service_page);
         window.add(new AboutPage(this.metadata.description, this.metadata.version));
+        window.set_default_size(-1, 660);
 
         window.connect('close-request', () => {
             this.#extension_page?.destroy();

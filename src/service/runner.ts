@@ -23,14 +23,14 @@ export class ServiceRunner extends GObject.Object {
             {
                 GTypeName: 'DeskChangerService',
                 Properties: {
-                    GameMode: GObject.param_spec_boolean(
+                    'GameMode': GObject.param_spec_boolean(
                         'GameMode',
                         'GameMode',
                         'Check if GameMode is currently enabled',
                         false,
                         GObject.ParamFlags.READABLE
                     ),
-                    History: GObject.param_spec_variant(
+                    'History': GObject.param_spec_variant(
                         'History',
                         'History',
                         'History of the currently loaded profile',
@@ -38,14 +38,14 @@ export class ServiceRunner extends GObject.Object {
                         null,
                         GObject.ParamFlags.READABLE
                     ),
-                    Profile: GObject.param_spec_string(
+                    'Profile': GObject.param_spec_string(
                         'Profile',
                         'Profile',
                         'The currently loaded profile name',
                         null,
                         GObject.ParamFlags.READABLE
                     ),
-                    Queue: GObject.param_spec_variant(
+                    'Queue': GObject.param_spec_variant(
                         'Queue',
                         'Queue',
                         'Queue of the currently loaded profile',
@@ -53,14 +53,14 @@ export class ServiceRunner extends GObject.Object {
                         null,
                         GObject.ParamFlags.READABLE
                     ),
-                    Preview: GObject.param_spec_string(
+                    'Preview': GObject.param_spec_string(
                         'Preview',
                         'Preview',
                         'A preview of the upcoming wallpaper in the queue',
                         null,
                         GObject.ParamFlags.READABLE
                     ),
-                    Running: GObject.param_spec_boolean(
+                    'Running': GObject.param_spec_boolean(
                         'Running',
                         'Running',
                         'Check if the daemon is running',
@@ -69,11 +69,11 @@ export class ServiceRunner extends GObject.Object {
                     ),
                 },
                 Signals: {
-                    Changed: {param_types: [GObject.TYPE_STRING]},
-                    Start: {
+                    'Changed': {param_types: [GObject.TYPE_STRING]},
+                    'Start': {
                         param_types: [GObject.TYPE_STRING, GObject.TYPE_STRING],
                     },
-                    Stop: {},
+                    'Stop': {},
                 },
             },
             this
@@ -131,10 +131,11 @@ export class ServiceRunner extends GObject.Object {
     destroy() {
         if (this.#running) this.Stop();
 
-        if (this.#gamemode) this.#gamemode.destroy();
-
-        this.#background = undefined;
+        this.#gamemode?.destroy();
         this.#gamemode = undefined;
+        this.#profile?.destroy(this.#background?.get_string('picture-uri'));
+        this.#profile = undefined;
+        this.#background = undefined;
         this.#logger = undefined;
         this.#settings = undefined;
     }
@@ -228,7 +229,17 @@ export class ServiceRunner extends GObject.Object {
     Start() {
         if (this.#running) throw new Error(_('Service is already running'));
 
-        if (!this.#profile) this.Load();
+        if (!this.#profile)
+            this.Load();
+        else if (this.#profile.loaded === false) {
+            try {
+                this.#profile.load();
+            } catch (e) {
+                this.#profile.destroy();
+                this.#profile = undefined;
+                throw e;
+            }
+        }
 
         // create the timer
         this.#create_timer();
@@ -265,6 +276,8 @@ export class ServiceRunner extends GObject.Object {
         }
 
         this.#destroy_timer();
+        // unload the profile to give it a chance to save its state
+        this.#profile?.unload(this.#background?.get_string('picture-uri'));
         this.emit('Stop');
     }
 

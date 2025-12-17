@@ -1,11 +1,11 @@
 <?xml version='1.0' encoding='UTF-8' standalone='no'?>
 <!DOCTYPE cambalache-project SYSTEM "cambalache-project.dtd">
-<!-- Created with Cambalache 0.96.1 -->
+<!-- Created with Cambalache 0.96.3 -->
 <cambalache-project version="0.96.0" target_tk="gtk-4.0">
-  <ui template-class="DeskChangerUiPrefsProfilesPage" filename="resources/ui/prefs/profiles_page.ui" sha256="a2e0808e7f7d83977fd492206770fc72224cb9758b51836d08ff9eca94cc7359"/>
-  <ui template-class="DeskChangerUiPrefsKeyboardPage" filename="resources/ui/prefs/keyboard_page.ui" sha256="7ae3eec048bc9aa770f441c90fd5e90cfb3a860af45be9ac3893da605cd956db"/>
+  <ui template-class="DeskChangerUiPrefsProfilesPage" filename="resources/ui/prefs/profiles_page.ui" sha256="0da4f480c39db8657536f22df96a64c82ebe3e63c9c83d908116aa8b2b80703b"/>
+  <ui template-class="DeskChangerUiPrefsKeyboardPage" filename="resources/ui/prefs/keyboard_page.ui" sha256="a870df5c42e1127fd6c157f1270a3798bdc9190aa7f1874b0ff157fe0b53f0ad"/>
   <ui template-class="DeskChangerUiPrefsExtensionPage" filename="resources/ui/prefs/extension_page.ui" sha256="fe6703b7fc1ce6fd356bc4c93e6467ea9b8eec802228a000670ed5b0ceb27d5d"/>
-  <ui template-class="DeskChangerUiPrefsServicePage" filename="resources/ui/prefs/service_page.ui" sha256="2178abeed677f77971fd69895728149489529487cf830bf3afc795b36392bbdf"/>
-  <ui template-class="DeskChangerUiPrefsAboutPage" filename="resources/ui/prefs/about_page.ui" sha256="8fe331db4c1abf4bd04dda95bdc74da93237a95a4b0c56ad49c751a31ef95861"/>
-  <ui template-class="DeskChangerUiKeybindDialog" filename="resources/ui/prefs/dialog/keybind.ui" sha256="cbd5348e8f182bca708e313e356b18e5c2cd1a29fd10254b30d8a25840cd2ac1"/>
+  <ui template-class="DeskChangerUiPrefsServicePage" filename="resources/ui/prefs/service_page.ui" sha256="09e4ddd8ca199393eea1564e69abec830de909d1c7dd96fb66d352aaadcdd9c3"/>
+  <ui template-class="DeskChangerUiPrefsAboutPage" filename="resources/ui/prefs/about_page.ui" sha256="e01cb2816e0b4bd65993dcdc4a18d3493f13f886fde455b70c6bc1553141ba31"/>
+  <ui template-class="DeskChangerUiKeybindDialog" filename="resources/ui/prefs/dialog/keybind.ui" sha256="b53de64a7642a8e13646fc1e7209b0e4ec0e57fbcaaea785f8634773dc6b3091"/>
 </cambalache-project>

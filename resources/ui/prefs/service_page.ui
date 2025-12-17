@@ -1,15 +1,15 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<!-- Created with Cambalache 0.96.1 -->
+<!-- Created with Cambalache 0.96.3 -->
 <interface>
   <!-- interface-name service_page.ui -->
   <requires lib="gtk" version="4.18"/>
   <requires lib="libadwaita" version="1.7"/>
   <template class="DeskChangerUiPrefsServicePage" parent="AdwPreferencesPage">
     <property name="icon-name">application-x-executable-symbolic</property>
-    <property name="title">Daemon</property>
+    <property name="title" translatable="yes">Daemon</property>
     <child>
       <object class="AdwPreferencesGroup">
-        <property name="title">Rotation Options</property>
+        <property name="title" translatable="yes">Rotation Options</property>
         <child>
           <object class="AdwComboRow" id="rotation_mode_combo">
             <property name="factory">
@@ -18,7 +18,7 @@
                 <signal name="setup" handler="_on_rotation_mode_combo_factory_setup"/>
               </object>
             </property>
-            <property name="title">Mode</property>
+            <property name="title" translatable="yes">Mode</property>
           </object>
         </child>
         <child>
@@ -38,12 +38,12 @@
         </child>
         <child>
           <object class="AdwSwitchRow" id="gamemode_switch">
-            <property name="title">GameMode Monitor</property>
+            <property name="title" translatable="yes">GameMode Monitor</property>
           </object>
         </child>
         <child>
           <object class="AdwSwitchRow" id="random_switch">
-            <property name="title">Random Wallpaper</property>
+            <property name="title" translatable="yes">Random Wallpaper</property>
           </object>
         </child>
       </object>
@@ -53,7 +53,7 @@
         <property name="title" translatable="yes">Daemon</property>
         <child>
           <object class="AdwSwitchRow" id="daemon_auto_start_switch">
-            <property name="title">Auto Start</property>
+            <property name="title" translatable="yes">Auto Start</property>
           </object>
         </child>
         <child>
@@ -74,7 +74,7 @@
       <object class="AdwPreferencesGroup">
         <property name="header-suffix">
           <object class="GtkButton" id="allowed_mime_types_reset_button">
-            <property name="label">Reset</property>
+            <property name="label" translatable="yes">Reset</property>
             <property name="visible">False</property>
             <signal name="clicked" handler="_on_allowed_mime_types_reset_button_clicked"/>
             <style>

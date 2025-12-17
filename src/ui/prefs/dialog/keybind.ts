@@ -22,15 +22,15 @@ export default class KeybindDialog extends Adw.Dialog {
                     'top_info_label',
                 ],
                 Properties: {
-                    keybind: GObject.param_spec_string(
+                    'keybind': GObject.param_spec_string(
                         'keybind',
                         'Keybind',
                         'GTK keybind name from Gtk.accelerator_name',
                         null,
                         GObject.ParamFlags.READWRITE
                     ),
-                    keybind_name: GObject.param_spec_string(
-                        'keybind_name',
+                    'keybind-name': GObject.param_spec_string(
+                        'keybind-name',
                         'Keybind Name',
                         'DeskChanger keybind name to display',
                         null,
@@ -72,7 +72,7 @@ export default class KeybindDialog extends Adw.Dialog {
 
     set keybind_name(value: string) {
         this.#keybind_name = value;
-        this.notify('keybind_name');
+        this.notify('keybind-name');
     }
 
     constructor(

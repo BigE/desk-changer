@@ -6,7 +6,7 @@ export default class CommonProfileItem extends GObject.Object {
             {
                 GTypeName: 'DeskChangerCommonProfileItem',
                 Properties: {
-                    recursive: GObject.param_spec_boolean(
+                    'recursive': GObject.param_spec_boolean(
                         'recursive',
                         'Recursive',
                         'Toggle to recursively load the URI',
@@ -14,7 +14,7 @@ export default class CommonProfileItem extends GObject.Object {
                         GObject.ParamFlags.READWRITE |
                             GObject.ParamFlags.CONSTRUCT
                     ),
-                    uri: GObject.param_spec_string(
+                    'uri': GObject.param_spec_string(
                         'uri',
                         'URI',
                         'URI to load into the profile',
