@@ -237,6 +237,7 @@ export class ServiceRunner extends GObject.Object {
             } catch (e) {
                 this.#profile.destroy();
                 this.#profile = undefined;
+                throw e;
             }
         }
 
