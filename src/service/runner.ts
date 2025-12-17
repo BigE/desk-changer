@@ -1,14 +1,15 @@
 import Gio from 'gi://Gio';
+import GLib from 'gi://GLib';
 import GObject from 'gi://GObject';
 
 import RotationModes from '../common/rotation_modes.js';
 import {SettingsRotationModes} from '../common/settings.js';
+import GameMode from './gamemode.js';
 import ServiceProfile from './profile/index.js';
 import ServiceTimer from './timer/index.js';
-import ServiceTimerHourly from './timer/hourly.js';
 import ServiceTimerDaily from './timer/daily.js';
-import GameMode from './gamemode.js';
-import GLib from 'gi://GLib';
+import ServiceTimerHourly from './timer/hourly.js';
+import ServiceTimerInterval from './timer/interval.js';
 
 export namespace ServiceRunner {
     export interface ConstructorProps {
@@ -292,7 +293,7 @@ export class ServiceRunner extends GObject.Object {
             const interval =
                 RotationModes[rotation].interval ||
                 this.#settings!.get_int('interval');
-            this.#timer = new ServiceTimer(
+            this.#timer = new ServiceTimerInterval(
                 interval,
                 this.#timer_rotation_callback.bind(this)
             );
