@@ -3,7 +3,7 @@ DOMAIN := eric.gach.gmail.com
 UUID := $(NAME)@$(DOMAIN)
 EXT_DIR := "${HOME}/.local/share/gnome-shell/extensions"
 TARGET_DIR := $(EXT_DIR)/$(UUID)
-VERSION := $(shell grep '"version"' metadata.json | cut -d '"' -f 4)
+VERSION := version-$(shell grep '"version"' metadata.json | cut -d '"' -f 4)
 
 .PHONY: all pack install clean pot symlink update-translation
 
