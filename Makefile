@@ -43,11 +43,16 @@ clean:
 	@rm -Rf dist $(UUID)-$(VERSION).zip .yarn/install-state.gz schemas/gschemas.compiled
 
 pot: po/xgettext.txt
-	@xgettext --package-name=$(NAME) --package-version=$(VERSION) -k --keyword=_ --keyword=gettext -o ./po/desk-changer.pot -f ./po/xgettext.txt
+	@xgettext \
+		--package-name=$(NAME) \
+		--package-version=$(VERSION) \
+		-k --keyword=_ --keyword=gettext \
+		-o ./po/desk-changer.pot \
+		-f ./po/xgettext.txt
 
 po/desk-changer.pot: pot
 
-symlink: dist schemas/gschemas.compiled
+symlink: schemas/gschemas.compiled dist
 #	Ensure the target doesn't exist as an actual directory
 	@if [ -d "$(TARGET_DIR)" ] && [ ! -L "$(TARGET_DIR)" ]; then \
 		echo "Error: $(TARGET_DIR) exists and is a real directory" \

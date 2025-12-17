@@ -1,6 +1,13 @@
 # Contributing to DeskChanger
 If you would like to contribute to DeskChanger, please read through this document.
 
+## Development Requirements
+To work on the project you will need the following software
+ * `make` for running commands in the `Makefile`
+ * `xgettext` for working with translations
+ * `yarn` for package management and TypeScript compilation
+ * `zip` for making the ZIP file of the extension
+
 ## Pull Requests
 Pull requests are actively welcome for DeskChanger. If you would like to contribute you can take a look at any of the
 existing
