@@ -131,9 +131,11 @@ export class ServiceRunner extends GObject.Object {
     destroy() {
         if (this.#running) this.Stop();
 
-        this.#background = undefined;
         this.#gamemode?.destroy();
         this.#gamemode = undefined;
+        this.#profile?.destroy(this.#background?.get_string('picture-uri'));
+        this.#profile = undefined;
+        this.#background = undefined;
         this.#logger = undefined;
         this.#settings = undefined;
     }
@@ -227,7 +229,16 @@ export class ServiceRunner extends GObject.Object {
     Start() {
         if (this.#running) throw new Error(_('Service is already running'));
 
-        if (!this.#profile) this.Load();
+        if (!this.#profile)
+            this.Load();
+        else if (this.#profile.loaded === false) {
+            try {
+                this.#profile.load();
+            } catch (e) {
+                this.#profile.destroy();
+                this.#profile = undefined;
+            }
+        }
 
         // create the timer
         this.#create_timer();
@@ -264,6 +275,8 @@ export class ServiceRunner extends GObject.Object {
         }
 
         this.#destroy_timer();
+        // unload the profile to give it a chance to save its state
+        this.#profile?.unload(this.#background?.get_string('picture-uri'));
         this.emit('Stop');
     }
 
