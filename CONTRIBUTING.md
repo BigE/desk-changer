@@ -112,7 +112,7 @@ run the targets required to rebuild the extension inside the dist folder, then r
 do this manually without recreating the symlink, you can run the following `Makefile` targets:
 
 ```bash
-make clean; make schemas/gschemas.compiled && make dist`
+make clean; make schemas/gschemas.compiled && make dist
 ```
 
 *__NOTE:__ The order here is important. The `schemas/gschemas.compiled` target must come before `dist` to be included!*
