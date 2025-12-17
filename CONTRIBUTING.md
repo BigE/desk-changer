@@ -101,7 +101,9 @@ running `make clean` will remove all files that will be generated. Once that is 
 run the targets required to rebuild the extension inside the dist folder, then recreate the symlink. If you want to do
 do this manually, you can run the following `Makefile` targets:
 
-`make clean; make dist && make schemas/gschemas.compiled`
+`make clean; make schemas/gschemas.compiled && make dist`
+
+*__NOTE:__ The order here is important. The `schemas/gschemas.compiled` target must come before `dist` to be included!*
 
 #### Remove Symlink
 `make unsymlink`
