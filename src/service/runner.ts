@@ -293,10 +293,10 @@ export class ServiceRunner extends GObject.Object {
             const interval =
                 RotationModes[rotation].interval ||
                 this.#settings!.get_int('interval');
-            this.#timer = new ServiceTimerInterval(
-                interval,
-                this.#timer_rotation_callback.bind(this)
-            );
+            this.#timer = new ServiceTimerInterval({
+                interval: interval,
+                callback: this.#timer_rotation_callback.bind(this)
+            });
             if (rotation === 'interval') {
                 this.#interval_changed_id = this.#settings!.connect(
                     'changed::interval',
@@ -304,13 +304,13 @@ export class ServiceRunner extends GObject.Object {
                 );
             }
         } else if (RotationModes[rotation].timer === 'daily') {
-            this.#timer = new ServiceTimerHourly(
-                this.#timer_rotation_callback.bind(this)
-            );
+            this.#timer = new ServiceTimerHourly({
+                callback: this.#timer_rotation_callback.bind(this)
+            });
         } else if (RotationModes[rotation].timer === 'hourly') {
-            this.#timer = new ServiceTimerDaily(
-                this.#timer_rotation_callback.bind(this)
-            );
+            this.#timer = new ServiceTimerDaily({
+                callback: this.#timer_rotation_callback.bind(this)
+            });
         }
 
         this.#running = true;
