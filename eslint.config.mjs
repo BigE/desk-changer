@@ -45,7 +45,8 @@ export default ts_eslint.config(
         },
         rules: {
             'lines-between-class-members': [
-                'error', {
+                'error',
+                {
                     enforce: [
                         {blankLine: 'always', prev: '*', next: 'method'},
                         {blankLine: 'always', prev: 'method', next: '*'},
@@ -77,10 +78,10 @@ export default ts_eslint.config(
             ],
             // See: https://eslint.org/docs/latest/rules/#suggestions
             'block-scoped-var': 'error',
-            'complexity': 'warn',
+            complexity: 'warn',
             'consistent-return': 'error',
             'default-param-last': 'error',
-            'eqeqeq': 'error',
+            eqeqeq: 'error',
             'no-array-constructor': 'error',
             'no-caller': 'error',
             'no-extend-native': 'error',
@@ -160,5 +161,5 @@ export default ts_eslint.config(
                 },
             ],
         },
-    },
+    }
 );

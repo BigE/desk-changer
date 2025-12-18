@@ -1,5 +1,4 @@
 import Adw from 'gi://Adw';
-import GLib from 'gi://GLib';
 import GObject from 'gi://GObject';
 import Gtk from 'gi://Gtk';
 import {SettingsKeybindType} from '../../../common/settings.js';
@@ -10,7 +9,7 @@ export default class KeyboardShortcutRow extends Adw.ActionRow {
             {
                 GTypeName: 'DeskChangerUiPrefsKeyboardShortcutRow',
                 Properties: {
-                    'keybind': GObject.param_spec_string(
+                    keybind: GObject.param_spec_string(
                         'keybind',
                         'Keybind',
                         '',

@@ -34,28 +34,28 @@ export default class PanelMenuButton extends PanelMenu.Button {
                         false,
                         GObject.ParamFlags.READWRITE
                     ),
-                    'notifications': GObject.param_spec_boolean(
+                    notifications: GObject.param_spec_boolean(
                         'notifications',
                         'Notifications',
                         'If enabled the extension will show notifications',
                         true,
                         GObject.ParamFlags.READWRITE
                     ),
-                    'preview': GObject.param_spec_string(
+                    preview: GObject.param_spec_string(
                         'preview',
                         'Preview',
                         'Preview URI to be passed into the menu',
                         null,
                         GObject.ParamFlags.READWRITE
                     ),
-                    'profile': GObject.param_spec_string(
+                    profile: GObject.param_spec_string(
                         'profile',
                         'Profile',
                         'Current profile selected',
                         null,
                         GObject.ParamFlags.READWRITE
                     ),
-                    'profiles': GObject.param_spec_variant(
+                    profiles: GObject.param_spec_variant(
                         'profiles',
                         'Profiles',
                         'Profiles object to provide into the menu',
@@ -63,7 +63,7 @@ export default class PanelMenuButton extends PanelMenu.Button {
                         null,
                         GObject.ParamFlags.READWRITE
                     ),
-                    'random': GObject.param_spec_boolean(
+                    random: GObject.param_spec_boolean(
                         'random',
                         'Random',
                         'Random flag for the controls in the menu',
@@ -206,14 +206,16 @@ export default class PanelMenuButton extends PanelMenu.Button {
         this.#bindings.push(
             this.bind_property(
                 'icon-preview-enabled',
-                this.#icon, 'preview-enabled',
+                this.#icon,
+                'preview-enabled',
                 GObject.BindingFlags.SYNC_CREATE
             )
         );
         this.#bindings.push(
             this.bind_property(
                 'preview',
-                this.#icon, 'preview',
+                this.#icon,
+                'preview',
                 GObject.BindingFlags.SYNC_CREATE
             )
         );
@@ -223,14 +225,16 @@ export default class PanelMenuButton extends PanelMenu.Button {
         this.#bindings.push(
             this.bind_property(
                 'profile',
-                this.#profile_menu_item, 'profile',
+                this.#profile_menu_item,
+                'profile',
                 GObject.BindingFlags.SYNC_CREATE
             )
         );
         this.#bindings.push(
             this.bind_property(
                 'profiles',
-                this.#profile_menu_item, 'profiles',
+                this.#profile_menu_item,
+                'profiles',
                 GObject.BindingFlags.SYNC_CREATE
             )
         );
@@ -250,7 +254,8 @@ export default class PanelMenuButton extends PanelMenu.Button {
         this.#bindings.push(
             this.bind_property(
                 'preview',
-                this.#preview_menu_item, 'preview',
+                this.#preview_menu_item,
+                'preview',
                 GObject.BindingFlags.SYNC_CREATE
             )
         );
@@ -261,15 +266,19 @@ export default class PanelMenuButton extends PanelMenu.Button {
         this.#bindings.push(
             this.bind_property(
                 'random',
-                this.#controls_menu_item, 'random',
-                GObject.BindingFlags.SYNC_CREATE | GObject.BindingFlags.BIDIRECTIONAL
+                this.#controls_menu_item,
+                'random',
+                GObject.BindingFlags.SYNC_CREATE |
+                    GObject.BindingFlags.BIDIRECTIONAL
             )
         );
         this.#bindings.push(
             this.bind_property(
                 'service-running',
-                this.#controls_menu_item, 'service-running',
-                GObject.BindingFlags.SYNC_CREATE | GObject.BindingFlags.BIDIRECTIONAL
+                this.#controls_menu_item,
+                'service-running',
+                GObject.BindingFlags.SYNC_CREATE |
+                    GObject.BindingFlags.BIDIRECTIONAL
             )
         );
         this.#next_clicked_id = this.#controls_menu_item.connect(
@@ -283,7 +292,9 @@ export default class PanelMenuButton extends PanelMenu.Button {
         this.menu.addMenuItem(this.#controls_menu_item);
         this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
         // quick settings submenu
-        this.#settings_submenu = new PopupMenu.PopupSubMenuMenuItem(_('Quick Settings'));
+        this.#settings_submenu = new PopupMenu.PopupSubMenuMenuItem(
+            _('Quick Settings')
+        );
         this.menu.addMenuItem(this.#settings_submenu);
         this.#icon_preview_switch_menu_item = new PopupMenu.PopupSwitchMenuItem(
             _('Icon as Preview'),
@@ -292,35 +303,49 @@ export default class PanelMenuButton extends PanelMenu.Button {
         this.#bindings.push(
             this.bind_property(
                 'icon-preview-enabled',
-                this.#icon_preview_switch_menu_item, 'state',
-                GObject.BindingFlags.SYNC_CREATE | GObject.BindingFlags.BIDIRECTIONAL
+                this.#icon_preview_switch_menu_item,
+                'state',
+                GObject.BindingFlags.SYNC_CREATE |
+                    GObject.BindingFlags.BIDIRECTIONAL
             )
         );
-        this.#settings_submenu.menu.addMenuItem(this.#icon_preview_switch_menu_item);
-        this.#remember_profile_state_switch_menu_item = new PopupMenu.PopupSwitchMenuItem(
-            _('Remember Profile State'),
-            this.remember_profile_state
+        this.#settings_submenu.menu.addMenuItem(
+            this.#icon_preview_switch_menu_item
         );
+        this.#remember_profile_state_switch_menu_item =
+            new PopupMenu.PopupSwitchMenuItem(
+                _('Remember Profile State'),
+                this.remember_profile_state
+            );
         this.#bindings.push(
             this.bind_property(
                 'remember-profile-state',
-                this.#remember_profile_state_switch_menu_item, 'state',
-                GObject.BindingFlags.SYNC_CREATE | GObject.BindingFlags.BIDIRECTIONAL
+                this.#remember_profile_state_switch_menu_item,
+                'state',
+                GObject.BindingFlags.SYNC_CREATE |
+                    GObject.BindingFlags.BIDIRECTIONAL
             )
         );
-        this.#settings_submenu.menu.addMenuItem(this.#remember_profile_state_switch_menu_item);
-        this.#notifications_switch_menu_item = new PopupMenu.PopupSwitchMenuItem(
-            _('Notifications'),
-            this.notifications
+        this.#settings_submenu.menu.addMenuItem(
+            this.#remember_profile_state_switch_menu_item
         );
+        this.#notifications_switch_menu_item =
+            new PopupMenu.PopupSwitchMenuItem(
+                _('Notifications'),
+                this.notifications
+            );
         this.#bindings.push(
             this.bind_property(
                 'notifications',
-                this.#notifications_switch_menu_item, 'state',
-                GObject.BindingFlags.SYNC_CREATE | GObject.BindingFlags.BIDIRECTIONAL
+                this.#notifications_switch_menu_item,
+                'state',
+                GObject.BindingFlags.SYNC_CREATE |
+                    GObject.BindingFlags.BIDIRECTIONAL
             )
         );
-        this.#settings_submenu.menu.addMenuItem(this.#notifications_switch_menu_item);
+        this.#settings_submenu.menu.addMenuItem(
+            this.#notifications_switch_menu_item
+        );
         // preferences
         this.#preferences_menu_item = new PopupMenu.PopupMenuItem(
             _('Preferences')

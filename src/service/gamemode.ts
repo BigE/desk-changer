@@ -18,7 +18,7 @@ export default class GameMode extends GObject.Object {
             {
                 GTypeName: 'DeskChangerServiceGameMode',
                 Properties: {
-                    'enabled': GObject.param_spec_boolean(
+                    enabled: GObject.param_spec_boolean(
                         'enabled',
                         'Enabled',
                         'Flag to indicate if GameMode is enabled',
