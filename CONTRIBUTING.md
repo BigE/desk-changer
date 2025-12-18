@@ -96,7 +96,7 @@ automatically reflected.
 make symlink
 ```
 
-To symlink the project you will use the `make symlink` command provided with the `Makefile`. This will ensure the `dist`
+To symlink the project you will use the `symlink` target provided with the `Makefile`. This will ensure the `dist`
 folder has been created by running some previous commands as well as the schemas/gschemas.compiled file is created. Once
 this is complete, the extension will be ready to use. If you did not have the extension installed previously, you will
 have to logout/login before it will become active.
@@ -107,9 +107,9 @@ make clean; make symlink
 ```
 
 When testing the extension as a symlink, all code changes will need to be reflected by rebuilding the extension. First
-running `make clean` will remove all files that will be generated. Once that is completed, running `make symlink` will
-run the targets required to rebuild the extension inside the dist folder, then recreate the symlink. If you want to do
-do this manually without recreating the symlink, you can run the following `Makefile` targets:
+running the `clean` target will remove all files that will be generated. Once that is completed, running `symlink`
+will run the targets required to rebuild the extension inside the dist folder, then recreate the symlink. If you want to
+do this manually without recreating the symlink, you can run the following `make` command:
 
 ```bash
 make clean; make schemas/gschemas.compiled && make dist
@@ -122,7 +122,7 @@ make clean; make schemas/gschemas.compiled && make dist
 make unsymlink
 ```
 
-To remove the symlink you can simply run `make unsymlink` which will **ONLY** remove a symlink and not remove an
+To remove the symlink you can simply run the `unsymlink` target which will **ONLY** remove a symlink and not remove an
 existing directory of the extension or the extension itself from `gnome-shell`. If you wish to fully uninstall the
 extension please see [Uninstall](#uninstall) for directions.
 
@@ -137,16 +137,33 @@ possible as it uses `gnome-extensions` to install the packaged ZIP file that is 
 make install
 ```
 
-To install the project from a ZIP file use the `make install` command that is provided by the `Makefile`. This will fail
-if the extension is already installed, even if it is not enabled.
+To install the project from a ZIP file use the `install` target that is provided by the `Makefile`. This will fail if
+the extension is already installed, even if it is not enabled.
 
 #### Uninstall
 ```bash
 make uninstall
 ```
 
-To uninstall the extension you can use `make uninstall` which simply just calls the `gnome-extensions uninstall` command
-automatically. This will completely remove the extension from `gnome-shell`.
+To uninstall the extension you can use the `uninstall` target which simply just calls the `gnome-extensions uninstall`
+command automatically. This will completely remove the extension from `gnome-shell`.
+
+### Manually creating the zip
+```bash
+make zip
+```
+
+While this command will build a zip file for the extension, you should be aware that due to a changes in
+[Gnome 44](https://gjs.guide/extensions/upgrading/gnome-shell-44.html#gsettings-schema) where the `gschemas.compiled`
+file is no longer packaged with the zip. In cases where the `gschemas.compiled` file is needed for the zip, just simply
+run the `Makefile` target `schemas/gschemas.compiled` **BEFORE** running the `zip` target.
+
+```bash
+make schemas/gschemas.compiled && make zip
+```
+
+A good example of when this is neccisary is if the extension is being installed system wide. This would require
+extracing the zip into a system folder and would bypass the Gnome extension install system.
 
 ## License
 By contributing to DeskChanger, you agree that your contributions will be licensed under the `LICENSE` file in the root

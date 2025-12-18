@@ -5,7 +5,7 @@ EXT_DIR := "${HOME}/.local/share/gnome-shell/extensions"
 TARGET_DIR := $(EXT_DIR)/$(UUID)
 VERSION := version-$(shell grep '"version"' metadata.json | cut -d '"' -f 4)
 
-.PHONY: all pack install clean pot symlink update-translation
+.PHONY: all install clean pot symlink update-translation zip
 
 all: schemas/gschemas.compiled dist update-translations
 
@@ -29,12 +29,10 @@ dist: dist/extension.js dist/prefs.js dist/org.gnome.shell.extensions.$(NAME).gr
 	@cp -r metadata.json dist
 	@yarn eslint dist --fix
 
-$(UUID)-$(VERSION).zip: dist
+zip: dist
 	@(cd dist && zip ../$(UUID)-$(VERSION).zip -9r .)
 
-pack: $(UUID)-$(VERSION).zip
-
-install: pack
+install: zip
 	@echo "Installing $(UUID)"
 	@gnome-extensions install $(UUID)-$(VERSION).zip
 	@echo "Extension is installed. You must logout/login before it can be enabled."
