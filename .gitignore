@@ -1,13 +1,3 @@
-# ide ignores
-/*.iml
-/.idea/
-/.nbproject/private/
-/.settings
-/*.code-workspace
-/.vscode
-*.db
-*.db-journal
-
 # zip ignore
 /*.zip
 
