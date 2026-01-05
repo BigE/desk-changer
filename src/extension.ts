@@ -31,6 +31,7 @@ export default class DeskChangerExtension extends Extension {
     #next_clicked_id?: number;
     #open_prefs_id?: number;
     #previous_clicked_id?: number;
+    #profiles_changed_id?: number;
     #resource?: Gio.Resource;
     #source?: GLib.Source;
     #service?: Service;
@@ -151,6 +152,15 @@ export default class DeskChangerExtension extends Extension {
         if (!this.#service) throw new TypeError('Service object is required');
 
         this.#button = new PanelMenuButton(this.uuid);
+        this.#button.profiles = this.#settings.get_value('profiles');
+        this.#profiles_changed_id = this.#settings.connect(
+            'changed::profiles',
+            () => {
+                if (this.#button && this.#settings)
+                    this.#button.profiles =
+                        this.#settings.get_value('profiles');
+            }
+        );
         // settings bindings
         this.#settings.bind(
             'current-profile',
@@ -171,30 +181,6 @@ export default class DeskChangerExtension extends Extension {
             'random',
             this.#button, 'random',
             Gio.SettingsBindFlags.DEFAULT
-        );
-        this.#settings.bind_with_mapping(
-            'profiles',
-            this.#button, 'profiles',
-            Gio.SettingsBindFlags.GET,
-            (value, variant) => {
-                this.#clearTimeout();
-                // according to the g_settings_bind_with_mapping the value is
-                // supposed to be an assignable reference here and then that gets
-                // set to the object property. however, there is no way to set the
-                // value here since it is passed in as null and that isn't a
-                // reference in JS. this is a dirty nasty hack.
-                this.#source = setTimeout(() => {
-                    if (this.#button && this.#settings)
-                        this.#button.profiles =
-                            this.#settings.get_value('profiles');
-                    this.#clearTimeout();
-                }, 50);
-
-                // this is what the C implementation expects?? but value is `null`
-                value = variant;
-                return true;
-            },
-            null
         );
         this.#settings.bind(
             'remember-profile-state',
@@ -410,6 +396,11 @@ export default class DeskChangerExtension extends Extension {
         if (this.#previous_clicked_id) {
             this.#button!.disconnect(this.#previous_clicked_id);
             this.#previous_clicked_id = undefined;
+        }
+
+        if (this.#profiles_changed_id) {
+            this.#settings!.disconnect(this.#profiles_changed_id);
+            this.#profiles_changed_id = undefined;
         }
 
         this.#service_preview_binding?.unbind();
