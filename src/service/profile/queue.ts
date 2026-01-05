@@ -8,7 +8,7 @@ export default class ServiceProfileQueue extends Gio.ListStore<ServiceProfileWal
             {
                 GTypeName: 'DeskChangerServiceProfileQueue',
                 Properties: {
-                    'next': GObject.param_spec_string(
+                    next: GObject.param_spec_string(
                         'next',
                         'Next',
                         'Next item in queue object',

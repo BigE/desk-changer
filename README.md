@@ -5,7 +5,6 @@ switch profiles on the fly without reloading the extension. The service runner w
 screen is active, allowing wallpaper changes to still happen at specific times or intervals.
 
 ## Screenshots
-
 <img src="./screenshot-1.png?raw=true" width="256" title="Screenshot of menu">
 <img src="./screenshot-2.png?raw=true" width="256" title="Screenshot of notification">
 
@@ -24,7 +23,7 @@ Download a release zip file from the [releases page](https://github.com/BigE/des
 code and not the compiled files that are ready to install. Once the file is downloaded, you can use `gnome-extensions`
 app to install the zip.
 
-```
+```bash
 gnome-extensions install ~/Downloads/desk-changer@eric.gach.gmail.com-version-##.zip
 ```
 
@@ -37,7 +36,7 @@ rotation enabled for every 30 minutes.
 To fully remove the extension you can use `gnome-extensions` with the `uninstall` option. You do not have to have a copy
 of the ZIP file to run this command.
 
-```
+```bash
 gnome-extensions uninstall desk-changer@eric.gach.gmail.com
 ```
 
@@ -92,7 +91,9 @@ use.
 To view the settings in dconf-editor, just use the `GSETTINGS_SCHEMA_DIR=` environment variable to open dconf-editor
 with the extensions schema available to the editor.
 
->$ GSETTINGS_SCHEMA_DIR=~/.local/share/gnome-shell/extensions/desk-changer@eric.gach.gmail.com/schemas/ dconf-editor /org/gnome/shell/extensions/desk-changer
+```bash
+GSETTINGS_SCHEMA_DIR=~/.local/share/gnome-shell/extensions/desk-changer@eric.gach.gmail.com/schemas/ dconf-editor /org/gnome/shell/extensions/desk-changer
+```
 
-Then navigate to `/org/gnome/shell/extensions/desk-changer` and you will see all of the available settings for the
-extension and daemon.
+This should automatically navigate to `/org/gnome/shell/extensions/desk-changer` and you will see all of the available
+settings for the extension.

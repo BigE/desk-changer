@@ -9,7 +9,7 @@ export default class CommonProfile extends GObject.Object {
             {
                 GTypeName: 'DeskChangerCommonProfile',
                 Properties: {
-                    'items': GObject.param_spec_object(
+                    items: GObject.param_spec_object(
                         'items',
                         'Items',
                         'All items contained within the profile',
@@ -17,7 +17,7 @@ export default class CommonProfile extends GObject.Object {
                         GObject.ParamFlags.READWRITE |
                             GObject.ParamFlags.CONSTRUCT
                     ),
-                    'name': GObject.param_spec_string(
+                    name: GObject.param_spec_string(
                         'name',
                         'Name',
                         'Name of the profile',

@@ -24,7 +24,7 @@ export default class ServiceProfile extends GObject.Object {
             {
                 GTypeName: 'DeskChangerServiceProfile',
                 Properties: {
-                    'history': GObject.param_spec_variant(
+                    history: GObject.param_spec_variant(
                         'history',
                         'History',
                         'History of the loaded profile',
@@ -32,14 +32,14 @@ export default class ServiceProfile extends GObject.Object {
                         null,
                         GObject.ParamFlags.READABLE
                     ),
-                    'loaded': GObject.param_spec_boolean(
+                    loaded: GObject.param_spec_boolean(
                         'loaded',
                         'Loaded',
                         'Check if the profile is loaded',
                         false,
                         GObject.ParamFlags.READABLE
                     ),
-                    'preview': GObject.param_spec_string(
+                    preview: GObject.param_spec_string(
                         'preview',
                         'Preview',
                         'Preview of the next wallpaper in the queue',
@@ -53,7 +53,7 @@ export default class ServiceProfile extends GObject.Object {
                         null,
                         GObject.ParamFlags.READABLE
                     ),
-                    'queue': GObject.param_spec_variant(
+                    queue: GObject.param_spec_variant(
                         'queue',
                         'Queue',
                         'Queue of the loaded profile',
@@ -173,8 +173,7 @@ export default class ServiceProfile extends GObject.Object {
                 ];
             const [in_history, _history_position] =
                 this.#history.find(wallpaper);
-            const [in_queue, _queue_position] =
-                this.#queue.find(wallpaper);
+            const [in_queue, _queue_position] = this.#queue.find(wallpaper);
 
             this.#logger?.debug(
                 in_history,
@@ -191,24 +190,16 @@ export default class ServiceProfile extends GObject.Object {
                     `Wallpaper ${wallpaper.wallpaper} exists in history`
                 );
                 wallpaper = undefined;
-            } else if (
-                in_queue &&
-                this.#wallpapers.length > MAX_QUEUE_LENGTH
-            ) {
+            } else if (in_queue && this.#wallpapers.length > MAX_QUEUE_LENGTH) {
                 this.#logger?.debug(
                     `Wallpaper ${wallpaper.wallpaper} is already in the queue`
                 );
                 wallpaper = undefined;
             }
-        } while (
-            wallpaper === undefined &&
-            ++i < this.#wallpapers.length
-        );
+        } while (wallpaper === undefined && ++i < this.#wallpapers.length);
 
         if (!wallpaper)
-            throw new TypeError(
-                _('Loading random wallpaper queue failed')
-            );
+            throw new TypeError(_('Loading random wallpaper queue failed'));
 
         return wallpaper;
     }

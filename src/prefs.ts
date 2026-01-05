@@ -42,10 +42,7 @@ export default class DeskChangerPreferences extends ExtensionPreferences {
         AboutPage ??= GObject.registerClass(
             {
                 GTypeName: 'DeskChangerUiPrefsAboutPage',
-                InternalChildren: [
-                    'description_label',
-                    'version_label'
-                ],
+                InternalChildren: ['description_label', 'version_label'],
                 Template: `resource://${APP_PATH}/ui/prefs/about_page.ui`,
             },
             _AboutPage
@@ -124,7 +121,9 @@ export default class DeskChangerPreferences extends ExtensionPreferences {
         window.add(this.#keyboard_page);
         window.add(this.#extension_page);
         window.add(this.#service_page);
-        window.add(new AboutPage(this.metadata.description, this.metadata.version));
+        window.add(
+            new AboutPage(this.metadata.description, this.metadata.version)
+        );
         window.set_default_size(-1, 660);
 
         window.connect('close-request', () => {

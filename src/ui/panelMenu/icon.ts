@@ -28,7 +28,7 @@ export default class PanelMenuIcon extends St.Bin {
             {
                 GTypeName: 'DeskChangerUiPanelMenuIcon',
                 Properties: {
-                    'preview': GObject.param_spec_string(
+                    preview: GObject.param_spec_string(
                         'preview',
                         'Preview',
                         'The URI of the current preview, NULL if empty',
@@ -64,8 +64,7 @@ export default class PanelMenuIcon extends St.Bin {
 
     set preview(value: string | null) {
         this.#preview = value;
-        if (!this.#preview_control)
-            this.update_child();
+        if (!this.#preview_control) this.update_child();
         this.notify('preview');
     }
 
@@ -128,7 +127,8 @@ export default class PanelMenuIcon extends St.Bin {
         });
         this.#preview_file_binding = this.bind_property(
             'preview',
-            this.#preview_control, 'preview-file',
+            this.#preview_control,
+            'preview-file',
             GObject.BindingFlags.SYNC_CREATE
         );
         this.set_child(this.#preview_control);

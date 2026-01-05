@@ -22,7 +22,7 @@ export default class KeybindDialog extends Adw.Dialog {
                     'top_info_label',
                 ],
                 Properties: {
-                    'keybind': GObject.param_spec_string(
+                    keybind: GObject.param_spec_string(
                         'keybind',
                         'Keybind',
                         'GTK keybind name from Gtk.accelerator_name',

@@ -100,7 +100,7 @@ export default class DeskChangerExtension extends Extension {
             () => {
                 if (this.#service?.Running) this.#service?.Previous();
             }
-        )
+        );
 
         if (this.#is_session_mode_user(Main.sessionMode))
             this.#logger.log('extension enabled');
@@ -164,33 +164,39 @@ export default class DeskChangerExtension extends Extension {
         // settings bindings
         this.#settings.bind(
             'current-profile',
-            this.#button, 'profile',
+            this.#button,
+            'profile',
             Gio.SettingsBindFlags.DEFAULT
         );
         this.#settings.bind(
             'icon-preview',
-            this.#button, 'icon-preview-enabled',
+            this.#button,
+            'icon-preview-enabled',
             Gio.SettingsBindFlags.DEFAULT
         );
         this.#settings.bind(
             'notifications',
-            this.#button, 'notifications',
+            this.#button,
+            'notifications',
             Gio.SettingsBindFlags.DEFAULT
         );
         this.#settings.bind(
             'random',
-            this.#button, 'random',
+            this.#button,
+            'random',
             Gio.SettingsBindFlags.DEFAULT
         );
         this.#settings.bind(
             'remember-profile-state',
-            this.#button, 'remember-profile-state',
+            this.#button,
+            'remember-profile-state',
             Gio.SettingsBindFlags.DEFAULT
         );
         // service bindings
         this.#service_preview_binding = this.#service.bind_property(
             'Preview',
-            this.#button, 'preview',
+            this.#button,
+            'preview',
             GObject.BindingFlags.SYNC_CREATE
         );
         // signals
@@ -209,15 +215,25 @@ export default class DeskChangerExtension extends Extension {
         );
         this.#service_running_binding = this.#service.bind_property(
             'Running',
-            this.#button, 'service-running',
-            GObject.BindingFlags.SYNC_CREATE,
+            this.#button,
+            'service-running',
+            GObject.BindingFlags.SYNC_CREATE
         );
-        this.#button_notify_id = this.#button.connect('notify::service-running', (button: PanelMenuButton) => {
-            if (button.service_running === true && this.#service?.Running === false)
-                this.#service.Start();
-            else if (button.service_running === false && this.#service?.Running === true)
-                this.#service.Stop();
-        });
+        this.#button_notify_id = this.#button.connect(
+            'notify::service-running',
+            (button: PanelMenuButton) => {
+                if (
+                    button.service_running === true &&
+                    this.#service?.Running === false
+                )
+                    this.#service.Start();
+                else if (
+                    button.service_running === false &&
+                    this.#service?.Running === true
+                )
+                    this.#service.Stop();
+            }
+        );
         // add to the main panel
         Main.panel.addToStatusArea(this.uuid, this.#button);
     }
@@ -285,8 +301,8 @@ export default class DeskChangerExtension extends Extension {
                     (settings: Gio.Settings) => {
                         this.#sendNotification(
                             settings.get_boolean('remember-profile-state')
-                            ? _('Profile queue will be saved on unload')
-                            : _('Profile queue will NOT be saved on unload')
+                                ? _('Profile queue will be saved on unload')
+                                : _('Profile queue will NOT be saved on unload')
                         );
                     }
                 )

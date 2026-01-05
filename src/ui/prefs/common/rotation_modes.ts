@@ -11,21 +11,21 @@ export class RotationModeObject extends GObject.Object {
             {
                 GTypeName: 'DeskChangerUiPrefsCommonRotationModeObject',
                 Properties: {
-                    'mode': GObject.param_spec_string(
+                    mode: GObject.param_spec_string(
                         'mode',
                         'Mode',
                         'Rotation mode identifier',
                         null,
                         GObject.ParamFlags.READABLE
                     ),
-                    'label': GObject.param_spec_string(
+                    label: GObject.param_spec_string(
                         'label',
                         'Label',
                         'Readable label for the rotation mode',
                         null,
                         GObject.ParamFlags.READABLE
                     ),
-                    'interval': GObject.param_spec_uint(
+                    interval: GObject.param_spec_uint(
                         'interval',
                         'Interval',
                         'Interval to be used with the rotation mode or 0 to disable',
@@ -34,7 +34,7 @@ export class RotationModeObject extends GObject.Object {
                         0,
                         GObject.ParamFlags.READABLE
                     ),
-                    'timer': GObject.param_spec_string(
+                    timer: GObject.param_spec_string(
                         'timer',
                         'Timer',
                         'Timer object to use with the interval',

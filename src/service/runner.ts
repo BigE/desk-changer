@@ -1,14 +1,15 @@
 import Gio from 'gi://Gio';
+import GLib from 'gi://GLib';
 import GObject from 'gi://GObject';
 
 import RotationModes from '../common/rotation_modes.js';
 import {SettingsRotationModes} from '../common/settings.js';
+import GameMode from './gamemode.js';
 import ServiceProfile from './profile/index.js';
 import ServiceTimer from './timer/index.js';
-import ServiceTimerHourly from './timer/hourly.js';
 import ServiceTimerDaily from './timer/daily.js';
-import GameMode from './gamemode.js';
-import GLib from 'gi://GLib';
+import ServiceTimerHourly from './timer/hourly.js';
+import ServiceTimerInterval from './timer/interval.js';
 
 export namespace ServiceRunner {
     export interface ConstructorProps {
@@ -23,14 +24,14 @@ export class ServiceRunner extends GObject.Object {
             {
                 GTypeName: 'DeskChangerService',
                 Properties: {
-                    'GameMode': GObject.param_spec_boolean(
+                    GameMode: GObject.param_spec_boolean(
                         'GameMode',
                         'GameMode',
                         'Check if GameMode is currently enabled',
                         false,
                         GObject.ParamFlags.READABLE
                     ),
-                    'History': GObject.param_spec_variant(
+                    History: GObject.param_spec_variant(
                         'History',
                         'History',
                         'History of the currently loaded profile',
@@ -38,14 +39,14 @@ export class ServiceRunner extends GObject.Object {
                         null,
                         GObject.ParamFlags.READABLE
                     ),
-                    'Profile': GObject.param_spec_string(
+                    Profile: GObject.param_spec_string(
                         'Profile',
                         'Profile',
                         'The currently loaded profile name',
                         null,
                         GObject.ParamFlags.READABLE
                     ),
-                    'Queue': GObject.param_spec_variant(
+                    Queue: GObject.param_spec_variant(
                         'Queue',
                         'Queue',
                         'Queue of the currently loaded profile',
@@ -53,14 +54,14 @@ export class ServiceRunner extends GObject.Object {
                         null,
                         GObject.ParamFlags.READABLE
                     ),
-                    'Preview': GObject.param_spec_string(
+                    Preview: GObject.param_spec_string(
                         'Preview',
                         'Preview',
                         'A preview of the upcoming wallpaper in the queue',
                         null,
                         GObject.ParamFlags.READABLE
                     ),
-                    'Running': GObject.param_spec_boolean(
+                    Running: GObject.param_spec_boolean(
                         'Running',
                         'Running',
                         'Check if the daemon is running',
@@ -69,11 +70,11 @@ export class ServiceRunner extends GObject.Object {
                     ),
                 },
                 Signals: {
-                    'Changed': {param_types: [GObject.TYPE_STRING]},
-                    'Start': {
+                    Changed: {param_types: [GObject.TYPE_STRING]},
+                    Start: {
                         param_types: [GObject.TYPE_STRING, GObject.TYPE_STRING],
                     },
-                    'Stop': {},
+                    Stop: {},
                 },
             },
             this
@@ -229,8 +230,7 @@ export class ServiceRunner extends GObject.Object {
     Start() {
         if (this.#running) throw new Error(_('Service is already running'));
 
-        if (!this.#profile)
-            this.Load();
+        if (!this.#profile) this.Load();
         else if (this.#profile.loaded === false) {
             try {
                 this.#profile.load();
@@ -292,10 +292,10 @@ export class ServiceRunner extends GObject.Object {
             const interval =
                 RotationModes[rotation].interval ||
                 this.#settings!.get_int('interval');
-            this.#timer = new ServiceTimer(
-                interval,
-                this.#timer_rotation_callback.bind(this)
-            );
+            this.#timer = new ServiceTimerInterval({
+                interval: interval,
+                callback: this.#timer_rotation_callback.bind(this),
+            });
             if (rotation === 'interval') {
                 this.#interval_changed_id = this.#settings!.connect(
                     'changed::interval',
@@ -303,13 +303,13 @@ export class ServiceRunner extends GObject.Object {
                 );
             }
         } else if (RotationModes[rotation].timer === 'daily') {
-            this.#timer = new ServiceTimerHourly(
-                this.#timer_rotation_callback.bind(this)
-            );
+            this.#timer = new ServiceTimerHourly({
+                callback: this.#timer_rotation_callback.bind(this),
+            });
         } else if (RotationModes[rotation].timer === 'hourly') {
-            this.#timer = new ServiceTimerDaily(
-                this.#timer_rotation_callback.bind(this)
-            );
+            this.#timer = new ServiceTimerDaily({
+                callback: this.#timer_rotation_callback.bind(this),
+            });
         }
 
         this.#running = true;

@@ -1,63 +1,81 @@
-import GLib from 'gi://GLib';
 import GObject from 'gi://GObject';
 
 export type ServiceCallback = () => boolean;
 
-export default class ServiceTimer extends GObject.Object {
+namespace ServiceTimer {
+    export interface ConstructorProps {
+        callback: ServiceCallback;
+    }
+}
+
+/**
+ * Base timer object that all timers extend from
+ *
+ * This class should be considered abstract and all timers should inherit this
+ * class for full support. The callback for the timer being run is defined and
+ * called through this class.
+ *
+ * @see __callback__
+ */
+class ServiceTimer extends GObject.Object {
     readonly #callback?: ServiceCallback;
-    readonly #interval: number;
-    #timer_id?: number;
 
     static {
         GObject.registerClass(
             {
-                Properties: {
-                    'interval': GObject.param_spec_int(
-                        'interval',
-                        'Interval',
-                        'Timer interval that the callback executes',
-                        1,
-                        86400,
-                        300,
-                        GObject.ParamFlags.READABLE
-                    ),
+                GTypeName: 'DeskChangerServiceTimer',
+                Signals: {
+                    activated: {},
                 },
             },
             this
         );
     }
 
-    get interval() {
-        return this.#interval;
-    }
-
-    constructor(interval: number, callback?: ServiceCallback) {
+    /**
+     * Create a new timer object
+     *
+     * @param callback Optional function to run when the timer is activated
+     */
+    constructor({callback}: Partial<ServiceTimer.ConstructorProps>) {
         super();
 
-        if (interval < 1 || interval > 86400)
-            throw new Error(_('Interval must be between 1 and 86400'));
+        if (this.constructor === ServiceTimer)
+            throw new TypeError(
+                `Cannot instantiate abstract class ${this.constructor.name}`
+            );
 
         this.#callback = callback;
-        this.#interval = interval;
-        this.#timer_id = GLib.timeout_add_seconds(
-            GLib.PRIORITY_DEFAULT,
-            this.#interval,
-            this.__callback__.bind(this)
-        );
     }
 
-    destroy() {
-        if (this.#timer_id) {
-            GLib.source_remove(this.#timer_id);
-            this.#timer_id = undefined;
-        }
-    }
+    /**
+     * Destroy the timer object
+     *
+     * The destroy method is always called by the service runner for clean up
+     * when destroying the timer. This class does not have anything to clean up
+     * but provides the method for compatibility. There is no need to call
+     * `super.destroy()` when implementing your own.
+     */
+    destroy(): void {}
 
+    /**
+     * Run the callback method and emit the activated signal
+     *
+     * This method will automatically run the callback if it was provided in
+     * the constructor. It will also emit the activated signal allowing
+     * multiple ways to trigger a callback to run. This should only be called
+     * when the timer is activated.
+     *
+     * @returns Return value should be true if the timer should continue
+     */
     protected __callback__() {
         if (this.#callback) {
             return this.#callback();
         }
 
+        this.emit('activated');
         return true;
     }
 }
+
+export default ServiceTimer;

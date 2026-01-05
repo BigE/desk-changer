@@ -17,7 +17,7 @@ export default class ControlStateButton extends ControlButton {
             {
                 GTypeName: 'DeskChangerUiControlStateButton',
                 Properties: {
-                    'state': GObject.param_spec_string(
+                    state: GObject.param_spec_string(
                         'state',
                         'State',
                         'State name',

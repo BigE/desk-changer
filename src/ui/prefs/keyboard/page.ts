@@ -1,6 +1,5 @@
 import Adw from 'gi://Adw';
 import Gio from 'gi://Gio';
-import GLib from 'gi://GLib';
 import Gtk from 'gi://Gtk';
 
 import KeyboardShortcutRow from './shortcut_row.js';
@@ -37,13 +36,13 @@ export default class KeyboardPage extends Adw.PreferencesPage {
             {title: 'Next Wallpaper'}
         );
 
-        if (!this.#next.accelerator_label)
-            throw TypeError();
+        if (!this.#next.accelerator_label) throw TypeError();
 
         this.#next_changed_id = this.#settings?.connect(
             'changed::next-wallpaper',
             () => {
-                this.#next!.accelerator_label!.accelerator = this.#settings?.get_strv('next-wallpaper').join(' ') || '';
+                this.#next!.accelerator_label!.accelerator =
+                    this.#settings?.get_strv('next-wallpaper').join(' ') || '';
             }
         );
         this.#next_activated_id = this.#next.connect(
@@ -57,13 +56,14 @@ export default class KeyboardPage extends Adw.PreferencesPage {
             {title: 'Previous Wallpaper'}
         );
 
-        if (!this.#previous.accelerator_label)
-            throw TypeError();
+        if (!this.#previous.accelerator_label) throw TypeError();
 
         this.#previous_changed_id = this.#settings?.connect(
             'changed::previous-wallpaper',
             () => {
-                this.#previous!.accelerator_label!.accelerator = this.#settings?.get_strv('previous-wallpaper').join(' ') || '';
+                this.#previous!.accelerator_label!.accelerator =
+                    this.#settings?.get_strv('previous-wallpaper').join(' ') ||
+                    '';
             }
         );
         this.#previous_activated_id = this.#previous.connect(
@@ -114,7 +114,11 @@ export default class KeyboardPage extends Adw.PreferencesPage {
 
             dialog.connect('notify::keybind', () => {
                 if (!dialog.keybind) this.#settings!.reset(widget.keybind);
-                else this.#settings!.set_strv(widget.keybind, Array(dialog.keybind));
+                else
+                    this.#settings!.set_strv(
+                        widget.keybind,
+                        Array(dialog.keybind)
+                    );
                 dialog.close();
             });
             dialog.present(this.get_root());

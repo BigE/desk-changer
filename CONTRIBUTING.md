@@ -45,7 +45,9 @@ test the changes.
 ### Create language folder
 If the language you want to contribute to does not exist, just create the folder in `po` for it:
 
-`mkdir po/fr`
+```bash
+mkdir po/fr
+```
 
 Once you have created the folder, just copy the `po/desk-changer.pot` file into your language folder and continue to
 [Updating the translation file](#updating-the-translation-file) to add your translations!
@@ -66,7 +68,9 @@ also applies to UI changes under the `resources/ui` folder with the `translatabl
 from the code only updates the `po/desk-changer.pot` file. If you have added a new source code file or UI resource
 file, it should be added to the file `po/xgettext.txt` before running the command.
 
-`make pot`
+```bash
+make pot
+```
 
 This will run `xgettext` using the `po/xgettext.txt` file as the file list argument to parse through. Once completed,
 the `po/desk-changer.pot` file will be updated with the most recent changes from the source.
@@ -77,7 +81,9 @@ To test your changes you should be running a development version of the extensio
 extension is installed, you can either login/logout to test changes or run the provided `test.sh` script. The script
 simply runs `gnome-shell --devkit` through the dbus-session-runner, which opens a window in your existing session.
 
-`./test.sh`
+```bash
+./test.sh
+```
 
 ### Symlink the project
 Symlinking the project comes at a cost, if you break the extension it will not load on your next logout/login until you
@@ -86,27 +92,37 @@ the easiest way to test preference changes as each time they are opened, any cha
 automatically reflected.
 
 #### Symlink Command
-`make symlink`
+```bash
+make symlink
+```
 
-To symlink the project you will use the `make symlink` command provided with the `Makefile`. This will ensure the `dist`
+To symlink the project you will use the `symlink` target provided with the `Makefile`. This will ensure the `dist`
 folder has been created by running some previous commands as well as the schemas/gschemas.compiled file is created. Once
 this is complete, the extension will be ready to use. If you did not have the extension installed previously, you will
 have to logout/login before it will become active.
 
 ##### Updating source with changes
-`make clean; make symlink`
+```bash
+make clean; make symlink
+```
 
 When testing the extension as a symlink, all code changes will need to be reflected by rebuilding the extension. First
-running `make clean` will remove all files that will be generated. Once that is completed, running `make symlink` will
-run the targets required to rebuild the extension inside the dist folder, then recreate the symlink. If you want to do
-do this manually, you can run the following `Makefile` targets:
+running the `clean` target will remove all files that will be generated. Once that is completed, running `symlink`
+will run the targets required to rebuild the extension inside the dist folder, then recreate the symlink. If you want to
+do this manually without recreating the symlink, you can run the following `make` command:
 
-`make clean; make dist && make schemas/gschemas.compiled`
+```bash
+make clean; make schemas/gschemas.compiled && make dist
+```
+
+*__NOTE:__ The order here is important. The `schemas/gschemas.compiled` target must come before `dist` to be included!*
 
 #### Remove Symlink
-`make unsymlink`
+```bash
+make unsymlink
+```
 
-To remove the symlink you can simply run `make unsymlink` which will **ONLY** remove a symlink and not remove an
+To remove the symlink you can simply run the `unsymlink` target which will **ONLY** remove a symlink and not remove an
 existing directory of the extension or the extension itself from `gnome-shell`. If you wish to fully uninstall the
 extension please see [Uninstall](#uninstall) for directions.
 
@@ -117,16 +133,37 @@ required by the packaging process. This should be as close to installing the ext
 possible as it uses `gnome-extensions` to install the packaged ZIP file that is created from the `dist` folder.
 
 #### Install
-`make install`
+```bash
+make install
+```
 
-To install the project from a ZIP file use the `make install` command that is provided by the `Makefile`. This will fail
-if the extension is already installed, even if it is not enabled.
+To install the project from a ZIP file use the `install` target that is provided by the `Makefile`. This will fail if
+the extension is already installed, even if it is not enabled.
 
 #### Uninstall
-`make uninstall`
+```bash
+make uninstall
+```
 
-To uninstall the extension you can use `make uninstall` which simply just calls the `gnome-extensions uninstall` command
-automatically. This will completely remove the extension from `gnome-shell`.
+To uninstall the extension you can use the `uninstall` target which simply just calls the `gnome-extensions uninstall`
+command automatically. This will completely remove the extension from `gnome-shell`.
+
+### Manually creating the zip
+```bash
+make zip
+```
+
+While this command will build a zip file for the extension, you should be aware that due to a changes in
+[Gnome 44](https://gjs.guide/extensions/upgrading/gnome-shell-44.html#gsettings-schema) where the `gschemas.compiled`
+file is no longer packaged with the zip. In cases where the `gschemas.compiled` file is needed for the zip, just simply
+run the `Makefile` target `schemas/gschemas.compiled` **BEFORE** running the `zip` target.
+
+```bash
+make schemas/gschemas.compiled && make zip
+```
+
+A good example of when this is neccisary is if the extension is being installed system wide. This would require
+extracing the zip into a system folder and would bypass the Gnome extension install system.
 
 ## License
 By contributing to DeskChanger, you agree that your contributions will be licensed under the `LICENSE` file in the root

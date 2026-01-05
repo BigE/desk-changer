@@ -39,9 +39,10 @@ export default class ControlPreview extends St.Bin {
                         'preview-size',
                         'Preview Size',
                         'The size of the preview control',
-                        GObject.ParamFlags.CONSTRUCT_ONLY | GObject.ParamFlags.READABLE,
+                        GObject.ParamFlags.CONSTRUCT_ONLY |
+                            GObject.ParamFlags.READABLE,
                         Graphene.Size.$gtype
-                    )
+                    ),
                 },
             },
             this
@@ -61,8 +62,7 @@ export default class ControlPreview extends St.Bin {
     }
 
     set preview_file(value: string | null) {
-        if (value)
-            this.#set_preview(value);
+        if (value) this.#set_preview(value);
         this.#preview_file = value;
         this.notify('preview-file');
     }
@@ -76,8 +76,7 @@ export default class ControlPreview extends St.Bin {
 
         this.#preview_file = preview_file || null;
         this.#preview_size = preview_size;
-        if (preview_file)
-            this.#set_preview(preview_file);
+        if (preview_file) this.#set_preview(preview_file);
     }
 
     destroy() {
