@@ -1,6 +1,6 @@
 {
   "name": "desk-changer",
-  "version": "41",
+  "version": "42",
   "description": "A TypeScript GNOME Extension",
   "type": "module",
   "private": true,
