@@ -1,3 +1,4 @@
+import Clutter from 'gi://Clutter';
 import Gio from 'gi://Gio';
 import GObject from 'gi://GObject';
 import Graphene from 'gi://Graphene';
@@ -69,7 +70,9 @@ export default class PreviewMenuItem extends PopupMenu.PopupBaseMenuItem {
         super(params);
 
         this.#preview = preview || null;
-        this.#box = new St.BoxLayout({vertical: true});
+        this.#box = new St.BoxLayout({
+            orientation: Clutter.Orientation.VERTICAL,
+        });
         this.add_child(this.#box);
         this.#prefix = new St.Label({text: _('Open next wallpaper')});
         this.#box.add_child(this.#prefix);
