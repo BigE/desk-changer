@@ -92,6 +92,14 @@
 			</description>
 			<summary>All currently available profiles</summary>
 		</key>
+		<key name="profile-background-styles" type="a{si}">
+			<default>[]</default>
+			<description>
+				Mapping of profile names to their GDesktopEnums.BackgroundStyle
+				enum value for picture-options.
+			</description>
+			<summary>Background style per proflie</summary>
+		</key>
 		<key name="profile-states" type="a{sas}">
 			<default>[]</default>
 			<description>

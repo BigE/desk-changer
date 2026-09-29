@@ -1,3 +1,4 @@
+import GDesktopEnums from 'gi://GDesktopEnums';
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 import GObject from 'gi://GObject';
@@ -337,8 +338,22 @@ export class ServiceRunner extends GObject.Object {
     }
 
     #set_wallpaper(uri: string) {
+        const style = this.#profile?.background_style;
+
         this.#background!.set_string('picture-uri', uri);
         this.#background!.set_string('picture-uri-dark', uri);
+
+        if (
+            style !== undefined &&
+            style !== GDesktopEnums.BackgroundStyle.NONE &&
+            style !== this.#background?.get_enum('picture-options')
+        ) {
+            this.#background?.set_enum('picture-options', style);
+            this.#logger?.debug(
+                `setting background style to ${style} for ${this.#profile?.profile_name}`
+            );
+        }
+
         this.emit('Changed', uri);
     }
 

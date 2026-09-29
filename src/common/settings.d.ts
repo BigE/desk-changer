@@ -1,6 +1,12 @@
+import GDesktopEnums from 'gi://GDesktopEnums';
+
 export type SettingsAllowedMimeTypesType = string[];
 
 export type SettingsKeybindType = 'next-wallpaper' | 'previous-wallpaper';
+
+export type SettingsProfileBackgroundStylesType = {
+    [name: string]: GDesktopEnums.BackgroundStyle;
+};
 
 export type SettingsProfileItemType = [string, boolean];
 

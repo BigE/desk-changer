@@ -1,9 +1,11 @@
+import GDesktopEnums from 'gi://GDesktopEnums';
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 import GObject from 'gi://GObject';
 
 import {
     SettingsAllowedMimeTypesType,
+    SettingsProfileBackgroundStylesType,
     SettingsProfileItemType,
     SettingsProfileType,
 } from '../../common/settings.js';
@@ -24,6 +26,15 @@ export default class ServiceProfile extends GObject.Object {
             {
                 GTypeName: 'DeskChangerServiceProfile',
                 Properties: {
+                    'background-style': GObject.param_spec_int(
+                        'background-style',
+                        'Background style',
+                        'Background style of the loaded profile',
+                        GDesktopEnums.BackgroundStyle.NONE,
+                        GDesktopEnums.BackgroundStyle.SPANNED,
+                        GDesktopEnums.BackgroundStyle.NONE,
+                        GObject.ParamFlags.READABLE
+                    ),
                     history: GObject.param_spec_variant(
                         'history',
                         'History',
@@ -73,6 +84,7 @@ export default class ServiceProfile extends GObject.Object {
         );
     }
 
+    #background_style?: GDesktopEnums.BackgroundStyle;
     #history: ServiceProfileQueue;
     #loaded: boolean;
     #logger?: Console;
@@ -83,6 +95,10 @@ export default class ServiceProfile extends GObject.Object {
     #sequence: number;
     #settings?: Gio.Settings;
     #wallpapers: ServiceProfileWallpaper[];
+
+    get background_style() {
+        return this.#background_style ?? GDesktopEnums.BackgroundStyle.NONE;
+    }
 
     get history() {
         return this.#history.items.map(value => value.wallpaper);
@@ -209,11 +225,18 @@ export default class ServiceProfile extends GObject.Object {
             this.#settings!.get_value(
                 'profiles'
             ).deepUnpack<SettingsProfileType>();
+        const styles: SettingsProfileBackgroundStylesType =
+            this.#settings!.get_value(
+                'profile-background-styles'
+            ).deepUnpack<SettingsProfileBackgroundStylesType>();
 
         if (!(this.#profile_name in profiles))
             throw new ReferenceError(
                 _('Profile %s does not exist').format(this.#profile_name)
             );
+
+        if (this.#profile_name in styles)
+            this.#background_style = styles[this.#profile_name];
 
         this.#profile = profiles[this.#profile_name];
         // load each item in the profile - this is the top level
@@ -292,6 +315,7 @@ export default class ServiceProfile extends GObject.Object {
         this.#monitors = [];
         this.#wallpapers = [];
         this.#loaded = false;
+        this.#background_style = undefined;
         this.notify('loaded');
         this.emit('unloaded');
     }
