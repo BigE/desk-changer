@@ -17,6 +17,7 @@
         <method name="Restart" />
         <method name="Start" />
         <method name="Stop" />
+        <method name="Unload" />
         <!-- Properties -->
         <property name="GameMode" type="b" access="read" />
         <property name="History" type="as" access="read" />

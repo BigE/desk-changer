@@ -84,13 +84,15 @@ export default class ServiceProfile extends GObject.Object {
         );
     }
 
-    #background_style?: GDesktopEnums.BackgroundStyle;
+    #background_style: GDesktopEnums.BackgroundStyle;
     #history: ServiceProfileQueue;
     #loaded: boolean;
     #logger?: Console;
     #monitors: Gio.FileMonitor[];
     #profile?: SettingsProfileItemType[];
+    #profile_background_styles_changed_id?: number;
     readonly #profile_name: string;
+    #profiles_changed_id?: number;
     #queue: ServiceProfileQueue;
     #sequence: number;
     #settings?: Gio.Settings;
@@ -133,6 +135,7 @@ export default class ServiceProfile extends GObject.Object {
 
         super();
 
+        this.#background_style = GDesktopEnums.BackgroundStyle.NONE;
         this.#loaded = false;
         this.#logger = logger;
         this.#settings = settings;
@@ -225,18 +228,19 @@ export default class ServiceProfile extends GObject.Object {
             this.#settings!.get_value(
                 'profiles'
             ).deepUnpack<SettingsProfileType>();
-        const styles: SettingsProfileBackgroundStylesType =
-            this.#settings!.get_value(
-                'profile-background-styles'
-            ).deepUnpack<SettingsProfileBackgroundStylesType>();
 
         if (!(this.#profile_name in profiles))
             throw new ReferenceError(
                 _('Profile %s does not exist').format(this.#profile_name)
             );
 
-        if (this.#profile_name in styles)
-            this.#background_style = styles[this.#profile_name];
+        this.#update_background_style();
+
+        // Update the background style if it is update through the settings
+        this.#profile_background_styles_changed_id = this.#settings!.connect(
+            'changed::profile-background-styles',
+            this.#update_background_style.bind(this)
+        );
 
         this.#profile = profiles[this.#profile_name];
         // load each item in the profile - this is the top level
@@ -248,7 +252,10 @@ export default class ServiceProfile extends GObject.Object {
             );
 
         // attempt to reload when the profiles change
-        this.#settings!.connect('notify::profiles', this.#reload.bind(this));
+        this.#profiles_changed_id = this.#settings!.connect(
+            'changed::profiles',
+            this.#reload.bind(this)
+        );
 
         if (this.#settings!.get_boolean('remember-profile-state'))
             this.#restore_profile_state();
@@ -310,12 +317,23 @@ export default class ServiceProfile extends GObject.Object {
         if (this.#settings!.get_boolean('remember-profile-state'))
             this.#save_profile_state(current_uri);
 
+        if (this.#profile_background_styles_changed_id) {
+            this.#settings!.disconnect(
+                this.#profile_background_styles_changed_id
+            );
+            this.#profile_background_styles_changed_id = undefined;
+        }
+
+        if (this.#profiles_changed_id) {
+            this.#settings!.disconnect(this.#profiles_changed_id);
+            this.#profiles_changed_id = undefined;
+        }
+
         this.#profile = undefined;
         this.#monitors.forEach(monitor => monitor.cancel());
         this.#monitors = [];
         this.#wallpapers = [];
         this.#loaded = false;
-        this.#background_style = undefined;
         this.notify('loaded');
         this.emit('unloaded');
     }
@@ -490,5 +508,28 @@ export default class ServiceProfile extends GObject.Object {
             'profile-states',
             new GLib.Variant('a{sas}', profile_states)
         );
+    }
+
+    #update_background_style() {
+        const styles: SettingsProfileBackgroundStylesType =
+            this.#settings!.get_value(
+                'profile-background-styles'
+            ).deepUnpack<SettingsProfileBackgroundStylesType>();
+
+        this.#logger?.debug(
+            `Checking ${this.#profile_name} against ${styles[this.#profile_name]} for background style`
+        );
+
+        if (
+            !(this.#profile_name in styles) ||
+            styles[this.#profile_name] === this.#background_style
+        )
+            return;
+
+        this.#logger?.debug(
+            `Updated background style from ${this.#background_style} to ${styles[this.#profile_name]} for ${this.#profile_name}`
+        );
+        this.#background_style = styles[this.#profile_name];
+        this.notify('background-style');
     }
 }

@@ -88,6 +88,7 @@ export class ServiceRunner extends GObject.Object {
     #interval_changed_id?: number;
     #logger?: Console;
     #profile?: ServiceProfile;
+    #profile_notify_background_style_id?: number;
     #profile_notify_preview_id?: number;
     #rotation_changed_id?: number;
     #running: boolean;
@@ -173,15 +174,7 @@ export class ServiceRunner extends GObject.Object {
         }
 
         // Unload the currently loaded profile
-        if (this.#profile) {
-            if (this.#profile_notify_preview_id) {
-                this.#profile.disconnect(this.#profile_notify_preview_id);
-                this.#profile_notify_preview_id = undefined;
-            }
-
-            this.#profile.destroy(this.#background?.get_string('picture-uri'));
-            this.#profile = undefined;
-        }
+        if (this.#profile) this.Unload();
 
         this.#profile = profile;
         this.#profile_notify_preview_id = this.#profile.connect(
@@ -190,6 +183,12 @@ export class ServiceRunner extends GObject.Object {
                 if (this.#running) {
                     this.notify('Preview');
                 }
+            }
+        );
+        this.#profile_notify_background_style_id = this.#profile.connect(
+            'notify::background-style',
+            () => {
+                if (this.#running) this.#set_picture_options();
             }
         );
 
@@ -278,8 +277,26 @@ export class ServiceRunner extends GObject.Object {
 
         this.#destroy_timer();
         // unload the profile to give it a chance to save its state
-        this.#profile?.unload(this.#background?.get_string('picture-uri'));
+        this.Unload();
         this.emit('Stop');
+    }
+
+    Unload() {
+        if (!this.#profile) throw new Error(_('No profile loaded'));
+
+        if (this.#profile_notify_background_style_id) {
+            this.#profile?.disconnect(this.#profile_notify_background_style_id);
+            this.#profile_notify_background_style_id = undefined;
+        }
+
+        if (this.#profile_notify_preview_id) {
+            this.#profile?.disconnect(this.#profile_notify_preview_id);
+            this.#profile_notify_preview_id = undefined;
+        }
+
+        const profile = this.#profile;
+        this.#profile = undefined;
+        profile.destroy(this.#background?.get_string('picture-uri'));
     }
 
     #create_timer() {
@@ -337,11 +354,8 @@ export class ServiceRunner extends GObject.Object {
         this.#create_timer();
     }
 
-    #set_wallpaper(uri: string) {
+    #set_picture_options() {
         const style = this.#profile?.background_style;
-
-        this.#background!.set_string('picture-uri', uri);
-        this.#background!.set_string('picture-uri-dark', uri);
 
         if (
             style !== undefined &&
@@ -353,6 +367,12 @@ export class ServiceRunner extends GObject.Object {
                 `setting background style to ${style} for ${this.#profile?.profile_name}`
             );
         }
+    }
+
+    #set_wallpaper(uri: string) {
+        this.#background!.set_string('picture-uri', uri);
+        this.#background!.set_string('picture-uri-dark', uri);
+        this.#set_picture_options();
 
         this.emit('Changed', uri);
     }
