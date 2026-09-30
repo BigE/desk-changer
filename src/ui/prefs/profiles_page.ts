@@ -76,6 +76,9 @@ export default class DeskChangerUiPrefsProfilesPage
 
         this.combo_row_profiles.set_model(profiles);
         this.combo_row_profiles.set_selected(current_profile);
+        this.#update_selected_combo_box_background_style(
+            this.combo_row_profiles.get_selected_item()
+        );
         this.locations_selection.set_model(
             this.combo_row_profiles.selected_item.items
         );
@@ -128,15 +131,7 @@ export default class DeskChangerUiPrefsProfilesPage
 
                 if (profile) {
                     this.locations_selection.set_model(profile.items);
-
-                    const current = this.#settings
-                        .get_value('profile-background-styles')
-                        .deepUnpack<Record<string, number>>();
-
-                    this.combo_row_background_styles.set_selected(
-                        current[profile.name] ??
-                            GDesktopEnums.BackgroundStyle.NONE
-                    );
+                    this.#update_selected_combo_box_background_style(profile);
                 }
 
                 this.remove_profile_button.set_sensitive(
@@ -477,5 +472,15 @@ export default class DeskChangerUiPrefsProfilesPage
         }
 
         return undefined;
+    }
+
+    #update_selected_combo_box_background_style(profile: Profile) {
+        const current = this.#settings
+            .get_value('profile-background-styles')
+            .deepUnpack<Record<string, number>>();
+
+        this.combo_row_background_styles.set_selected(
+            current[profile.name] ?? GDesktopEnums.BackgroundStyle.NONE
+        );
     }
 }
