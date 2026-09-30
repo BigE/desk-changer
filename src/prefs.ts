@@ -74,6 +74,7 @@ export default class DeskChangerPreferences extends ExtensionPreferences {
             {
                 GTypeName: 'DeskChangerUiPrefsProfilesPage',
                 InternalChildren: [
+                    'combo_row_background_styles',
                     'combo_row_profiles',
                     'locations_listview',
                     'locations_selection',

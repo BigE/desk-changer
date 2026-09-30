@@ -1,4 +1,5 @@
 import Adw from 'gi://Adw';
+import GDesktopEnums from 'gi://GDesktopEnums';
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 import Gtk from 'gi://Gtk';
@@ -30,7 +31,11 @@ type LocationSelectionType = Omit<
     selected_item: ProfileItem | null;
 };
 
-export default class DeskChangerUiPrefsProfilesPage extends Adw.PreferencesPage {
+export default class DeskChangerUiPrefsProfilesPage
+    extends Adw.PreferencesPage
+{
+    private combo_row_background_styles: Adw.ComboRow;
+    #combo_row_background_styles_selected_item_id?: number;
     private combo_row_profiles: ComboRowProfilesType;
     #combo_row_profiles_selected_item_id?: number;
     #destroy_id?: number;
@@ -49,6 +54,8 @@ export default class DeskChangerUiPrefsProfilesPage extends Adw.PreferencesPage 
         this.#settings = settings;
 
         // @ts-expect-error Bind property from resource file
+        this.combo_row_background_styles = this._combo_row_background_styles;
+        // @ts-expect-error Bind property from resource file
         this.combo_row_profiles = this._combo_row_profiles;
         // @ts-expect-error Bind property from resource file
         this.locations_listview = this._locations_listview;
@@ -58,6 +65,14 @@ export default class DeskChangerUiPrefsProfilesPage extends Adw.PreferencesPage 
         this.remove_item_button = this._remove_item_button;
         // @ts-expect-error Bind property from resource file
         this.remove_profile_button = this._remove_profile_button;
+
+        const background_styles = Object.entries(GDesktopEnums.BackgroundStyle)
+            .sort(([, a], [, b]) => Number(a) - Number(b))
+            .map(([name]) => _(name.charAt(0) + name.slice(1).toLowerCase()));
+
+        this.combo_row_background_styles.set_model(
+            new Gtk.StringList({strings: background_styles})
+        );
 
         this.combo_row_profiles.set_model(profiles);
         this.combo_row_profiles.set_selected(current_profile);
@@ -69,13 +84,60 @@ export default class DeskChangerUiPrefsProfilesPage extends Adw.PreferencesPage 
         );
         this.remove_profile_button.set_sensitive(profiles.get_n_items() > 1);
 
+        this.#combo_row_background_styles_selected_item_id =
+            this.combo_row_background_styles.connect(
+                'notify::selected-item',
+                () => {
+                    const profile = this.#find_profile_by_name(
+                        this.combo_row_profiles.get_selected_item<Profile>()
+                            .name
+                    );
+                    const background_style =
+                        this.combo_row_background_styles.get_selected();
+
+                    if (!profile || background_style === null) return;
+
+                    const current = this.#settings
+                        .get_value('profile-background-styles')
+                        .deepUnpack<Record<string, number>>();
+
+                    if (
+                        background_style ===
+                            GDesktopEnums.BackgroundStyle.NONE &&
+                        profile.name in current
+                    ) {
+                        delete current[profile.name];
+                    } else if (
+                        background_style !== GDesktopEnums.BackgroundStyle.NONE
+                    ) {
+                        current[profile.name] = background_style;
+                    }
+
+                    this.#settings.set_value(
+                        'profile-background-styles',
+                        new GLib.Variant('a{si}', current)
+                    );
+                }
+            );
+
         this.#combo_row_profiles_selected_item_id =
             this.combo_row_profiles.connect('notify::selected-item', () => {
                 const profile = this.#find_profile_by_name(
                     this.combo_row_profiles.get_selected_item<Profile>().name
                 );
 
-                if (profile) this.locations_selection.set_model(profile.items);
+                if (profile) {
+                    this.locations_selection.set_model(profile.items);
+
+                    const current = this.#settings
+                        .get_value('profile-background-styles')
+                        .deepUnpack<Record<string, number>>();
+
+                    this.combo_row_background_styles.set_selected(
+                        current[profile.name] ??
+                            GDesktopEnums.BackgroundStyle.NONE
+                    );
+                }
 
                 this.remove_profile_button.set_sensitive(
                     this.combo_row_profiles.get_model()!.get_n_items() > 1
@@ -84,6 +146,13 @@ export default class DeskChangerUiPrefsProfilesPage extends Adw.PreferencesPage 
     }
 
     destroy() {
+        if (this.#combo_row_background_styles_selected_item_id) {
+            this.combo_row_background_styles.disconnect(
+                this.#combo_row_background_styles_selected_item_id
+            );
+            this.#combo_row_background_styles_selected_item_id = undefined;
+        }
+
         if (this.#combo_row_profiles_selected_item_id) {
             this.combo_row_profiles.disconnect(
                 this.#combo_row_profiles_selected_item_id
@@ -206,6 +275,25 @@ export default class DeskChangerUiPrefsProfilesPage extends Adw.PreferencesPage 
             'profiles',
             new GLib.Variant('a{sa(sb)}', profiles)
         );
+    }
+
+    _on_factory_row_background_styles_bind(
+        _widget: Gtk.SignalListItemFactory,
+        item: Gtk.ListItem
+    ) {
+        const label = item.get_child() as Gtk.Label;
+        const string_obj = item.get_item<Gtk.StringObject>();
+
+        if (label && string_obj) {
+            label.set_label(string_obj.string);
+        }
+    }
+
+    _on_factory_row_background_styles_setup(
+        _widget: Gtk.SignalListItemFactory,
+        item: Gtk.ListItem
+    ) {
+        item.set_child(new Gtk.Label());
     }
 
     _on_factory_row_profiles_bind(

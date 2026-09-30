@@ -1,8 +1,8 @@
 <?xml version='1.0' encoding='UTF-8' standalone='no'?>
 <!DOCTYPE cambalache-project SYSTEM "cambalache-project.dtd">
-<!-- Created with Cambalache 0.96.3 -->
-<cambalache-project version="0.96.0" target_tk="gtk-4.0">
-  <ui template-class="DeskChangerUiPrefsProfilesPage" filename="resources/ui/prefs/profiles_page.ui" sha256="0da4f480c39db8657536f22df96a64c82ebe3e63c9c83d908116aa8b2b80703b"/>
+<!-- Created with Cambalache 1.0.3 -->
+<cambalache-project version="1.0.0" target_tk="gtk-4.0" depends="casilda-1.0,libadwaita-1,webkitgtk-6.0">
+  <ui template-class="DeskChangerUiPrefsProfilesPage" filename="resources/ui/prefs/profiles_page.ui" sha256="d789bd056fcab7d09d100a5c52838e1026617e3e048a6524f8f436ecd94fb436"/>
   <ui template-class="DeskChangerUiPrefsKeyboardPage" filename="resources/ui/prefs/keyboard_page.ui" sha256="a870df5c42e1127fd6c157f1270a3798bdc9190aa7f1874b0ff157fe0b53f0ad"/>
   <ui template-class="DeskChangerUiPrefsExtensionPage" filename="resources/ui/prefs/extension_page.ui" sha256="fe6703b7fc1ce6fd356bc4c93e6467ea9b8eec802228a000670ed5b0ceb27d5d"/>
   <ui template-class="DeskChangerUiPrefsServicePage" filename="resources/ui/prefs/service_page.ui" sha256="09e4ddd8ca199393eea1564e69abec830de909d1c7dd96fb66d352aaadcdd9c3"/>
